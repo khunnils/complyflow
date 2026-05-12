@@ -25,7 +25,18 @@ const profileBody = {
     centralizedLoggingEnabled: false,
   },
   dataHandling: {
-    dataTypesStored: ["customer account data", "product analytics"],
+    dataTypesStored: [
+      {
+        name: "customer account data",
+        isSensitive: true,
+        description: "Profile and billing contact details",
+      },
+      {
+        name: "product analytics",
+        isSensitive: false,
+        description: "Usage events for product improvement",
+      },
+    ],
     storesPii: true,
     storesHealthcareData: false,
     encryptionAtRest: true,
@@ -79,6 +90,9 @@ describe("security profile API", () => {
 
     expect(saveResponse.statusCode).toBe(200)
     expect(saveResponse.json().organization.company.companyName).toBe("Acme AI")
+    expect(saveResponse.json().organization.dataHandling.dataTypesStored).toEqual(
+      profileBody.dataHandling.dataTypesStored
+    )
 
     const getResponse = await app.inject({
       method: "GET",
@@ -87,6 +101,9 @@ describe("security profile API", () => {
 
     expect(getResponse.statusCode).toBe(200)
     expect(getResponse.json().organization.company.companyName).toBe("Acme AI")
+    expect(getResponse.json().organization.dataHandling.dataTypesStored).toEqual(
+      profileBody.dataHandling.dataTypesStored
+    )
   })
 
   it("returns structured validation errors", async () => {

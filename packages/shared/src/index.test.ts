@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   companyProfileSchema,
+  dataHandlingProfileSchema,
   vendorInputSchema,
   vendorCriticalitySchema,
 } from "./index.js"
@@ -40,5 +41,25 @@ describe("shared security profile schemas", () => {
 
   it("limits vendor criticality to the supported readiness levels", () => {
     expect(vendorCriticalitySchema.safeParse("severe").success).toBe(false)
+  })
+
+  it("requires stored data types to include a name, sensitivity, and description", () => {
+    const result = dataHandlingProfileSchema.safeParse({
+      dataTypesStored: [
+        {
+          name: "customer emails",
+          isSensitive: true,
+          description: "Account contact and notification data",
+        },
+      ],
+      storesPii: true,
+      storesHealthcareData: false,
+      encryptionAtRest: true,
+      encryptionInTransit: true,
+      productionDataInDevelopment: false,
+      retentionPolicyExists: true,
+    })
+
+    expect(result.success).toBe(true)
   })
 })

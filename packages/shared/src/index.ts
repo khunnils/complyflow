@@ -10,6 +10,12 @@ export const dpaStatusSchema = z.enum([
 
 export const vendorCriticalitySchema = z.enum(["low", "medium", "high"])
 
+export const storedDataTypeSchema = z.object({
+  name: z.string().trim().min(1),
+  isSensitive: z.boolean().default(false),
+  description: z.string().trim().default(""),
+})
+
 export const companyProfileSchema = z.object({
   companyName: z.string().trim().min(1, "Company name is required"),
   employeeCount: z.number().int().min(1).max(100000),
@@ -32,7 +38,7 @@ export const infrastructureProfileSchema = z.object({
 })
 
 export const dataHandlingProfileSchema = z.object({
-  dataTypesStored: z.array(z.string().trim().min(1)).default([]),
+  dataTypesStored: z.array(storedDataTypeSchema).default([]),
   storesPii: z.boolean(),
   storesHealthcareData: z.boolean(),
   encryptionAtRest: z.boolean(),
@@ -104,6 +110,7 @@ export const structuredErrorSchema = z.object({
 
 export type DpaStatus = z.infer<typeof dpaStatusSchema>
 export type VendorCriticality = z.infer<typeof vendorCriticalitySchema>
+export type StoredDataType = z.infer<typeof storedDataTypeSchema>
 export type CompanyProfile = z.infer<typeof companyProfileSchema>
 export type InfrastructureProfile = z.infer<typeof infrastructureProfileSchema>
 export type DataHandlingProfile = z.infer<typeof dataHandlingProfileSchema>

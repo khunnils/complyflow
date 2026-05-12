@@ -1,8 +1,24 @@
 import { type UseFormReturn } from "react-hook-form"
 
-import { ListField } from "@/components/form/list-field"
+import { DataTypesField } from "@/components/form/data-types-field"
 import { ToggleField } from "@/components/form/toggle-field"
 import { type ProfileDraft } from "@/types/security-profile"
+
+const getErrorMessage = (error: unknown): string | undefined => {
+  if (!error || typeof error !== "object") {
+    return undefined
+  }
+
+  if ("message" in error && typeof error.message === "string") {
+    return error.message
+  }
+
+  if (Array.isArray(error)) {
+    return error.map(getErrorMessage).find(Boolean)
+  }
+
+  return Object.values(error).map(getErrorMessage).find(Boolean)
+}
 
 export const DataHandlingProfileFields = ({
   form,
@@ -10,12 +26,14 @@ export const DataHandlingProfileFields = ({
   form: UseFormReturn<ProfileDraft>
 }) => (
   <div className="grid gap-4 md:grid-cols-2">
-    <ListField
+    <DataTypesField
       control={form.control}
       error={form.formState.errors.dataHandling?.dataTypesStored?.root}
+      errorMessage={getErrorMessage(
+        form.formState.errors.dataHandling?.dataTypesStored
+      )}
       label="Data types stored"
       name="dataHandling.dataTypesStored"
-      placeholder="customer emails, usage data"
     />
     <ToggleField
       control={form.control}

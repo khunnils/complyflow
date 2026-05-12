@@ -3,8 +3,10 @@ import {
   Check,
   LayoutDashboard,
   Loader2,
+  Plus,
   Save,
   Users,
+  X,
 } from "lucide-react"
 import {
   type Provider,
@@ -40,6 +42,7 @@ import {
 import { ProviderSelector } from "@/components/security/provider-selector"
 import { Section } from "@/components/security/section"
 import { SummaryTiles } from "@/components/security/summary-tiles"
+import { VendorEmptyState } from "@/components/security/vendor-empty-state"
 import { VendorForm } from "@/components/security/vendor-form"
 import { VendorList } from "@/components/security/vendor-list"
 import { useSecurityUiStore } from "@/stores/security-ui-store"
@@ -76,6 +79,19 @@ const companySections: Array<{
 
 const valueList = (values: string[]) =>
   values.length > 0 ? values.join(", ") : "Not set"
+
+const dataTypeList = (
+  values: ProfileDraft["dataHandling"]["dataTypesStored"],
+) =>
+  values.length > 0
+    ? values
+        .map((value) =>
+          value.description
+            ? `${value.name}: ${value.description}`
+            : value.name,
+        )
+        .join(", ")
+    : "Not set"
 
 const boolText = (value: boolean) => (value ? "Yes" : "No")
 
@@ -157,7 +173,7 @@ const CompanyReadOnlySection = ({
       ],
     ],
     dataHandling: [
-      ["Data types", valueList(profile.dataHandling.dataTypesStored)],
+      ["Data types", dataTypeList(profile.dataHandling.dataTypesStored)],
       ["Stores PII", boolText(profile.dataHandling.storesPii)],
       ["Healthcare data", boolText(profile.dataHandling.storesHealthcareData)],
       ["Encryption at rest", boolText(profile.dataHandling.encryptionAtRest)],
@@ -227,6 +243,7 @@ export const Workspace = ({
   onUpdateVendor: (id: string, vendor: VendorInput) => void
   onDeleteVendor: (vendor: Vendor) => void
 }) => {
+  const [showVendorCatalog, setShowVendorCatalog] = useState(false)
   const [showCustomVendorForm, setShowCustomVendorForm] = useState(false)
   const {
     activeWorkspaceView,
@@ -395,21 +412,51 @@ export const Workspace = ({
 
           {activeWorkspaceView === "vendors" && (
             <Section
-              description="Add common providers from the catalog or maintain a custom entry."
+              description="Review organization vendors or add common providers from the catalog."
               title="Vendors"
             >
-              <ProviderSelector
-                error={providersError}
-                isLoading={providersLoading}
-                providers={providers}
-                onChooseOther={() => {
-                  startEditingVendor(null)
-                  setShowCustomVendorForm(true)
-                }}
-                onChooseProvider={(provider) =>
-                  onCreateVendor(vendorInputFromProvider(provider))
-                }
-              />
+              {showVendorCatalog ? (
+                <div className="grid gap-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h3 className="font-semibold text-slate-950">
+                        Add from catalog
+                      </h3>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Filter by category, then choose a provider to add it to
+                        the organization inventory.
+                      </p>
+                    </div>
+                    <Button
+                      className="w-fit"
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setShowVendorCatalog(false)
+                        setShowCustomVendorForm(false)
+                      }}
+                    >
+                      <X />
+                      Cancel
+                    </Button>
+                  </div>
+                  <ProviderSelector
+                    error={providersError}
+                    isLoading={providersLoading}
+                    providers={providers}
+                    onChooseOther={() => {
+                      startEditingVendor(null)
+                      setShowVendorCatalog(false)
+                      setShowCustomVendorForm(true)
+                    }}
+                    onChooseProvider={(provider) => {
+                      onCreateVendor(vendorInputFromProvider(provider))
+                      setShowVendorCatalog(false)
+                      setShowCustomVendorForm(false)
+                    }}
+                  />
+                </div>
+              ) : null}
               {(showCustomVendorForm || editingVendor) && (
                 <VendorForm
                   defaultValues={
@@ -426,18 +473,43 @@ export const Workspace = ({
                       onCreateVendor(vendor)
                     }
 
+                    setShowVendorCatalog(false)
                     setShowCustomVendorForm(false)
                   }}
                 />
               )}
-              <VendorList
-                vendors={vendors}
-                onDelete={onDeleteVendor}
-                onEdit={(vendor) => {
-                  startEditingVendor(vendor.id)
-                  setShowCustomVendorForm(true)
-                }}
-              />
+              {!showVendorCatalog && !showCustomVendorForm && !editingVendor ? (
+                vendors.length > 0 ? (
+                  <div className="grid gap-4">
+                    <Button
+                      className="w-fit"
+                      type="button"
+                      onClick={() => {
+                        startEditingVendor(null)
+                        setShowVendorCatalog(true)
+                      }}
+                    >
+                      <Plus />
+                      Add vendor
+                    </Button>
+                    <VendorList
+                      vendors={vendors}
+                      onDelete={onDeleteVendor}
+                      onEdit={(vendor) => {
+                        startEditingVendor(vendor.id)
+                        setShowCustomVendorForm(true)
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <VendorEmptyState
+                    onAdd={() => {
+                      startEditingVendor(null)
+                      setShowVendorCatalog(true)
+                    }}
+                  />
+                )
+              ) : null}
             </Section>
           )}
         </main>

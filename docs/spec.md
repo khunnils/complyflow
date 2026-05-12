@@ -114,7 +114,7 @@ Fields:
 ### Data Handling Profile
 
 Fields:
-- data types stored
+- data types stored, captured as name, sensitivity, and description entries
 - stores PII
 - stores healthcare data
 - encryption at rest

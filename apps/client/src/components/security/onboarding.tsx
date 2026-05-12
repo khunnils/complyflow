@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, Loader2, Save } from "lucide-react"
 import { type Provider, type VendorInput } from "@complyflow/shared"
 import { useState } from "react"
+import { type FieldErrors } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -50,6 +51,26 @@ const onboardingSteps = [
     description: "Choose common providers or add your own critical vendors.",
   },
 ]
+
+const stepWithError = (errors: FieldErrors<ProfileDraft>) => {
+  if (errors.company) {
+    return 0
+  }
+
+  if (errors.infrastructure) {
+    return 1
+  }
+
+  if (errors.dataHandling) {
+    return 2
+  }
+
+  if (errors.access) {
+    return 3
+  }
+
+  return 0
+}
 
 export const Onboarding = ({
   defaultValues,
@@ -102,6 +123,7 @@ export const Onboarding = ({
 
         <ProfileForm
           defaultValues={defaultValues}
+          onInvalid={(errors) => setOnboardingStep(stepWithError(errors))}
           onSubmit={(profile) =>
             onSave(profile, onboardingVendors.map(toVendorInput))
           }

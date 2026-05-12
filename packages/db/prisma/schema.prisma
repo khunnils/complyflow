@@ -8,32 +8,123 @@ datasource db {
 }
 
 model Organization {
-  id             String   @id @default(cuid())
-  company        Json
-  infrastructure Json
-  dataHandling   Json
-  access         Json
-  vendors        Vendor[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                       String                 @id(map: "organizations_pkey") @default(cuid())
+  companyName              String                 @map("company_name")
+  employeeCount            Int                    @map("employee_count")
+  industries               String[]
+  regions                  String[]
+  handlesPii               Boolean                @map("handles_pii")
+  handlesSensitiveData     Boolean                @map("handles_sensitive_data")
+  complianceGoals          String[]               @map("compliance_goals")
+  infrastructureProfile    InfrastructureProfile?
+  dataHandlingProfile      DataHandlingProfile?
+  accessProfile            AccessProfile?
+  dataTypes                OrganizationDataType[]
+  vendors                  Vendor[]
+  createdAt                DateTime               @default(now()) @map("created_at")
+  updatedAt                DateTime               @updatedAt @map("updated_at")
+
+  @@map("organizations")
+}
+
+model InfrastructureProfile {
+  id                        String       @id(map: "infrastructure_profiles_pkey") @default(cuid())
+  organizationId            String       @unique(map: "infrastructure_profiles_organization_id_key") @map("organization_id")
+  organization              Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "infrastructure_profiles_organization_id_fkey")
+  cloudProviders            String[]     @map("cloud_providers")
+  sourceControlProvider     String?      @map("source_control_provider")
+  authProvider              String?      @map("auth_provider")
+  passwordManager           String?      @map("password_manager")
+  mfaEnabled                Boolean      @map("mfa_enabled")
+  encryptedDevicesRequired  Boolean      @map("encrypted_devices_required")
+  backupsEnabled            Boolean      @map("backups_enabled")
+  centralizedLoggingEnabled Boolean      @map("centralized_logging_enabled")
+  createdAt                 DateTime     @default(now()) @map("created_at")
+  updatedAt                 DateTime     @updatedAt @map("updated_at")
+
+  @@map("infrastructure_profiles")
+}
+
+model DataHandlingProfile {
+  id                              String       @id(map: "data_handling_profiles_pkey") @default(cuid())
+  organizationId                  String       @unique(map: "data_handling_profiles_organization_id_key") @map("organization_id")
+  organization                    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "data_handling_profiles_organization_id_fkey")
+  storesPii                       Boolean      @map("stores_pii")
+  storesHealthcareData            Boolean      @map("stores_healthcare_data")
+  encryptionAtRest                Boolean      @map("encryption_at_rest")
+  encryptionInTransit             Boolean      @map("encryption_in_transit")
+  productionDataInDevelopment     Boolean      @map("production_data_in_development")
+  retentionPolicyExists           Boolean      @map("retention_policy_exists")
+  createdAt                       DateTime     @default(now()) @map("created_at")
+  updatedAt                       DateTime     @updatedAt @map("updated_at")
+
+  @@map("data_handling_profiles")
+}
+
+model OrganizationDataType {
+  id              String           @id(map: "organization_data_types_pkey") @default(cuid())
+  organizationId  String           @map("organization_id")
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "organization_data_types_organization_id_fkey")
+  name            String
+  isSensitive     Boolean          @map("is_sensitive")
+  description     String
+  vendorDataTypes VendorDataType[]
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  @@unique([organizationId, name], map: "organization_data_types_organization_id_name_key")
+  @@index([organizationId], map: "idx_organization_data_types_organization_id")
+  @@map("organization_data_types")
+}
+
+model AccessProfile {
+  id                           String       @id(map: "access_profiles_pkey") @default(cuid())
+  organizationId               String       @unique(map: "access_profiles_organization_id_key") @map("organization_id")
+  organization                 Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "access_profiles_organization_id_fkey")
+  mfaRequired                  Boolean      @map("mfa_required")
+  ssoEnabled                   Boolean      @map("sso_enabled")
+  sharedAccountsExist          Boolean      @map("shared_accounts_exist")
+  offboardingProcessExists     Boolean      @map("offboarding_process_exists")
+  accessReviewsPerformed       Boolean      @map("access_reviews_performed")
+  privilegedAccessRestricted   Boolean      @map("privileged_access_restricted")
+  createdAt                    DateTime     @default(now()) @map("created_at")
+  updatedAt                    DateTime     @updatedAt @map("updated_at")
+
+  @@map("access_profiles")
 }
 
 model Vendor {
-  id               String       @id @default(cuid())
-  organizationId   String
-  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  id               String       @id(map: "vendors_pkey") @default(cuid())
+  organizationId   String       @map("organization_id")
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "vendors_organization_id_fkey")
   name             String
   category         String
   purpose          String
-  hasSubprocessors Boolean
-  dataProcessed    String[]
-  dpaStatus        String
-  dataRegions      String[]
+  hasSubprocessors Boolean      @map("has_subprocessors")
+  dpaStatus        String       @map("dpa_status")
+  dataRegions      String[]     @map("data_regions")
   criticality      String
   owner            String?
   notes            String?
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  dataTypes        VendorDataType[]
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
 
-  @@index([organizationId])
+  @@index([organizationId], map: "idx_vendors_organization_id")
+  @@map("vendors")
+}
+
+model VendorDataType {
+  id                     String               @id(map: "vendor_data_types_pkey") @default(cuid())
+  vendorId               String               @map("vendor_id")
+  vendor                 Vendor               @relation(fields: [vendorId], references: [id], onDelete: Cascade, map: "vendor_data_types_vendor_id_fkey")
+  organizationDataTypeId String               @map("organization_data_type_id")
+  organizationDataType   OrganizationDataType @relation(fields: [organizationDataTypeId], references: [id], onDelete: Cascade, map: "vendor_data_types_organization_data_type_id_fkey")
+  createdAt              DateTime             @default(now()) @map("created_at")
+  updatedAt              DateTime             @updatedAt @map("updated_at")
+
+  @@unique([vendorId, organizationDataTypeId], map: "vendor_data_types_vendor_id_organization_data_type_id_key")
+  @@index([vendorId], map: "idx_vendor_data_types_vendor_id")
+  @@index([organizationDataTypeId], map: "idx_vendor_data_types_organization_data_type_id")
+  @@map("vendor_data_types")
 }
