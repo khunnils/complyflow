@@ -4,6 +4,7 @@ import {
   emptyDataHandlingProfile,
   emptyInfrastructureProfile,
   type OrganizationSecurityProfile,
+  type Provider,
   type Vendor,
   type VendorInput,
 } from "@complyflow/shared"
@@ -56,4 +57,40 @@ export const toVendorInput = (vendor: Vendor | VendorInput): VendorInput => ({
   criticality: vendor.criticality,
   owner: vendor.owner,
   notes: vendor.notes,
+})
+
+const providerCriticality = (
+  provider: Provider
+): VendorInput["criticality"] => {
+  const normalizedCriticality = provider.securityCriticality?.toLowerCase()
+
+  if (
+    normalizedCriticality === "critical" ||
+    normalizedCriticality === "high"
+  ) {
+    return "high"
+  }
+
+  if (normalizedCriticality === "low") {
+    return "low"
+  }
+
+  return "medium"
+}
+
+export const vendorInputFromProvider = (provider: Provider): VendorInput => ({
+  name: provider.name,
+  category: provider.category ?? "Provider",
+  purpose: provider.url
+    ? `Operational provider listed at ${provider.url}`
+    : "Operational provider",
+  hasSubprocessors: false,
+  dataProcessed: provider.handlesCustomerData ? ["customer data"] : [],
+  dpaStatus: "not_started",
+  dataRegions: [],
+  criticality: providerCriticality(provider),
+  owner: "",
+  notes: provider.securityCriticality
+    ? `Provider catalog criticality: ${provider.securityCriticality}`
+    : "",
 })

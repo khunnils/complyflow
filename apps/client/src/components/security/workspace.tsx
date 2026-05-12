@@ -1,15 +1,43 @@
-import { Check, Loader2, Save } from "lucide-react"
-import { type Vendor, type VendorInput } from "@complyflow/shared"
+import {
+  Building2,
+  Check,
+  LayoutDashboard,
+  Loader2,
+  Save,
+  Users,
+} from "lucide-react"
+import {
+  type Provider,
+  type Vendor,
+  type VendorInput,
+} from "@complyflow/shared"
+import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { emptyVendorDraft, toVendorInput } from "@/lib/profile"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarProvider,
+} from "@/components/ui/sidebar"
+import {
+  emptyVendorDraft,
+  toVendorInput,
+  vendorInputFromProvider,
+} from "@/lib/profile"
 import {
   ProfileAccessFields,
   ProfileCompanyFields,
   ProfileDataHandlingFields,
   ProfileForm,
+  type ProfileFormReturn,
   ProfileInfrastructureFields,
 } from "@/components/security/profile-form"
+import { ProviderSelector } from "@/components/security/provider-selector"
 import { Section } from "@/components/security/section"
 import { SummaryTiles } from "@/components/security/summary-tiles"
 import { VendorForm } from "@/components/security/vendor-form"
@@ -17,9 +45,169 @@ import { VendorList } from "@/components/security/vendor-list"
 import { useSecurityUiStore } from "@/stores/security-ui-store"
 import { type MutationState, type ProfileDraft } from "@/types/security-profile"
 
+type CompanySectionId = "company" | "infrastructure" | "dataHandling" | "access"
+
+const companySections: Array<{
+  id: CompanySectionId
+  title: string
+  description: string
+}> = [
+  {
+    id: "company",
+    title: "Company",
+    description: "Operational context customers ask for early.",
+  },
+  {
+    id: "infrastructure",
+    title: "Infrastructure",
+    description: "The baseline systems behind the product.",
+  },
+  {
+    id: "dataHandling",
+    title: "Data",
+    description: "Data categories and protection practices.",
+  },
+  {
+    id: "access",
+    title: "Access",
+    description: "Access hygiene and account risk.",
+  },
+]
+
+const valueList = (values: string[]) =>
+  values.length > 0 ? values.join(", ") : "Not set"
+
+const boolText = (value: boolean) => (value ? "Yes" : "No")
+
+const DetailGrid = ({ rows }: { rows: Array<[string, string | number]> }) => (
+  <dl className="grid gap-3 sm:grid-cols-2">
+    {rows.map(([label, value]) => (
+      <div
+        className="rounded-md border border-slate-200 bg-slate-50 p-3"
+        key={label}
+      >
+        <dt className="text-xs font-medium text-slate-500">{label}</dt>
+        <dd className="mt-1 text-sm font-medium text-slate-900">{value}</dd>
+      </div>
+    ))}
+  </dl>
+)
+
+const CompanySectionFields = ({
+  form,
+  section,
+}: {
+  form: ProfileFormReturn
+  section: CompanySectionId
+}) => {
+  if (section === "company") {
+    return <ProfileCompanyFields form={form} />
+  }
+
+  if (section === "infrastructure") {
+    return <ProfileInfrastructureFields form={form} />
+  }
+
+  if (section === "dataHandling") {
+    return <ProfileDataHandlingFields form={form} />
+  }
+
+  return <ProfileAccessFields form={form} />
+}
+
+const CompanyReadOnlySection = ({
+  profile,
+  section,
+  onEdit,
+}: {
+  profile: ProfileDraft
+  section: CompanySectionId
+  onEdit: () => void
+}) => {
+  const rowsBySection: Record<
+    CompanySectionId,
+    Array<[string, string | number]>
+  > = {
+    company: [
+      ["Company name", profile.company.companyName || "Not set"],
+      ["Employees", profile.company.employeeCount],
+      ["Industries", valueList(profile.company.industries)],
+      ["Regions", valueList(profile.company.regions)],
+      ["Compliance goals", valueList(profile.company.complianceGoals)],
+      ["Handles PII", boolText(profile.company.handlesPii)],
+      ["Sensitive data", boolText(profile.company.handlesSensitiveData)],
+    ],
+    infrastructure: [
+      ["Cloud providers", valueList(profile.infrastructure.cloudProviders)],
+      [
+        "Source control",
+        profile.infrastructure.sourceControlProvider || "Not set",
+      ],
+      ["Auth provider", profile.infrastructure.authProvider || "Not set"],
+      ["Password manager", profile.infrastructure.passwordManager || "Not set"],
+      ["MFA enabled", boolText(profile.infrastructure.mfaEnabled)],
+      [
+        "Encrypted devices",
+        boolText(profile.infrastructure.encryptedDevicesRequired),
+      ],
+      ["Backups", boolText(profile.infrastructure.backupsEnabled)],
+      [
+        "Centralized logging",
+        boolText(profile.infrastructure.centralizedLoggingEnabled),
+      ],
+    ],
+    dataHandling: [
+      ["Data types", valueList(profile.dataHandling.dataTypesStored)],
+      ["Stores PII", boolText(profile.dataHandling.storesPii)],
+      ["Healthcare data", boolText(profile.dataHandling.storesHealthcareData)],
+      ["Encryption at rest", boolText(profile.dataHandling.encryptionAtRest)],
+      [
+        "Encryption in transit",
+        boolText(profile.dataHandling.encryptionInTransit),
+      ],
+      [
+        "Production data in development",
+        boolText(profile.dataHandling.productionDataInDevelopment),
+      ],
+      [
+        "Retention policy",
+        boolText(profile.dataHandling.retentionPolicyExists),
+      ],
+    ],
+    access: [
+      ["MFA required", boolText(profile.access.mfaRequired)],
+      ["SSO enabled", boolText(profile.access.ssoEnabled)],
+      ["Shared accounts", boolText(profile.access.sharedAccountsExist)],
+      ["Offboarding", boolText(profile.access.offboardingProcessExists)],
+      ["Access reviews", boolText(profile.access.accessReviewsPerformed)],
+      [
+        "Privileged access restricted",
+        boolText(profile.access.privilegedAccessRestricted),
+      ],
+    ],
+  }
+
+  return (
+    <div className="grid gap-4">
+      <DetailGrid rows={rowsBySection[section]} />
+      <Button
+        className="w-fit"
+        type="button"
+        variant="outline"
+        onClick={onEdit}
+      >
+        Edit
+      </Button>
+    </div>
+  )
+}
+
 export const Workspace = ({
   defaultValues,
   vendors,
+  providers,
+  providersError,
+  providersLoading,
   error,
   saveState,
   onSaveProfile,
@@ -29,6 +217,9 @@ export const Workspace = ({
 }: {
   defaultValues: ProfileDraft
   vendors: Vendor[]
+  providers: Provider[]
+  providersError: string | null
+  providersLoading: boolean
   error: string | null
   saveState: MutationState
   onSaveProfile: (profile: ProfileDraft) => void
@@ -36,106 +227,221 @@ export const Workspace = ({
   onUpdateVendor: (id: string, vendor: VendorInput) => void
   onDeleteVendor: (vendor: Vendor) => void
 }) => {
-  const { editingVendorId, startEditingVendor } = useSecurityUiStore()
+  const [showCustomVendorForm, setShowCustomVendorForm] = useState(false)
+  const {
+    activeWorkspaceView,
+    editingCompanySection,
+    editingVendorId,
+    setActiveWorkspaceView,
+    setEditingCompanySection,
+    startEditingVendor,
+  } = useSecurityUiStore()
   const editingVendor = vendors.find((vendor) => vendor.id === editingVendorId)
 
   return (
-    <main className="min-h-svh bg-slate-50 px-4 py-6 text-slate-900 md:px-8">
-      <div className="mx-auto grid max-w-6xl gap-6">
-        <ProfileForm defaultValues={defaultValues} onSubmit={onSaveProfile}>
-          {(form) => (
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader>
+          <p className="text-sm font-semibold text-blue-700">ComplyFlow</p>
+          <p className="mt-1 text-lg font-semibold text-slate-950">
+            {defaultValues.company.companyName || "Security workspace"}
+          </p>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarMenu>
+            <SidebarMenuButton
+              active={activeWorkspaceView === "dashboard"}
+              onClick={() => setActiveWorkspaceView("dashboard")}
+            >
+              <LayoutDashboard className="size-4" />
+              Dashboard
+            </SidebarMenuButton>
+            <SidebarMenuButton
+              active={activeWorkspaceView === "company"}
+              onClick={() => setActiveWorkspaceView("company")}
+            >
+              <Building2 className="size-4" />
+              Company
+            </SidebarMenuButton>
+            <SidebarMenuButton
+              active={activeWorkspaceView === "vendors"}
+              onClick={() => setActiveWorkspaceView("vendors")}
+            >
+              <Users className="size-4" />
+              Vendors
+            </SidebarMenuButton>
+          </SidebarMenu>
+        </SidebarContent>
+        <SidebarFooter>
+          <div className="flex items-center gap-3 rounded-md px-2 py-2">
+            <div className="flex size-9 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
+              {defaultValues.company.companyName.slice(0, 1).toUpperCase() ||
+                "U"}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-900">
+                Workspace user
+              </p>
+              <p className="text-xs text-slate-500">Founder</p>
+            </div>
+          </div>
+        </SidebarFooter>
+      </Sidebar>
+
+      <SidebarInset>
+        <main className="grid gap-6 px-4 py-6 md:px-8">
+          <header className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+            <div>
+              <p className="text-sm font-semibold text-blue-700">
+                {activeWorkspaceView === "dashboard"
+                  ? "Dashboard"
+                  : activeWorkspaceView === "company"
+                    ? "Company"
+                    : "Vendors"}
+              </p>
+              <h1 className="mt-1 text-2xl font-semibold text-slate-950">
+                {activeWorkspaceView === "dashboard"
+                  ? "Security readiness dashboard"
+                  : activeWorkspaceView === "company"
+                    ? "Company profile"
+                    : "Vendor inventory"}
+              </h1>
+            </div>
+            {saveState === "saved" && (
+              <span className="inline-flex w-fit items-center gap-1 rounded-md bg-green-50 px-2 py-1 text-sm font-medium text-green-800">
+                <Check className="size-4" />
+                Saved
+              </span>
+            )}
+          </header>
+
+          {error && (
+            <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800">
+              {error}
+            </p>
+          )}
+
+          {activeWorkspaceView === "dashboard" && (
             <>
-              <header className="flex flex-col justify-between gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm md:flex-row md:items-center">
-                <div>
-                  <p className="text-sm font-semibold text-blue-700">
-                    ComplyFlow
-                  </p>
-                  <h1 className="mt-1 text-2xl font-semibold text-slate-950">
-                    {form.watch("company.companyName") ||
-                      "Security program snapshot"}
-                  </h1>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Single source-of-truth for basic posture, data handling,
-                    access, and vendors.
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  {saveState === "saved" && (
-                    <span className="inline-flex items-center gap-1 rounded-md bg-green-50 px-2 py-1 text-sm font-medium text-green-800">
-                      <Check className="size-4" />
-                      Saved
-                    </span>
-                  )}
-                  <Button disabled={saveState === "loading"} type="submit">
-                    {saveState === "loading" ? <Loader2 /> : <Save />}
-                    Save changes
-                  </Button>
-                </div>
-              </header>
-
-              {error && (
-                <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800">
-                  {error}
-                </p>
-              )}
-
-              <SummaryTiles profile={form.watch()} vendors={vendors} />
-
-              <div className="grid gap-5 xl:grid-cols-2">
-                <Section
-                  description="Operational context customers ask for early."
-                  title="Company profile"
-                >
-                  <ProfileCompanyFields form={form} />
-                </Section>
-                <Section
-                  description="The baseline systems behind the product."
-                  title="Infrastructure"
-                >
-                  <ProfileInfrastructureFields form={form} />
-                </Section>
-                <Section
-                  description="Data categories and protection practices."
-                  title="Data handling"
-                >
-                  <ProfileDataHandlingFields form={form} />
-                </Section>
-                <Section
-                  description="Access hygiene and account risk."
-                  title="Access"
-                >
-                  <ProfileAccessFields form={form} />
-                </Section>
-              </div>
+              <SummaryTiles profile={defaultValues} vendors={vendors} />
+              <Section
+                description="Current source-of-truth posture captured during onboarding."
+                title="Snapshot"
+              >
+                <CompanyReadOnlySection
+                  profile={defaultValues}
+                  section="company"
+                  onEdit={() => {
+                    setActiveWorkspaceView("company")
+                    setEditingCompanySection("company")
+                  }}
+                />
+              </Section>
             </>
           )}
-        </ProfileForm>
 
-        <Section
-          description="Subprocessors, DPA state, criticality, and ownership."
-          title="Vendor inventory"
-        >
-          <VendorForm
-            defaultValues={
-              editingVendor ? toVendorInput(editingVendor) : emptyVendorDraft
-            }
-            submitLabel={editingVendor ? "Update vendor" : "Add vendor"}
-            onSubmit={(vendor) => {
-              if (editingVendor) {
-                onUpdateVendor(editingVendor.id, vendor)
-                startEditingVendor(null)
-              } else {
-                onCreateVendor(vendor)
-              }
-            }}
-          />
-          <VendorList
-            vendors={vendors}
-            onDelete={onDeleteVendor}
-            onEdit={(vendor) => startEditingVendor(vendor.id)}
-          />
-        </Section>
-      </div>
-    </main>
+          {activeWorkspaceView === "company" && (
+            <div className="grid gap-5">
+              {companySections.map((section) => (
+                <Section
+                  description={section.description}
+                  key={section.id}
+                  title={section.title}
+                >
+                  {editingCompanySection === section.id ? (
+                    <ProfileForm
+                      defaultValues={defaultValues}
+                      onSubmit={(profile) => {
+                        onSaveProfile(profile)
+                        setEditingCompanySection(null)
+                      }}
+                    >
+                      {(form) => (
+                        <>
+                          <CompanySectionFields
+                            form={form}
+                            section={section.id}
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              disabled={saveState === "loading"}
+                              type="submit"
+                            >
+                              {saveState === "loading" ? <Loader2 /> : <Save />}
+                              Save section
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => setEditingCompanySection(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </ProfileForm>
+                  ) : (
+                    <CompanyReadOnlySection
+                      profile={defaultValues}
+                      section={section.id}
+                      onEdit={() => setEditingCompanySection(section.id)}
+                    />
+                  )}
+                </Section>
+              ))}
+            </div>
+          )}
+
+          {activeWorkspaceView === "vendors" && (
+            <Section
+              description="Add common providers from the catalog or maintain a custom entry."
+              title="Vendors"
+            >
+              <ProviderSelector
+                error={providersError}
+                isLoading={providersLoading}
+                providers={providers}
+                onChooseOther={() => {
+                  startEditingVendor(null)
+                  setShowCustomVendorForm(true)
+                }}
+                onChooseProvider={(provider) =>
+                  onCreateVendor(vendorInputFromProvider(provider))
+                }
+              />
+              {(showCustomVendorForm || editingVendor) && (
+                <VendorForm
+                  defaultValues={
+                    editingVendor
+                      ? toVendorInput(editingVendor)
+                      : emptyVendorDraft
+                  }
+                  submitLabel={editingVendor ? "Update vendor" : "Add vendor"}
+                  onSubmit={(vendor) => {
+                    if (editingVendor) {
+                      onUpdateVendor(editingVendor.id, vendor)
+                      startEditingVendor(null)
+                    } else {
+                      onCreateVendor(vendor)
+                    }
+
+                    setShowCustomVendorForm(false)
+                  }}
+                />
+              )}
+              <VendorList
+                vendors={vendors}
+                onDelete={onDeleteVendor}
+                onEdit={(vendor) => {
+                  startEditingVendor(vendor.id)
+                  setShowCustomVendorForm(true)
+                }}
+              />
+            </Section>
+          )}
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

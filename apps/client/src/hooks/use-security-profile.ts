@@ -4,6 +4,7 @@ import { type Vendor, type VendorInput } from "@complyflow/shared"
 import {
   createVendor,
   deleteVendor,
+  getProviders,
   getSecurityProfile,
   saveSecurityProfile,
   updateVendor,
@@ -11,11 +12,18 @@ import {
 import { type ProfileDraft } from "@/types/security-profile"
 
 const securityProfileQueryKey = ["security-profile"] as const
+const providersQueryKey = ["providers"] as const
 
 export const useSecurityProfile = () =>
   useQuery({
     queryKey: securityProfileQueryKey,
     queryFn: getSecurityProfile,
+  })
+
+export const useProviders = () =>
+  useQuery({
+    queryKey: providersQueryKey,
+    queryFn: getProviders,
   })
 
 export const useSaveSecurityProfile = () => {

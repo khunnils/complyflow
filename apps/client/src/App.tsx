@@ -2,6 +2,7 @@ import {
   useCreateVendor,
   useCreateVendors,
   useDeleteVendor,
+  useProviders,
   useSaveSecurityProfile,
   useSecurityProfile,
   useUpdateVendor,
@@ -33,6 +34,7 @@ const errorMessage = (...errors: Array<Error | null>) =>
 
 export const App = () => {
   const securityProfile = useSecurityProfile()
+  const providers = useProviders()
   const saveProfile = useSaveSecurityProfile()
   const createVendor = useCreateVendor()
   const createVendors = useCreateVendors()
@@ -76,6 +78,9 @@ export const App = () => {
       <Onboarding
         defaultValues={emptyProfileDraft}
         error={error}
+        providers={providers.data ?? []}
+        providersError={providers.error?.message ?? null}
+        providersLoading={providers.isLoading}
         saveState={saveState}
         onSave={(profileDraft, onboardingVendors) => {
           saveProfile.mutate(profileDraft, {
@@ -94,6 +99,9 @@ export const App = () => {
     <Workspace
       defaultValues={profile}
       error={error}
+      providers={providers.data ?? []}
+      providersError={providers.error?.message ?? null}
+      providersLoading={providers.isLoading}
       saveState={saveState}
       vendors={vendors}
       onCreateVendor={(vendor) => createVendor.mutate(vendor)}

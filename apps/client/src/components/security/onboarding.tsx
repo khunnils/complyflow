@@ -1,19 +1,13 @@
-import {
-  Activity,
-  Building2,
-  ChevronLeft,
-  ChevronRight,
-  Cloud,
-  Database,
-  KeyRound,
-  Loader2,
-  Save,
-  ShieldCheck,
-} from "lucide-react"
-import { type VendorInput } from "@complyflow/shared"
+import { ChevronLeft, ChevronRight, Loader2, Save } from "lucide-react"
+import { type Provider, type VendorInput } from "@complyflow/shared"
+import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { emptyVendorDraft, toVendorInput } from "@/lib/profile"
+import {
+  emptyVendorDraft,
+  toVendorInput,
+  vendorInputFromProvider,
+} from "@/lib/profile"
 import {
   ProfileAccessFields,
   ProfileCompanyFields,
@@ -21,33 +15,60 @@ import {
   ProfileForm,
   ProfileInfrastructureFields,
 } from "@/components/security/profile-form"
-import { Section } from "@/components/security/section"
-import { SummaryTiles } from "@/components/security/summary-tiles"
+import { ProviderSelector } from "@/components/security/provider-selector"
 import { VendorForm } from "@/components/security/vendor-form"
 import { VendorList } from "@/components/security/vendor-list"
 import { useSecurityUiStore } from "@/stores/security-ui-store"
 import { type MutationState, type ProfileDraft } from "@/types/security-profile"
 
-const wizardSteps = [
-  { label: "Company", icon: Building2 },
-  { label: "Infrastructure", icon: Cloud },
-  { label: "Data", icon: Database },
-  { label: "Access", icon: KeyRound },
-  { label: "Vendors", icon: Activity },
-  { label: "Review", icon: ShieldCheck },
+const onboardingSteps = [
+  {
+    label: "Company",
+    title: "Company profile",
+    description:
+      "Basic context for security reviews and future policy generation.",
+  },
+  {
+    label: "Infrastructure",
+    title: "Infrastructure profile",
+    description:
+      "The systems and operating practices that shape your baseline posture.",
+  },
+  {
+    label: "Data",
+    title: "Data handling",
+    description: "A practical overview of the data you store and protect.",
+  },
+  {
+    label: "Access",
+    title: "Access controls",
+    description: "How people get access, keep access, and lose access.",
+  },
+  {
+    label: "Vendors",
+    title: "Vendor inventory",
+    description: "Choose common providers or add your own critical vendors.",
+  },
 ]
 
 export const Onboarding = ({
   defaultValues,
   error,
+  providers,
+  providersError,
+  providersLoading,
   saveState,
   onSave,
 }: {
   defaultValues: ProfileDraft
   error: string | null
+  providers: Provider[]
+  providersError: string | null
+  providersLoading: boolean
   saveState: MutationState
   onSave: (profile: ProfileDraft, vendors: VendorInput[]) => void
 }) => {
+  const [showCustomVendorForm, setShowCustomVendorForm] = useState(false)
   const {
     addOnboardingVendor,
     editingVendorId,
@@ -58,46 +79,26 @@ export const Onboarding = ({
     startEditingVendor,
     updateOnboardingVendor,
   } = useSecurityUiStore()
+  const currentStep = onboardingSteps[onboardingStep]
   const editingVendor = onboardingVendors.find(
     (vendor) => vendor.id === editingVendorId
   )
+  const isFinalStep = onboardingStep === onboardingSteps.length - 1
 
   return (
     <main className="min-h-svh bg-slate-50 px-4 py-6 text-slate-900 md:px-8">
-      <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[280px_1fr]">
-        <aside className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="mb-5">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
             <p className="text-sm font-semibold text-blue-700">ComplyFlow</p>
-            <h1 className="mt-2 text-2xl font-semibold text-slate-950">
+            <h1 className="mt-1 text-2xl font-semibold text-slate-950">
               Security snapshot
             </h1>
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              Capture the basics once, then keep the profile current as your
-              team grows.
-            </p>
           </div>
-          <nav className="grid gap-1">
-            {wizardSteps.map((item, index) => {
-              const Icon = item.icon
-
-              return (
-                <button
-                  className={`flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium ${
-                    index === onboardingStep
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-slate-600 hover:bg-slate-100"
-                  }`}
-                  key={item.label}
-                  type="button"
-                  onClick={() => setOnboardingStep(index)}
-                >
-                  <Icon className="size-4" />
-                  {item.label}
-                </button>
-              )
-            })}
-          </nav>
-        </aside>
+          <span className="rounded-md bg-white px-3 py-1 text-sm font-medium text-slate-600 ring-1 ring-slate-200">
+            {onboardingStep + 1}/{onboardingSteps.length}
+          </span>
+        </div>
 
         <ProfileForm
           defaultValues={defaultValues}
@@ -106,121 +107,107 @@ export const Onboarding = ({
           }
         >
           {(form) => (
-            <>
-              {onboardingStep === 0 && (
-                <Section
-                  description="Basic context for security reviews and future policy generation."
-                  title="Company profile"
-                >
-                  <ProfileCompanyFields form={form} />
-                </Section>
-              )}
-              {onboardingStep === 1 && (
-                <Section
-                  description="The systems and operating practices that shape your baseline posture."
-                  title="Infrastructure profile"
-                >
-                  <ProfileInfrastructureFields form={form} />
-                </Section>
-              )}
-              {onboardingStep === 2 && (
-                <Section
-                  description="A practical overview of the data you store and how it is protected."
-                  title="Data handling"
-                >
-                  <ProfileDataHandlingFields form={form} />
-                </Section>
-              )}
-              {onboardingStep === 3 && (
-                <Section
-                  description="How people get access, keep access, and lose access."
-                  title="Access controls"
-                >
-                  <ProfileAccessFields form={form} />
-                </Section>
-              )}
-              {onboardingStep === 4 && (
-                <Section
-                  description="Track critical subprocessors before customers ask."
-                  title="Vendor inventory"
-                >
-                  <VendorForm
-                    defaultValues={
-                      editingVendor
-                        ? toVendorInput(editingVendor)
-                        : emptyVendorDraft
-                    }
-                    submitLabel={editingVendor ? "Update vendor" : "Add vendor"}
-                    onSubmit={(vendor) => {
-                      if (editingVendor) {
-                        updateOnboardingVendor(editingVendor.id, vendor)
-                      } else {
-                        addOnboardingVendor(vendor)
-                      }
-                    }}
-                  />
-                  <VendorList
-                    vendors={onboardingVendors}
-                    onDelete={(vendor) => removeOnboardingVendor(vendor.id)}
-                    onEdit={(vendor) => startEditingVendor(vendor.id)}
-                  />
-                </Section>
-              )}
-              {onboardingStep === 5 && (
-                <Section
-                  description="Save this as the source-of-truth security profile."
-                  title="Review and save"
-                >
-                  <SummaryTiles
-                    profile={form.watch()}
-                    vendors={onboardingVendors}
-                  />
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                    <p className="font-medium text-slate-900">
-                      {form.watch("company.companyName") || "Unnamed company"}
-                    </p>
-                    <p className="mt-1">
-                      {form.watch("company.employeeCount")} employees ·{" "}
-                      {form.watch("company.complianceGoals").join(", ") ||
-                        "No goals listed"}
-                    </p>
-                  </div>
-                  {error && (
-                    <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800">
-                      {error}
-                    </p>
-                  )}
-                  <Button
-                    className="w-fit"
-                    disabled={saveState === "loading"}
-                    type="submit"
-                  >
-                    {saveState === "loading" ? <Loader2 /> : <Save />}
-                    Save profile
-                  </Button>
-                </Section>
-              )}
-
-              <div className="flex items-center justify-between">
-                <Button
-                  disabled={onboardingStep === 0}
-                  type="button"
-                  variant="outline"
-                  onClick={() => setOnboardingStep(onboardingStep - 1)}
-                >
-                  <ChevronLeft />
-                  Back
-                </Button>
-                <Button
-                  disabled={onboardingStep === wizardSteps.length - 1}
-                  type="button"
-                  onClick={() => setOnboardingStep(onboardingStep + 1)}
-                >
-                  Next
-                  <ChevronRight />
-                </Button>
+            <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+              <div className="mb-6">
+                <p className="text-sm font-medium text-slate-500">
+                  {currentStep?.label}
+                </p>
+                <h2 className="mt-2 text-3xl font-semibold text-slate-950">
+                  {currentStep?.title}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  {currentStep?.description}
+                </p>
               </div>
-            </>
+
+              <div className="grid gap-5">
+                {onboardingStep === 0 && <ProfileCompanyFields form={form} />}
+                {onboardingStep === 1 && (
+                  <ProfileInfrastructureFields form={form} />
+                )}
+                {onboardingStep === 2 && (
+                  <ProfileDataHandlingFields form={form} />
+                )}
+                {onboardingStep === 3 && <ProfileAccessFields form={form} />}
+                {onboardingStep === 4 && (
+                  <>
+                    <ProviderSelector
+                      error={providersError}
+                      isLoading={providersLoading}
+                      providers={providers}
+                      onChooseOther={() => {
+                        startEditingVendor(null)
+                        setShowCustomVendorForm(true)
+                      }}
+                      onChooseProvider={(provider) =>
+                        addOnboardingVendor(vendorInputFromProvider(provider))
+                      }
+                    />
+                    {(showCustomVendorForm || editingVendor) && (
+                      <VendorForm
+                        defaultValues={
+                          editingVendor
+                            ? toVendorInput(editingVendor)
+                            : emptyVendorDraft
+                        }
+                        submitLabel={
+                          editingVendor ? "Update vendor" : "Add vendor"
+                        }
+                        onSubmit={(vendor) => {
+                          if (editingVendor) {
+                            updateOnboardingVendor(editingVendor.id, vendor)
+                          } else {
+                            addOnboardingVendor(vendor)
+                          }
+
+                          setShowCustomVendorForm(false)
+                        }}
+                      />
+                    )}
+                    <VendorList
+                      vendors={onboardingVendors}
+                      onDelete={(vendor) => removeOnboardingVendor(vendor.id)}
+                      onEdit={(vendor) => {
+                        startEditingVendor(vendor.id)
+                        setShowCustomVendorForm(true)
+                      }}
+                    />
+                  </>
+                )}
+
+                {error && (
+                  <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800">
+                    {error}
+                  </p>
+                )}
+
+                <div className="flex items-center justify-between border-t border-slate-200 pt-5">
+                  <Button
+                    disabled={onboardingStep === 0}
+                    type="button"
+                    variant="outline"
+                    onClick={() => setOnboardingStep(onboardingStep - 1)}
+                  >
+                    <ChevronLeft />
+                    Back
+                  </Button>
+                  {isFinalStep ? (
+                    <Button disabled={saveState === "loading"} type="submit">
+                      {saveState === "loading" ? <Loader2 /> : <Save />}
+                      Finish onboarding
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      onClick={() => setOnboardingStep(onboardingStep + 1)}
+                    >
+                      Next
+                      <ChevronRight />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </section>
           )}
         </ProfileForm>
       </div>

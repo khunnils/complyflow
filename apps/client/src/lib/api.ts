@@ -1,7 +1,9 @@
 import {
   securityProgramSnapshotSchema,
   structuredErrorSchema,
+  providerSchema,
   vendorSchema,
+  type Provider,
   type SecurityProgramSnapshot,
   type Vendor,
   type VendorInput,
@@ -45,6 +47,9 @@ const apiRequest = async <T>(
 
 export const getSecurityProfile = (): Promise<SecurityProgramSnapshot> =>
   apiRequest("/security-profile", securityProgramSnapshotSchema)
+
+export const getProviders = (): Promise<Provider[]> =>
+  apiRequest("/providers", z.array(providerSchema))
 
 export const saveSecurityProfile = (
   profile: ProfileDraft

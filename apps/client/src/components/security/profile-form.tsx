@@ -6,7 +6,7 @@ import {
   infrastructureProfileSchema,
 } from "@complyflow/shared"
 import { type ReactNode } from "react"
-import { type Resolver, useForm } from "react-hook-form"
+import { type Resolver, type UseFormReturn, useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { AccessProfileFields } from "@/components/security/access-profile-fields"
@@ -22,13 +22,15 @@ const profileDraftSchema = z.object({
   access: accessProfileSchema,
 })
 
+export type ProfileFormReturn = UseFormReturn<ProfileDraft>
+
 export const ProfileForm = ({
   defaultValues,
   children,
   onSubmit,
 }: {
   defaultValues: ProfileDraft
-  children: (form: ReturnType<typeof useForm<ProfileDraft>>) => ReactNode
+  children: (form: ProfileFormReturn) => ReactNode
   onSubmit: (profile: ProfileDraft) => void
 }) => {
   const form = useForm<ProfileDraft>({
