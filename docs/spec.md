@@ -60,6 +60,7 @@ The MVP includes:
 5. Policy Generation
 6. Security Summary Generation
 7. Readiness Dashboard
+8. Document Templates
 
 # Core MVP Features
 
@@ -189,3 +190,31 @@ Reduces account compromise risk.
 Evidence:
 - Google Workspace screenshot
 - GitHub MFA enforcement screenshot
+```
+
+# 8. Document Templates
+
+## Goal
+
+Provide reusable markdown templates for security documents and customer-facing policy drafts.
+
+System templates are versioned markdown files in the repository. Each file starts with basic metadata:
+
+```text
+' slug: template-slug
+' name: template name
+' description: template description
+```
+
+Template content uses Jinja-style placeholders such as `{{ company.name }}`.
+
+## UX
+
+The app includes a Templates sidebar option.
+
+The Templates screen shows:
+
+- System templates at the top, with slug, name, description, and an Add action.
+- Organization templates below, created by copying a system template.
+
+Organization templates can be edited or deleted after they are added. Editing covers name, slug, and markdown content.

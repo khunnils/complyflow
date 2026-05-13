@@ -2,9 +2,10 @@ import { type Vendor, type VendorInput } from "@complyflow/shared"
 import { create } from "zustand"
 
 type SecurityUiState = {
-  activeWorkspaceView: "dashboard" | "company" | "vendors"
+  activeWorkspaceView: "dashboard" | "company" | "templates" | "vendors"
   onboardingStep: number
   editingVendorId: string | null
+  editingTemplateId: string | null
   onboardingVendors: Vendor[]
   editingCompanySection:
     | "company"
@@ -15,6 +16,7 @@ type SecurityUiState = {
   setActiveWorkspaceView: (view: SecurityUiState["activeWorkspaceView"]) => void
   setOnboardingStep: (step: number) => void
   startEditingVendor: (id: string | null) => void
+  startEditingTemplate: (id: string | null) => void
   setEditingCompanySection: (
     section: SecurityUiState["editingCompanySection"]
   ) => void
@@ -28,11 +30,13 @@ export const useSecurityUiStore = create<SecurityUiState>((set) => ({
   activeWorkspaceView: "dashboard",
   onboardingStep: 0,
   editingVendorId: null,
+  editingTemplateId: null,
   editingCompanySection: null,
   onboardingVendors: [],
   setActiveWorkspaceView: (view) => set({ activeWorkspaceView: view }),
   setOnboardingStep: (step) => set({ onboardingStep: step }),
   startEditingVendor: (id) => set({ editingVendorId: id }),
+  startEditingTemplate: (id) => set({ editingTemplateId: id }),
   setEditingCompanySection: (section) =>
     set({ editingCompanySection: section }),
   addOnboardingVendor: (vendor) =>

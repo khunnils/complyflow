@@ -6,8 +6,10 @@ import Fastify, {
 import {
   accessProfileSchema,
   companyProfileSchema,
+  createOrganizationTemplateFromSystemSchema,
   dataHandlingProfileSchema,
   infrastructureProfileSchema,
+  organizationTemplateInputSchema,
   vendorInputSchema,
 } from "@complyflow/shared"
 import { z } from "zod"
@@ -24,6 +26,11 @@ import {
   type SecurityProfileRepository,
   InMemorySecurityProfileRepository,
 } from "./repository.js"
+import {
+  FileSystemTemplateSource,
+  StaticSystemTemplateSource,
+  type SystemTemplateSource,
+} from "./system-templates.js"
 
 const securityProfileBodySchema = z.object({
   company: companyProfileSchema,
@@ -35,6 +42,7 @@ const securityProfileBodySchema = z.object({
 export type CreateAppOptions = {
   repository?: SecurityProfileRepository
   providerSource?: ProviderSource
+  systemTemplateSource?: SystemTemplateSource
   logger?: FastifyServerOptions["logger"]
 }
 
@@ -48,6 +56,7 @@ export async function createApp({
         apiConfig.airtableApiKey
       )
     : new StaticProviderSource(),
+  systemTemplateSource = new FileSystemTemplateSource(),
   logger = false,
 }: CreateAppOptions = {}): Promise<FastifyInstance> {
   const app = Fastify({ logger })
@@ -75,6 +84,11 @@ export async function createApp({
   app.get("/security-profile", async () => repository.getSnapshot())
 
   app.get("/providers", async () => providerSource.listProviders())
+
+  app.get("/templates", async () => ({
+    systemTemplates: await systemTemplateSource.listSystemTemplates(),
+    organizationTemplates: await repository.listOrganizationTemplates(),
+  }))
 
   app.put("/security-profile", async (request, reply) => {
     const body = securityProfileBodySchema.parse(request.body)
@@ -120,6 +134,67 @@ export async function createApp({
     }
   )
 
+  app.post("/templates/organization", async (request, reply) => {
+    const body = createOrganizationTemplateFromSystemSchema.parse(request.body)
+    const systemTemplates = await systemTemplateSource.listSystemTemplates()
+    const systemTemplate = systemTemplates.find(
+      (template) => template.slug === body.sourceSystemTemplateSlug
+    )
+
+    if (!systemTemplate) {
+      throw new ApiError(
+        "SYSTEM_TEMPLATE_NOT_FOUND",
+        "System template was not found.",
+        404
+      )
+    }
+
+    const template =
+      await repository.createOrganizationTemplateFromSystem(systemTemplate)
+
+    return reply.status(201).send(template)
+  })
+
+  app.put<{ Params: { id: string } }>(
+    "/templates/organization/:id",
+    async (request, reply) => {
+      const body = organizationTemplateInputSchema.parse(request.body)
+      const template = await repository.updateOrganizationTemplate(
+        request.params.id,
+        body
+      )
+
+      if (!template) {
+        throw new ApiError(
+          "ORGANIZATION_TEMPLATE_NOT_FOUND",
+          "Organization template was not found.",
+          404
+        )
+      }
+
+      return reply.send(template)
+    }
+  )
+
+  app.delete<{ Params: { id: string } }>(
+    "/templates/organization/:id",
+    async (request, reply) => {
+      const deleted = await repository.deleteOrganizationTemplate(
+        request.params.id
+      )
+
+      if (!deleted) {
+        throw new ApiError(
+          "ORGANIZATION_TEMPLATE_NOT_FOUND",
+          "Organization template was not found.",
+          404
+        )
+      }
+
+      return reply.status(204).send()
+    }
+  )
+
   return app
 }
 
@@ -134,6 +209,20 @@ export function createTestApp() {
         category: "Source Control",
         securityCriticality: "Critical",
         handlesCustomerData: false,
+      },
+    ]),
+    systemTemplateSource: new StaticSystemTemplateSource([
+      {
+        slug: "security-policy",
+        name: "Security Policy",
+        description: "A practical starter security policy.",
+        content: "# {{ company.name }} Security Policy\n",
+      },
+      {
+        slug: "incident-response-plan",
+        name: "Incident Response Plan",
+        description: "A lightweight incident response outline.",
+        content: "# {{ company.name }} Incident Response Plan\n",
       },
     ]),
   })

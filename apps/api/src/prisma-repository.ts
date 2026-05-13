@@ -1,4 +1,5 @@
 import {
+  mapOrganizationTemplateRecord,
   mapOrganizationRecord,
   mapVendorRecord,
   prisma,
@@ -14,7 +15,10 @@ import {
   type DataHandlingProfile,
   type InfrastructureProfile,
   type OrganizationSecurityProfile,
+  type OrganizationTemplate,
+  type OrganizationTemplateInput,
   type SecurityProgramSnapshot,
+  type SystemTemplate,
   type Vendor,
   type VendorInput,
 } from "@complyflow/shared";
@@ -200,6 +204,88 @@ export class PrismaSecurityProfileRepository implements SecurityProfileRepositor
     }
 
     await this.client.vendor.delete({ where: { id } });
+    return true;
+  }
+
+  async listOrganizationTemplates(): Promise<OrganizationTemplate[]> {
+    const organization = await this.client.organization.findFirst({
+      where: SINGLE_ORG_FILTER,
+    });
+
+    if (!organization) {
+      return [];
+    }
+
+    const templates = await this.client.organizationTemplate.findMany({
+      where: { organizationId: organization.id },
+      orderBy: { createdAt: "asc" },
+    });
+
+    return templates.map(mapOrganizationTemplateRecord);
+  }
+
+  async createOrganizationTemplateFromSystem(
+    systemTemplate: SystemTemplate,
+  ): Promise<OrganizationTemplate> {
+    const organization = await this.getOrCreateOrganization();
+
+    try {
+      const template = await this.client.organizationTemplate.create({
+        data: {
+          organizationId: organization.id,
+          name: systemTemplate.name,
+          slug: systemTemplate.slug,
+          sourceSystemTemplateSlug: systemTemplate.slug,
+          content: systemTemplate.content,
+        },
+      });
+
+      return mapOrganizationTemplateRecord(template);
+    } catch (error) {
+      this.throwTemplateConflict(error, systemTemplate.slug);
+    }
+  }
+
+  async updateOrganizationTemplate(
+    id: string,
+    input: OrganizationTemplateInput,
+  ): Promise<OrganizationTemplate | null> {
+    const organization = await this.getOrCreateOrganization();
+    const existing = await this.client.organizationTemplate.findFirst({
+      where: { id, organizationId: organization.id },
+    });
+
+    if (!existing) {
+      return null;
+    }
+
+    try {
+      const template = await this.client.organizationTemplate.update({
+        where: { id },
+        data: {
+          name: input.name,
+          slug: input.slug,
+          content: input.content,
+        },
+      });
+
+      return mapOrganizationTemplateRecord(template);
+    } catch (error) {
+      this.throwTemplateConflict(error, input.slug);
+    }
+  }
+
+  async deleteOrganizationTemplate(id: string): Promise<boolean> {
+    const organization = await this.getOrCreateOrganization();
+    const existing = await this.client.organizationTemplate.findFirst({
+      where: { id, organizationId: organization.id },
+    });
+
+    if (!existing) {
+      return false;
+    }
+
+    await this.client.organizationTemplate.delete({ where: { id } });
     return true;
   }
 
@@ -411,5 +497,23 @@ export class PrismaSecurityProfileRepository implements SecurityProfileRepositor
       owner: input.owner || null,
       notes: input.notes || null,
     };
+  }
+
+  private throwTemplateConflict(error: unknown, slug: string): never {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
+      throw new ApiError(
+        "ORGANIZATION_TEMPLATE_SLUG_EXISTS",
+        "An organization template with this slug already exists.",
+        409,
+        { slug },
+      );
+    }
+
+    throw error;
   }
 }

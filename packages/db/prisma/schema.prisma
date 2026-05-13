@@ -20,6 +20,7 @@ model Organization {
   dataHandlingProfile      DataHandlingProfile?
   accessProfile            AccessProfile?
   dataTypes                OrganizationDataType[]
+  templates                OrganizationTemplate[]
   vendors                  Vendor[]
   createdAt                DateTime               @default(now()) @map("created_at")
   updatedAt                DateTime               @updatedAt @map("updated_at")
@@ -113,6 +114,23 @@ model Vendor {
 
   @@index([organizationId], map: "idx_vendors_organization_id")
   @@map("vendors")
+}
+
+model OrganizationTemplate {
+  id                       String       @id(map: "organization_templates_pkey") @default(cuid())
+  organizationId           String       @map("organization_id")
+  organization             Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "organization_templates_organization_id_fkey")
+  name                     String
+  slug                     String
+  sourceSystemTemplateSlug String       @map("source_system_template_slug")
+  content                  String
+  createdAt                DateTime     @default(now()) @map("created_at")
+  updatedAt                DateTime     @updatedAt @map("updated_at")
+
+  @@unique([organizationId, slug], map: "organization_templates_organization_id_slug_key")
+  @@index([organizationId], map: "idx_organization_templates_organization_id")
+  @@index([sourceSystemTemplateSlug], map: "idx_organization_templates_source_system_template_slug")
+  @@map("organization_templates")
 }
 
 model VendorDataType {

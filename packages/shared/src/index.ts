@@ -115,6 +115,48 @@ export const providerSchema = z.object({
   handlesCustomerData: z.boolean(),
 })
 
+export const templateSlugSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .regex(
+    /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+    "Template slug must use lowercase letters, numbers, and hyphens",
+  )
+
+export const systemTemplateSchema = z.object({
+  slug: templateSlugSchema,
+  name: z.string().trim().min(1),
+  description: z.string().trim().min(1),
+  content: z.string(),
+})
+
+export const organizationTemplateSchema = z.object({
+  id: z.string().min(1),
+  organizationId: z.string().min(1),
+  name: z.string().trim().min(1),
+  slug: templateSlugSchema,
+  sourceSystemTemplateSlug: templateSlugSchema,
+  content: z.string(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+})
+
+export const organizationTemplateInputSchema = z.object({
+  name: z.string().trim().min(1, "Template name is required"),
+  slug: templateSlugSchema,
+  content: z.string(),
+})
+
+export const createOrganizationTemplateFromSystemSchema = z.object({
+  sourceSystemTemplateSlug: templateSlugSchema,
+})
+
+export const templateCatalogSchema = z.object({
+  systemTemplates: z.array(systemTemplateSchema),
+  organizationTemplates: z.array(organizationTemplateSchema),
+})
+
 export const organizationSecurityProfileSchema = z.object({
   id: z.string().min(1),
   company: companyProfileSchema,
@@ -151,6 +193,15 @@ export type AccessProfile = z.infer<typeof accessProfileSchema>
 export type VendorInput = z.infer<typeof vendorInputSchema>
 export type Vendor = z.infer<typeof vendorSchema>
 export type Provider = z.infer<typeof providerSchema>
+export type SystemTemplate = z.infer<typeof systemTemplateSchema>
+export type OrganizationTemplate = z.infer<typeof organizationTemplateSchema>
+export type OrganizationTemplateInput = z.infer<
+  typeof organizationTemplateInputSchema
+>
+export type CreateOrganizationTemplateFromSystem = z.infer<
+  typeof createOrganizationTemplateFromSystemSchema
+>
+export type TemplateCatalog = z.infer<typeof templateCatalogSchema>
 export type OrganizationSecurityProfile = z.infer<
   typeof organizationSecurityProfileSchema
 >

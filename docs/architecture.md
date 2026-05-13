@@ -64,8 +64,9 @@ Sprint 1 implements the Security Program Snapshot with single-organization seman
 - no user or membership model
 - one current organization profile
 - vendor inventory scoped to that organization
+- organization document templates scoped to that organization
 
-The API validates request payloads with `packages/shared` schemas. `packages/db` owns Prisma models and database mapping. Company attributes live on the `organizations` table, profile sections are stored in one-to-one relational tables, organization data types are stored in `organization_data_types`, and vendor inventory is stored relationally with `vendor_data_types` linking vendors to the data categories they process.
+The API validates request payloads with `packages/shared` schemas. `packages/db` owns Prisma models and database mapping. Company attributes live on the `organizations` table, profile sections are stored in one-to-one relational tables, organization data types are stored in `organization_data_types`, and vendor inventory is stored relationally with `vendor_data_types` linking vendors to the data categories they process. System document templates are versioned markdown files in `apps/api/system-templates`, while editable organization copies are stored in `organization_templates`.
 
 ## Local Development
 

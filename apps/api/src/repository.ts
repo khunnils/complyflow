@@ -1,6 +1,9 @@
 import {
   type OrganizationSecurityProfile,
+  type OrganizationTemplate,
+  type OrganizationTemplateInput,
   type SecurityProgramSnapshot,
+  type SystemTemplate,
   type Vendor,
   type VendorInput,
 } from "@complyflow/shared";
@@ -21,6 +24,15 @@ export interface SecurityProfileRepository {
   createVendor(input: VendorInput): Promise<Vendor>;
   updateVendor(id: string, input: VendorInput): Promise<Vendor | null>;
   deleteVendor(id: string): Promise<boolean>;
+  listOrganizationTemplates(): Promise<OrganizationTemplate[]>;
+  createOrganizationTemplateFromSystem(
+    systemTemplate: SystemTemplate,
+  ): Promise<OrganizationTemplate>;
+  updateOrganizationTemplate(
+    id: string,
+    input: OrganizationTemplateInput,
+  ): Promise<OrganizationTemplate | null>;
+  deleteOrganizationTemplate(id: string): Promise<boolean>;
 }
 
 function now() {
@@ -34,6 +46,7 @@ function newId(prefix: string) {
 export class InMemorySecurityProfileRepository implements SecurityProfileRepository {
   private organization: OrganizationSecurityProfile | null = null;
   private vendors = new Map<string, Vendor>();
+  private organizationTemplates = new Map<string, OrganizationTemplate>();
 
   async getSnapshot(): Promise<SecurityProgramSnapshot> {
     return {
@@ -100,6 +113,85 @@ export class InMemorySecurityProfileRepository implements SecurityProfileReposit
     return this.vendors.delete(id);
   }
 
+  async listOrganizationTemplates(): Promise<OrganizationTemplate[]> {
+    return Array.from(this.organizationTemplates.values());
+  }
+
+  async createOrganizationTemplateFromSystem(
+    systemTemplate: SystemTemplate,
+  ): Promise<OrganizationTemplate> {
+    const timestamp = now();
+    const organizationId = this.getOrCreateOrganizationId();
+    const existing = Array.from(this.organizationTemplates.values()).find(
+      (template) =>
+        template.organizationId === organizationId &&
+        template.slug === systemTemplate.slug,
+    );
+
+    if (existing) {
+      throw new ApiError(
+        "ORGANIZATION_TEMPLATE_SLUG_EXISTS",
+        "An organization template with this slug already exists.",
+        409,
+        { slug: systemTemplate.slug },
+      );
+    }
+
+    const template: OrganizationTemplate = {
+      id: newId("template"),
+      organizationId,
+      name: systemTemplate.name,
+      slug: systemTemplate.slug,
+      sourceSystemTemplateSlug: systemTemplate.slug,
+      content: systemTemplate.content,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    };
+
+    this.organizationTemplates.set(template.id, template);
+    return template;
+  }
+
+  async updateOrganizationTemplate(
+    id: string,
+    input: OrganizationTemplateInput,
+  ): Promise<OrganizationTemplate | null> {
+    const currentTemplate = this.organizationTemplates.get(id);
+
+    if (!currentTemplate) {
+      return null;
+    }
+
+    const duplicate = Array.from(this.organizationTemplates.values()).find(
+      (template) =>
+        template.id !== id &&
+        template.organizationId === currentTemplate.organizationId &&
+        template.slug === input.slug,
+    );
+
+    if (duplicate) {
+      throw new ApiError(
+        "ORGANIZATION_TEMPLATE_SLUG_EXISTS",
+        "An organization template with this slug already exists.",
+        409,
+        { slug: input.slug },
+      );
+    }
+
+    const template: OrganizationTemplate = {
+      ...currentTemplate,
+      ...input,
+      updatedAt: now(),
+    };
+
+    this.organizationTemplates.set(id, template);
+    return template;
+  }
+
+  async deleteOrganizationTemplate(id: string): Promise<boolean> {
+    return this.organizationTemplates.delete(id);
+  }
+
   private validVendorDataTypeNames(input: VendorInput) {
     if (input.dataProcessingLevel === "none") {
       return [];
@@ -130,5 +222,55 @@ export class InMemorySecurityProfileRepository implements SecurityProfileReposit
     }
 
     return requestedNames;
+  }
+
+  private getOrCreateOrganizationId() {
+    if (!this.organization) {
+      const timestamp = now();
+
+      this.organization = {
+        id: newId("org"),
+        company: {
+          companyName: "Untitled company",
+          employeeCount: 1,
+          industries: [],
+          regions: [],
+          handlesPii: false,
+          handlesSensitiveData: false,
+          complianceGoals: [],
+        },
+        infrastructure: {
+          cloudProviders: [],
+          sourceControlProvider: "",
+          authProvider: "",
+          passwordManager: "",
+          mfaEnabled: false,
+          encryptedDevicesRequired: false,
+          backupsEnabled: false,
+          centralizedLoggingEnabled: false,
+        },
+        dataHandling: {
+          dataTypesStored: [],
+          storesPii: false,
+          storesHealthcareData: false,
+          encryptionAtRest: false,
+          encryptionInTransit: false,
+          productionDataInDevelopment: false,
+          retentionPolicyExists: false,
+        },
+        access: {
+          mfaRequired: false,
+          ssoEnabled: false,
+          sharedAccountsExist: false,
+          offboardingProcessExists: false,
+          accessReviewsPerformed: false,
+          privilegedAccessRestricted: false,
+        },
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      };
+    }
+
+    return this.organization.id;
   }
 }

@@ -1,19 +1,25 @@
 import {
   Building2,
   Check,
+  FileText,
   LayoutDashboard,
   Loader2,
+  Pencil,
   Plus,
   Save,
+  Trash2,
   Users,
   X,
 } from "lucide-react"
 import {
+  type OrganizationTemplate,
+  type OrganizationTemplateInput,
   type Provider,
+  type TemplateCatalog,
   type Vendor,
   type VendorInput,
 } from "@complyflow/shared"
-import { useState } from "react"
+import { useState, type FormEvent, type ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -217,15 +223,134 @@ const CompanyReadOnlySection = ({
   )
 }
 
+const OrganizationTemplateForm = ({
+  defaultValues,
+  saveState,
+  onCancel,
+  onSubmit,
+}: {
+  defaultValues: OrganizationTemplate
+  saveState: MutationState
+  onCancel: () => void
+  onSubmit: (template: OrganizationTemplateInput) => void
+}) => {
+  const [draft, setDraft] = useState<OrganizationTemplateInput>({
+    name: defaultValues.name,
+    slug: defaultValues.slug,
+    content: defaultValues.content,
+  })
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    onSubmit(draft)
+  }
+
+  return (
+    <form className="grid gap-4" onSubmit={handleSubmit}>
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="grid gap-1">
+          <span className="text-sm font-medium text-slate-700">Name</span>
+          <input
+            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 transition outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            required
+            value={draft.name}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                name: event.target.value,
+              }))
+            }
+          />
+        </label>
+        <label className="grid gap-1">
+          <span className="text-sm font-medium text-slate-700">Slug</span>
+          <input
+            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 transition outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            pattern="[a-z0-9]+(-[a-z0-9]+)*"
+            required
+            value={draft.slug}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                slug: event.target.value,
+              }))
+            }
+          />
+        </label>
+      </div>
+      <label className="grid gap-1">
+        <span className="text-sm font-medium text-slate-700">Content</span>
+        <textarea
+          className="min-h-80 rounded-md border border-slate-200 bg-white px-3 py-2 font-mono text-sm text-slate-900 transition outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          value={draft.content}
+          onChange={(event) =>
+            setDraft((current) => ({
+              ...current,
+              content: event.target.value,
+            }))
+          }
+        />
+      </label>
+      <div className="flex gap-2">
+        <Button disabled={saveState === "loading"} type="submit">
+          {saveState === "loading" ? <Loader2 /> : <Save />}
+          Save template
+        </Button>
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+      </div>
+    </form>
+  )
+}
+
+const TemplateCard = ({
+  template,
+  children,
+}: {
+  template: {
+    slug: string
+    name: string
+    description?: string
+    sourceSystemTemplateSlug?: string
+  }
+  children: ReactNode
+}) => (
+  <div className="grid gap-4 rounded-md border border-slate-200 bg-slate-50 p-4 md:grid-cols-[1fr_auto] md:items-start">
+    <div>
+      <div className="flex flex-wrap items-center gap-2">
+        <h3 className="font-semibold text-slate-950">{template.name}</h3>
+        <span className="rounded-md bg-white px-2 py-1 font-mono text-xs text-slate-600 ring-1 ring-slate-200">
+          {template.slug}
+        </span>
+      </div>
+      {template.description ? (
+        <p className="mt-2 text-sm text-slate-600">{template.description}</p>
+      ) : null}
+      {template.sourceSystemTemplateSlug ? (
+        <p className="mt-2 text-xs text-slate-500">
+          Copied from {template.sourceSystemTemplateSlug}
+        </p>
+      ) : null}
+    </div>
+    <div className="flex flex-wrap gap-2">{children}</div>
+  </div>
+)
+
 export const Workspace = ({
   defaultValues,
   vendors,
   providers,
   providersError,
   providersLoading,
+  templates,
+  templatesLoading,
   error,
   saveState,
   onSaveProfile,
+  onAddSystemTemplate,
+  onUpdateOrganizationTemplate,
+  onDeleteOrganizationTemplate,
   onCreateVendor,
   onUpdateVendor,
   onDeleteVendor,
@@ -235,9 +360,17 @@ export const Workspace = ({
   providers: Provider[]
   providersError: string | null
   providersLoading: boolean
+  templates: TemplateCatalog
+  templatesLoading: boolean
   error: string | null
   saveState: MutationState
   onSaveProfile: (profile: ProfileDraft) => void
+  onAddSystemTemplate: (sourceSystemTemplateSlug: string) => void
+  onUpdateOrganizationTemplate: (
+    id: string,
+    template: OrganizationTemplateInput
+  ) => void
+  onDeleteOrganizationTemplate: (template: OrganizationTemplate) => void
   onCreateVendor: (vendor: VendorInput) => void
   onUpdateVendor: (id: string, vendor: VendorInput) => void
   onDeleteVendor: (vendor: Vendor) => void
@@ -247,14 +380,24 @@ export const Workspace = ({
   const {
     activeWorkspaceView,
     editingCompanySection,
+    editingTemplateId,
     editingVendorId,
     setActiveWorkspaceView,
     setEditingCompanySection,
+    startEditingTemplate,
     startEditingVendor,
   } = useSecurityUiStore()
   const editingVendor = vendors.find((vendor) => vendor.id === editingVendorId)
+  const editingTemplate = templates.organizationTemplates.find(
+    (template) => template.id === editingTemplateId
+  )
   const dataTypeOptions = dataTypeOptionsFromProfile(
     defaultValues.dataHandling.dataTypesStored
+  )
+  const addedSystemTemplateSlugs = new Set(
+    templates.organizationTemplates.map(
+      (template) => template.sourceSystemTemplateSlug
+    )
   )
 
   return (
@@ -289,6 +432,13 @@ export const Workspace = ({
               <Users className="size-4" />
               Vendors
             </SidebarMenuButton>
+            <SidebarMenuButton
+              active={activeWorkspaceView === "templates"}
+              onClick={() => setActiveWorkspaceView("templates")}
+            >
+              <FileText className="size-4" />
+              Templates
+            </SidebarMenuButton>
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
@@ -316,14 +466,18 @@ export const Workspace = ({
                   ? "Dashboard"
                   : activeWorkspaceView === "company"
                     ? "Company"
-                    : "Vendors"}
+                    : activeWorkspaceView === "templates"
+                      ? "Templates"
+                      : "Vendors"}
               </p>
               <h1 className="mt-1 text-2xl font-semibold text-slate-950">
                 {activeWorkspaceView === "dashboard"
                   ? "Security readiness dashboard"
                   : activeWorkspaceView === "company"
                     ? "Company profile"
-                    : "Vendor inventory"}
+                    : activeWorkspaceView === "templates"
+                      ? "Document templates"
+                      : "Vendor inventory"}
               </h1>
             </div>
             {saveState === "saved" && (
@@ -514,6 +668,83 @@ export const Workspace = ({
                 )
               ) : null}
             </Section>
+          )}
+
+          {activeWorkspaceView === "templates" && (
+            <div className="grid gap-5">
+              <Section
+                description="Versioned starter markdown templates with Jinja-style placeholders."
+                title="System templates"
+              >
+                {templatesLoading ? (
+                  <p className="text-sm text-slate-500">Loading templates...</p>
+                ) : templates.systemTemplates.length > 0 ? (
+                  templates.systemTemplates.map((template) => {
+                    const isAdded = addedSystemTemplateSlugs.has(template.slug)
+
+                    return (
+                      <TemplateCard key={template.slug} template={template}>
+                        <Button
+                          disabled={isAdded || saveState === "loading"}
+                          type="button"
+                          onClick={() => onAddSystemTemplate(template.slug)}
+                        >
+                          <Plus />
+                          {isAdded ? "Added" : "Add"}
+                        </Button>
+                      </TemplateCard>
+                    )
+                  })
+                ) : (
+                  <p className="text-sm text-slate-500">
+                    No system templates are available.
+                  </p>
+                )}
+              </Section>
+
+              <Section
+                description="Organization copies can be edited for your own customer-facing documents."
+                title="Organization templates"
+              >
+                {editingTemplate ? (
+                  <OrganizationTemplateForm
+                    defaultValues={editingTemplate}
+                    saveState={saveState}
+                    onCancel={() => startEditingTemplate(null)}
+                    onSubmit={(template) => {
+                      onUpdateOrganizationTemplate(editingTemplate.id, template)
+                      startEditingTemplate(null)
+                    }}
+                  />
+                ) : templates.organizationTemplates.length > 0 ? (
+                  templates.organizationTemplates.map((template) => (
+                    <TemplateCard key={template.id} template={template}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => startEditingTemplate(template.id)}
+                      >
+                        <Pencil />
+                        Edit
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={() => onDeleteOrganizationTemplate(template)}
+                      >
+                        <Trash2 />
+                        Delete
+                      </Button>
+                    </TemplateCard>
+                  ))
+                ) : (
+                  <p className="text-sm text-slate-500">
+                    Add a system template to create the first organization
+                    template.
+                  </p>
+                )}
+              </Section>
+            </div>
           )}
         </main>
       </SidebarInset>

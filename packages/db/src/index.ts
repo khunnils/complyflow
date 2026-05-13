@@ -5,7 +5,9 @@ import {
   dataHandlingProfileSchema,
   infrastructureProfileSchema,
   type OrganizationSecurityProfile,
+  type OrganizationTemplate,
   type Vendor,
+  organizationTemplateSchema,
   vendorSchema,
 } from "@complyflow/shared"
 
@@ -154,6 +156,28 @@ export function mapVendorRecord(record: {
     criticality: record.criticality,
     owner: record.owner ?? "",
     notes: record.notes ?? "",
+    createdAt: toIsoString(record.createdAt),
+    updatedAt: toIsoString(record.updatedAt),
+  })
+}
+
+export function mapOrganizationTemplateRecord(record: {
+  id: string
+  organizationId: string
+  name: string
+  slug: string
+  sourceSystemTemplateSlug: string
+  content: string
+  createdAt: Date
+  updatedAt: Date
+}): OrganizationTemplate {
+  return organizationTemplateSchema.parse({
+    id: record.id,
+    organizationId: record.organizationId,
+    name: record.name,
+    slug: record.slug,
+    sourceSystemTemplateSlug: record.sourceSystemTemplateSlug,
+    content: record.content,
     createdAt: toIsoString(record.createdAt),
     updatedAt: toIsoString(record.updatedAt),
   })

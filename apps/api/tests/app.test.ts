@@ -171,6 +171,85 @@ describe("security profile API", () => {
     expect(emptyListResponse.json()).toHaveLength(0);
   });
 
+  it("returns system and organization templates", async () => {
+    const app = await createTestApp();
+    const response = await app.inject({ method: "GET", url: "/templates" });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      systemTemplates: [
+        {
+          slug: "incident-response-plan",
+          name: "Incident Response Plan",
+          description: "A lightweight incident response outline.",
+        },
+        {
+          slug: "security-policy",
+          name: "Security Policy",
+          description: "A practical starter security policy.",
+        },
+      ],
+      organizationTemplates: [],
+    });
+  });
+
+  it("copies, edits, and deletes organization templates", async () => {
+    const app = await createTestApp();
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/templates/organization",
+      payload: { sourceSystemTemplateSlug: "security-policy" },
+    });
+
+    expect(createResponse.statusCode).toBe(201);
+    const createdTemplate = createResponse.json();
+    expect(createdTemplate).toMatchObject({
+      name: "Security Policy",
+      slug: "security-policy",
+      sourceSystemTemplateSlug: "security-policy",
+      content: "# {{ company.name }} Security Policy\n",
+    });
+
+    const updateResponse = await app.inject({
+      method: "PUT",
+      url: `/templates/organization/${createdTemplate.id}`,
+      payload: {
+        name: "Customer Security Policy",
+        slug: "customer-security-policy",
+        content: "# Updated policy\n",
+      },
+    });
+
+    expect(updateResponse.statusCode).toBe(200);
+    expect(updateResponse.json()).toMatchObject({
+      name: "Customer Security Policy",
+      slug: "customer-security-policy",
+      sourceSystemTemplateSlug: "security-policy",
+      content: "# Updated policy\n",
+    });
+
+    const listResponse = await app.inject({ method: "GET", url: "/templates" });
+    expect(listResponse.json().organizationTemplates).toHaveLength(1);
+
+    const deleteResponse = await app.inject({
+      method: "DELETE",
+      url: `/templates/organization/${createdTemplate.id}`,
+    });
+    expect(deleteResponse.statusCode).toBe(204);
+  });
+
+  it("rejects missing system templates", async () => {
+    const app = await createTestApp();
+    const response = await app.inject({
+      method: "POST",
+      url: "/templates/organization",
+      payload: { sourceSystemTemplateSlug: "missing-template" },
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json().error.code).toBe("SYSTEM_TEMPLATE_NOT_FOUND");
+  });
+
   it("rejects vendor data processed outside organization data types", async () => {
     const app = await createTestApp();
     await app.inject({
