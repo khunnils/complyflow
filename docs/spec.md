@@ -91,7 +91,7 @@ Users answer practical operational questions.
 
 Avoid giant forms or audit-style questionnaires.
 
-Sprint 1 starts with a single organization and no login. The saved snapshot is the current workspace source-of-truth until auth and membership are introduced in a later sprint.
+Sprint 1 starts with a single organization behind Google login. Any verified Google user can access the current workspace. The saved snapshot is the current workspace source-of-truth until persistent users, roles, and memberships are introduced in a later sprint.
 
 ## Sections
 

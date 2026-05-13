@@ -19,9 +19,54 @@ function readPort(value: string | undefined) {
   return port
 }
 
+export type AuthConfig = {
+  apiPublicUrl: string
+  clientUrl: string
+  googleClientId: string
+  googleClientSecret: string
+  sessionKey: string
+  cookieSecure: boolean
+  cookieSameSite: "lax" | "none"
+}
+
+function readRequired(value: string | undefined, name: string) {
+  if (!value) {
+    throw new Error(`${name} is required when authentication is enabled`)
+  }
+
+  return value
+}
+
+export function readAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig {
+  const sessionKey = readRequired(env.SESSION_KEY, "SESSION_KEY")
+
+  if (sessionKey.length < 32) {
+    throw new Error("SESSION_KEY must be at least 32 characters")
+  }
+
+  const isProduction = env.NODE_ENV === "production"
+
+  return {
+    apiPublicUrl: readRequired(env.API_PUBLIC_URL, "API_PUBLIC_URL"),
+    clientUrl: readRequired(env.CLIENT_URL, "CLIENT_URL"),
+    googleClientId: readRequired(
+      env.GOOGLE_OAUTH_CLIENT_ID,
+      "GOOGLE_OAUTH_CLIENT_ID",
+    ),
+    googleClientSecret: readRequired(
+      env.GOOGLE_OAUTH_CLIENT_SECRET,
+      "GOOGLE_OAUTH_CLIENT_SECRET",
+    ),
+    sessionKey,
+    cookieSecure: isProduction,
+    cookieSameSite: isProduction ? "none" : "lax",
+  }
+}
+
 export const apiConfig = {
   host: process.env.HOST ?? "0.0.0.0",
   port: readPort(process.env.PORT),
   airtableBase: process.env.AIRTABLE_BASE,
   airtableApiKey: process.env.AIRTABLE_API_KEY,
+  auth: () => readAuthConfig(),
 }

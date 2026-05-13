@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  authStateSchema,
+  authUserSchema,
   companyProfileSchema,
   dataHandlingProfileSchema,
   vendorInputSchema,
@@ -22,7 +24,7 @@ describe("shared security profile schemas", () => {
     expect(result.success).toBe(false)
   })
 
-    it("requires operational vendor fields", () => {
+  it("requires operational vendor fields", () => {
     const result = vendorInputSchema.safeParse({
       name: "GitHub",
       category: "Source control",
@@ -38,6 +40,29 @@ describe("shared security profile schemas", () => {
     })
 
     expect(result.success).toBe(true)
+  })
+
+  it("accepts authenticated user state", () => {
+    expect(
+      authStateSchema.safeParse({
+        user: {
+          id: "google-user-1",
+          email: "founder@example.com",
+          name: "Startup Founder",
+          picture: "https://example.com/avatar.png",
+        },
+      }).success,
+    ).toBe(true)
+  })
+
+  it("requires auth users to have a valid email", () => {
+    expect(
+      authUserSchema.safeParse({
+        id: "google-user-1",
+        email: "not-an-email",
+        name: "Startup Founder",
+      }).success,
+    ).toBe(false)
   })
 
   it("limits vendor criticality to the supported readiness levels", () => {

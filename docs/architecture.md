@@ -61,16 +61,16 @@ complyflow/
 
 ## Sprint 1 Runtime
 
-Sprint 1 implements the Security Program Snapshot with single-organization semantics:
+Sprint 1 implements the Security Program Snapshot with authenticated single-organization semantics:
 
-- no auth
-- no user or membership model
+- Google OAuth login is required
+- no persistent user or membership model
 - one current organization profile
 - vendor inventory scoped to that organization
 - organization document templates scoped to that organization
 - generated documents scoped to templates
 
-The API validates request payloads with `packages/shared` schemas. `packages/db` owns Prisma models and database mapping. Company attributes live on the `organizations` table, profile sections are stored in one-to-one relational tables, organization data types are stored in `organization_data_types`, and vendor inventory is stored relationally with `vendor_data_types` linking vendors to the data categories they process. System document templates are versioned markdown files in `apps/api/data/templates`, editable organization copies are stored in `templates`, and generated markdown documents are stored in `documents`.
+The API validates request payloads with `packages/shared` schemas. Google OAuth is handled by Fastify with an encrypted HTTP-only session cookie that stores minimal Google profile details for the current browser session. `packages/db` owns Prisma models and database mapping. Company attributes live on the `organizations` table, profile sections are stored in one-to-one relational tables, organization data types are stored in `organization_data_types`, and vendor inventory is stored relationally with `vendor_data_types` linking vendors to the data categories they process. System document templates are versioned markdown files in `apps/api/data/templates`, editable organization copies are stored in `templates`, and generated markdown documents are stored in `documents`.
 
 ## Local Development
 
@@ -81,7 +81,7 @@ pnpm dev:api
 pnpm dev:client
 ```
 
-The client reads `VITE_API_URL` and defaults to `http://localhost:4000`. The API expects `DATABASE_URL` for Prisma-backed persistence.
+The client reads `VITE_API_URL` and defaults to `http://localhost:4000`. The API expects `DATABASE_URL` for Prisma-backed persistence and requires Google OAuth/session settings when auth is enabled.
 
 ## Deployment
 

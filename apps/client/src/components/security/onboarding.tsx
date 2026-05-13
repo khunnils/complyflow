@@ -1,5 +1,9 @@
-import { ChevronLeft, ChevronRight, Loader2, Save } from "lucide-react"
-import { type Provider, type VendorInput } from "@complyflow/shared"
+import { ChevronLeft, ChevronRight, Loader2, LogOut, Save } from "lucide-react"
+import {
+  type AuthUser,
+  type Provider,
+  type VendorInput,
+} from "@complyflow/shared"
 import { useState } from "react"
 import { type FieldErrors } from "react-hook-form"
 
@@ -80,6 +84,8 @@ export const Onboarding = ({
   providersError,
   providersLoading,
   saveState,
+  user,
+  onLogout,
   onSave,
 }: {
   defaultValues: ProfileDraft
@@ -88,6 +94,8 @@ export const Onboarding = ({
   providersError: string | null
   providersLoading: boolean
   saveState: MutationState
+  user: AuthUser
+  onLogout: () => void
   onSave: (profile: ProfileDraft, vendors: VendorInput[]) => void
 }) => {
   const [showCustomVendorForm, setShowCustomVendorForm] = useState(false)
@@ -110,16 +118,29 @@ export const Onboarding = ({
   return (
     <main className="min-h-svh bg-slate-50 px-4 py-6 text-slate-900 md:px-8">
       <div className="mx-auto max-w-4xl">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-semibold text-blue-700">ComplyFlow</p>
             <h1 className="mt-1 text-2xl font-semibold text-slate-950">
               Security snapshot
             </h1>
           </div>
-          <span className="rounded-md bg-white px-3 py-1 text-sm font-medium text-slate-600 ring-1 ring-slate-200">
-            {onboardingStep + 1}/{onboardingSteps.length}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="rounded-md bg-white px-3 py-1 text-sm font-medium text-slate-600 ring-1 ring-slate-200">
+              {onboardingStep + 1}/{onboardingSteps.length}
+            </span>
+            {user.picture ? (
+              <img alt="" className="size-9 rounded-full" src={user.picture} />
+            ) : null}
+            <div className="hidden text-right sm:block">
+              <p className="text-sm font-medium text-slate-900">{user.name}</p>
+              <p className="text-xs text-slate-500">{user.email}</p>
+            </div>
+            <Button type="button" variant="outline" onClick={onLogout}>
+              <LogOut />
+              Logout
+            </Button>
+          </div>
         </div>
 
         <ProfileForm

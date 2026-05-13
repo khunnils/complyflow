@@ -1,4 +1,5 @@
 import {
+  useAuthState,
   useCreateVendor,
   useCreateVendors,
   useCreateDocument,
@@ -7,6 +8,7 @@ import {
   useDeleteVendor,
   useDocument,
   useDocuments,
+  useLogout,
   useProviders,
   useSaveSecurityProfile,
   useSecurityProfile,
@@ -14,7 +16,9 @@ import {
   useUpdateTemplate,
   useUpdateVendor,
 } from "@/hooks/use-security-profile"
+import { LoginScreen } from "@/components/auth/login-screen"
 import { emptyProfileDraft, profileFromOrganization } from "@/lib/profile"
+import { startGoogleLogin } from "@/lib/api"
 import { LoadingState } from "@/components/security/loading-state"
 import { Onboarding } from "@/components/security/onboarding"
 import { Workspace } from "@/components/security/workspace"
@@ -41,14 +45,18 @@ const errorMessage = (...errors: Array<Error | null>) =>
   errors.find(Boolean)?.message ?? null
 
 export const App = () => {
-  const securityProfile = useSecurityProfile()
-  const providers = useProviders()
-  const templates = useTemplates()
-  const documents = useDocuments()
+  const authState = useAuthState()
+  const user = authState.data?.user ?? null
+  const isAuthenticated = Boolean(user)
+  const securityProfile = useSecurityProfile(isAuthenticated)
+  const providers = useProviders(isAuthenticated)
+  const templates = useTemplates(isAuthenticated)
+  const documents = useDocuments(isAuthenticated)
   const viewingDocumentId = useSecurityUiStore(
     (state) => state.viewingDocumentId
   )
-  const document = useDocument(viewingDocumentId)
+  const document = useDocument(viewingDocumentId, isAuthenticated)
+  const logout = useLogout()
   const saveProfile = useSaveSecurityProfile()
   const createVendor = useCreateVendor()
   const createVendors = useCreateVendors()
@@ -107,8 +115,17 @@ export const App = () => {
     document.error
   )
 
-  if (securityProfile.isLoading) {
+  if (authState.isLoading || (isAuthenticated && securityProfile.isLoading)) {
     return <LoadingState />
+  }
+
+  if (!user) {
+    return (
+      <LoginScreen
+        error={authState.error?.message ?? null}
+        onLogin={startGoogleLogin}
+      />
+    )
   }
 
   if (!snapshot?.organization) {
@@ -120,6 +137,8 @@ export const App = () => {
         providersError={providers.error?.message ?? null}
         providersLoading={providers.isLoading}
         saveState={saveState}
+        user={user}
+        onLogout={() => logout.mutate()}
         onSave={(profileDraft, onboardingVendors) => {
           saveProfile.mutate(profileDraft, {
             onSuccess: () => {
@@ -154,6 +173,7 @@ export const App = () => {
         createTemplate.mutate({ sourceSystemTemplateSlug })
       }
       onCreateVendor={(vendor) => createVendor.mutate(vendor)}
+      onLogout={() => logout.mutate()}
       onDeleteTemplate={(template) => deleteTemplate.mutate(template.id)}
       onDeleteVendor={(vendor) => deleteVendor.mutate(vendor.id)}
       onGenerateDocument={(templateId) => createDocument.mutate({ templateId })}
@@ -162,6 +182,7 @@ export const App = () => {
         updateTemplate.mutate({ id, template })
       }
       onUpdateVendor={(id, vendor) => updateVendor.mutate({ id, vendor })}
+      user={user}
     />
   )
 }

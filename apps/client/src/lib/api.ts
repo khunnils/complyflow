@@ -1,4 +1,5 @@
 import {
+  authStateSchema,
   securityProgramSnapshotSchema,
   structuredErrorSchema,
   providerSchema,
@@ -13,6 +14,7 @@ import {
   type CreateTemplateFromSystem,
   type Document,
   type DocumentSummary,
+  type AuthState,
   type SecurityProgramSnapshot,
   type Template,
   type TemplateCatalog,
@@ -47,14 +49,37 @@ const apiRequest = async <T>(
   init?: RequestInit
 ): Promise<T> => {
   const response = await fetch(`${API_URL}${path}`, {
+    ...init,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...init?.headers,
     },
-    ...init,
   })
 
   return parseResponse(response, schema)
+}
+
+export const startGoogleLogin = () => {
+  window.location.href = `${API_URL}/auth/google`
+}
+
+export const getAuthState = (): Promise<AuthState> =>
+  apiRequest("/auth/me", authStateSchema)
+
+export const logout = async (): Promise<void> => {
+  const response = await fetch(`${API_URL}/auth/logout`, {
+    credentials: "include",
+    method: "POST",
+  })
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null)
+    const parsedError = structuredErrorSchema.safeParse(body)
+    throw new Error(
+      parsedError.success ? parsedError.data.error.message : "Request failed"
+    )
+  }
 }
 
 export const getSecurityProfile = (): Promise<SecurityProgramSnapshot> =>
@@ -126,6 +151,7 @@ export const updateVendor = ({
 
 export const deleteVendor = async (id: string): Promise<void> => {
   const response = await fetch(`${API_URL}/vendors/${id}`, {
+    credentials: "include",
     method: "DELETE",
   })
 
@@ -140,6 +166,7 @@ export const deleteVendor = async (id: string): Promise<void> => {
 
 export const deleteTemplate = async (id: string): Promise<void> => {
   const response = await fetch(`${API_URL}/templates/organization/${id}`, {
+    credentials: "include",
     method: "DELETE",
   })
 

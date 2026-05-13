@@ -11,11 +11,13 @@ import {
   createVendor,
   deleteTemplate,
   deleteVendor,
+  getAuthState,
   getDocument,
   getDocuments,
   getProviders,
   getSecurityProfile,
   getTemplates,
+  logout,
   saveSecurityProfile,
   updateTemplate,
   updateVendor,
@@ -23,37 +25,64 @@ import {
 import { type ProfileDraft } from "@/types/security-profile"
 
 const securityProfileQueryKey = ["security-profile"] as const
+const authStateQueryKey = ["auth"] as const
 const providersQueryKey = ["providers"] as const
 const templatesQueryKey = ["templates"] as const
 const documentsQueryKey = ["documents"] as const
 
-export const useSecurityProfile = () =>
+export const useAuthState = () =>
   useQuery({
+    queryKey: authStateQueryKey,
+    queryFn: getAuthState,
+  })
+
+export const useLogout = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: logout,
+    onSuccess: () => {
+      queryClient.setQueryData(authStateQueryKey, { user: null })
+      queryClient.removeQueries({ queryKey: securityProfileQueryKey })
+      queryClient.removeQueries({ queryKey: providersQueryKey })
+      queryClient.removeQueries({ queryKey: templatesQueryKey })
+      queryClient.removeQueries({ queryKey: documentsQueryKey })
+      queryClient.removeQueries({ queryKey: ["document"] })
+    },
+  })
+}
+
+export const useSecurityProfile = (enabled = true) =>
+  useQuery({
+    enabled,
     queryKey: securityProfileQueryKey,
     queryFn: getSecurityProfile,
   })
 
-export const useProviders = () =>
+export const useProviders = (enabled = true) =>
   useQuery({
+    enabled,
     queryKey: providersQueryKey,
     queryFn: getProviders,
   })
 
-export const useTemplates = () =>
+export const useTemplates = (enabled = true) =>
   useQuery({
+    enabled,
     queryKey: templatesQueryKey,
     queryFn: getTemplates,
   })
 
-export const useDocuments = () =>
+export const useDocuments = (enabled = true) =>
   useQuery({
+    enabled,
     queryKey: documentsQueryKey,
     queryFn: getDocuments,
   })
 
-export const useDocument = (id: string | null) =>
+export const useDocument = (id: string | null, enabled = true) =>
   useQuery({
-    enabled: Boolean(id),
+    enabled: enabled && Boolean(id),
     queryKey: ["document", id] as const,
     queryFn: () => getDocument(id ?? ""),
   })

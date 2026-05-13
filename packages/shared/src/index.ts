@@ -178,6 +178,17 @@ export const createDocumentSchema = z.object({
   templateId: z.string().min(1),
 })
 
+export const authUserSchema = z.object({
+  id: z.string().min(1),
+  email: z.string().email(),
+  name: z.string().trim().min(1),
+  picture: z.string().url().optional(),
+})
+
+export const authStateSchema = z.object({
+  user: authUserSchema.nullable(),
+})
+
 export const templateCatalogSchema = z.object({
   systemTemplates: z.array(systemTemplateSchema),
   organizationTemplates: z.array(templateSchema),
@@ -230,6 +241,8 @@ export type DocumentStatus = z.infer<typeof documentStatusSchema>
 export type DocumentSummary = z.infer<typeof documentSummarySchema>
 export type CreateDocument = z.infer<typeof createDocumentSchema>
 export type TemplateCatalog = z.infer<typeof templateCatalogSchema>
+export type AuthUser = z.infer<typeof authUserSchema>
+export type AuthState = z.infer<typeof authStateSchema>
 export type OrganizationSecurityProfile = z.infer<
   typeof organizationSecurityProfileSchema
 >

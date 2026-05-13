@@ -79,7 +79,7 @@ const MultiSelectInput = <TValue extends string>({
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
-  const optionLabels = useMemo(
+  const optionLabels = useMemo<Map<string, string>>(
     () => new Map(options.map((option) => [option.value, option.label])),
     [options]
   )

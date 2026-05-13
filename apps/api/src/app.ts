@@ -4,8 +4,9 @@ import Fastify, {
   type FastifyServerOptions,
 } from "fastify"
 
+import { registerAuth } from "./auth.js"
 import { sendError } from "./errors.js"
-import { apiConfig } from "./config.js"
+import { apiConfig, type AuthConfig } from "./config.js"
 import { InMemoryDocumentRepository } from "./features/documents/in-memory-repository.js"
 import { PrismaDocumentRepository } from "./features/documents/prisma-repository.js"
 import { type DocumentRepository } from "./features/documents/repository.js"
@@ -30,6 +31,7 @@ import {
 } from "./system-templates.js"
 
 export type CreateAppOptions = {
+  auth?: false | AuthConfig
   organizationRepository?: OrganizationRepository
   vendorRepository?: VendorRepository
   documentRepository?: DocumentRepository
@@ -39,6 +41,7 @@ export type CreateAppOptions = {
 }
 
 export async function createApp({
+  auth = apiConfig.auth(),
   organizationRepository,
   vendorRepository,
   documentRepository,
@@ -59,8 +62,9 @@ export async function createApp({
   })
 
   await app.register(cors, {
+    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    origin: true,
+    origin: auth ? auth.clientUrl : true,
   })
 
   app.setErrorHandler((error, request, reply) => {
@@ -77,6 +81,10 @@ export async function createApp({
   })
 
   app.get("/health", async () => ({ status: "ok" }))
+
+  if (auth) {
+    await registerAuth(app, { authConfig: auth })
+  }
 
   await registerVendorRoutes(app, {
     providerSource,
@@ -104,6 +112,7 @@ export function createTestApp() {
   )
 
   return createApp({
+    auth: false,
     documentRepository,
     organizationRepository,
     vendorRepository,

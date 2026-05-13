@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { createApp, createTestApp } from "../src/app.js"
+import { readAuthConfig } from "../src/config.js"
 import { InMemoryDocumentRepository } from "../src/features/documents/in-memory-repository.js"
 import { InMemoryOrganizationRepository } from "../src/features/organizations/in-memory-repository.js"
 import { InMemoryVendorRepository } from "../src/features/vendors/in-memory-repository.js"
@@ -70,6 +71,16 @@ const vendorBody = {
   notes: "Critical engineering system",
 }
 
+const authConfig = {
+  apiPublicUrl: "http://localhost:4000",
+  clientUrl: "http://localhost:5173",
+  googleClientId: "google-client-id",
+  googleClientSecret: "google-client-secret",
+  sessionKey: "test-session-key-with-at-least-32-chars",
+  cookieSecure: false,
+  cookieSameSite: "lax" as const,
+}
+
 describe("security profile API", () => {
   afterEach(() => {
     vi.unstubAllGlobals()
@@ -81,6 +92,64 @@ describe("security profile API", () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.json()).toEqual({ status: "ok" })
+  })
+
+  it("rejects protected routes when authentication is enabled", async () => {
+    const app = await createApp({
+      ...createInMemoryRepositories(),
+      auth: authConfig,
+    })
+    const response = await app.inject({
+      method: "GET",
+      url: "/security-profile",
+    })
+
+    expect(response.statusCode).toBe(401)
+    expect(response.json()).toMatchObject({
+      error: {
+        code: "AUTHENTICATION_REQUIRED",
+        message: "Authentication is required.",
+      },
+    })
+  })
+
+  it("returns anonymous auth state before login", async () => {
+    const app = await createApp({
+      ...createInMemoryRepositories(),
+      auth: authConfig,
+    })
+    const response = await app.inject({ method: "GET", url: "/auth/me" })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({ user: null })
+  })
+
+  it("supports idempotent logout without a session", async () => {
+    const app = await createApp({
+      ...createInMemoryRepositories(),
+      auth: authConfig,
+    })
+    const response = await app.inject({ method: "POST", url: "/auth/logout" })
+
+    expect(response.statusCode).toBe(204)
+  })
+
+  it("requires auth config values when auth config is read", () => {
+    expect(() => readAuthConfig({} as NodeJS.ProcessEnv)).toThrow(
+      "SESSION_KEY is required",
+    )
+  })
+
+  it("requires a high entropy session key", () => {
+    expect(() =>
+      readAuthConfig({
+        SESSION_KEY: "short",
+        API_PUBLIC_URL: "http://localhost:4000",
+        CLIENT_URL: "http://localhost:5173",
+        GOOGLE_OAUTH_CLIENT_ID: "client",
+        GOOGLE_OAUTH_CLIENT_SECRET: "secret",
+      } as NodeJS.ProcessEnv),
+    ).toThrow("SESSION_KEY must be at least 32 characters")
   })
 
   it("creates and returns the single organization security profile", async () => {
@@ -412,6 +481,7 @@ describe("security profile API", () => {
       }),
     )
     const app = await createApp({
+      auth: false,
       ...createInMemoryRepositories(),
       providerSource: new AirtableProviderSource("app-test", "pat-test"),
     })
@@ -432,6 +502,7 @@ describe("security profile API", () => {
   it("logs unexpected request failures with error details", async () => {
     let logOutput = ""
     const app = await createApp({
+      auth: false,
       logger: {
         level: "error",
         stream: {
