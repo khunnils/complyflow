@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { createApp, createTestApp } from "../src/app.js"
+import { InMemoryDocumentRepository } from "../src/features/documents/in-memory-repository.js"
+import { InMemoryOrganizationRepository } from "../src/features/organizations/in-memory-repository.js"
+import { InMemoryVendorRepository } from "../src/features/vendors/in-memory-repository.js"
 import { AirtableProviderSource } from "../src/providers.js"
-import { InMemorySecurityProfileRepository } from "../src/repository.js"
 
 const profileBody = {
   company: {
@@ -410,7 +412,7 @@ describe("security profile API", () => {
       }),
     )
     const app = await createApp({
-      repository: new InMemorySecurityProfileRepository(),
+      ...createInMemoryRepositories(),
       providerSource: new AirtableProviderSource("app-test", "pat-test"),
     })
     const response = await app.inject({ method: "GET", url: "/providers" })
@@ -438,7 +440,7 @@ describe("security profile API", () => {
           },
         },
       },
-      repository: new InMemorySecurityProfileRepository(),
+      ...createInMemoryRepositories(),
       providerSource: {
         async listProviders() {
           throw new Error("catalog exploded")
@@ -453,3 +455,13 @@ describe("security profile API", () => {
     expect(logOutput).toContain("/providers")
   })
 })
+
+function createInMemoryRepositories() {
+  const organizationRepository = new InMemoryOrganizationRepository()
+
+  return {
+    documentRepository: new InMemoryDocumentRepository(organizationRepository),
+    organizationRepository,
+    vendorRepository: new InMemoryVendorRepository(organizationRepository),
+  }
+}
