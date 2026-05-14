@@ -185,8 +185,23 @@ export const authUserSchema = z.object({
   picture: z.string().url().optional(),
 })
 
+export const organizationMembershipRoleSchema = z.enum(["owner", "member"])
+
+export const organizationSummarySchema = z.object({
+  id: z.string().min(1),
+  name: z.string().trim().min(1),
+  role: organizationMembershipRoleSchema,
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+})
+
 export const authStateSchema = z.object({
   user: authUserSchema.nullable(),
+  organizations: z.array(organizationSummarySchema).default([]),
+})
+
+export const createOrganizationSchema = z.object({
+  name: z.string().trim().min(1, "Organization name is required"),
 })
 
 export const templateCatalogSchema = z.object({
@@ -242,7 +257,12 @@ export type DocumentSummary = z.infer<typeof documentSummarySchema>
 export type CreateDocument = z.infer<typeof createDocumentSchema>
 export type TemplateCatalog = z.infer<typeof templateCatalogSchema>
 export type AuthUser = z.infer<typeof authUserSchema>
+export type OrganizationMembershipRole = z.infer<
+  typeof organizationMembershipRoleSchema
+>
+export type OrganizationSummary = z.infer<typeof organizationSummarySchema>
 export type AuthState = z.infer<typeof authStateSchema>
+export type CreateOrganization = z.infer<typeof createOrganizationSchema>
 export type OrganizationSecurityProfile = z.infer<
   typeof organizationSecurityProfileSchema
 >

@@ -91,7 +91,7 @@ Users answer practical operational questions.
 
 Avoid giant forms or audit-style questionnaires.
 
-Sprint 1 starts with a single organization behind Google login. Any verified Google user can access the current workspace. The saved snapshot is the current workspace source-of-truth until persistent users, roles, and memberships are introduced in a later sprint.
+Users sign in with Google and can belong to multiple organizations. The client lets users choose the current organization from the workspace sidebar, and all workspace data is loaded through organization-scoped API routes. Organization membership controls access; v1 stores `owner` and `member` roles, with both roles able to edit the security snapshot and related workspace data.
 
 ## Sections
 

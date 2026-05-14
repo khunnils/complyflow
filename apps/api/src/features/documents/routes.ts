@@ -11,7 +11,9 @@ import {
   templateSourceHash,
 } from "../../document-generation.js"
 import { ApiError } from "../../errors.js"
+import { requireOrganizationMembership } from "../../organization-context.js"
 import { type SystemTemplateSource } from "../../system-templates.js"
+import { type AccountRepository } from "../accounts/repository.js"
 import { type OrganizationRepository } from "../organizations/repository.js"
 import { type VendorRepository } from "../vendors/repository.js"
 import { type DocumentRepository } from "./repository.js"
@@ -23,7 +25,9 @@ export async function registerDocumentRoutes(
     organizationRepository,
     systemTemplateSource,
     vendorRepository,
+    accountRepository,
   }: {
+    accountRepository: AccountRepository
     documentRepository: DocumentRepository
     organizationRepository: OrganizationRepository
     systemTemplateSource: SystemTemplateSource
@@ -33,48 +37,90 @@ export async function registerDocumentRoutes(
   const contextBuilder = new ReportContextBuilder()
   const renderer = new Jinja2Renderer()
 
-  app.get("/templates", async () => ({
-    systemTemplates: await systemTemplateSource.listSystemTemplates(),
-    organizationTemplates: await documentRepository.listTemplates(),
-  }))
-
-  app.get("/documents", async () => {
-    const context = contextBuilder.build({
-      organization: await organizationRepository.getOrganization(),
-      vendors: await vendorRepository.listVendors(),
-    })
-
-    return documentRepository.listDocumentSummaries((template) =>
-      templateSourceHash(template, context),
-    )
-  })
-
-  app.post("/templates/organization", async (request, reply) => {
-    const body = createTemplateFromSystemSchema.parse(request.body)
-    const systemTemplates = await systemTemplateSource.listSystemTemplates()
-    const systemTemplate = systemTemplates.find(
-      (template) => template.slug === body.sourceSystemTemplateSlug,
-    )
-
-    if (!systemTemplate) {
-      throw new ApiError(
-        "SYSTEM_TEMPLATE_NOT_FOUND",
-        "System template was not found.",
-        404,
+  app.get<{ Params: { organizationId: string } }>(
+    "/organizations/:organizationId/templates",
+    async (request) => {
+      await requireOrganizationMembership(
+        request,
+        accountRepository,
+        request.params.organizationId,
       )
-    }
 
-    const template =
-      await documentRepository.createTemplateFromSystem(systemTemplate)
+      return {
+        systemTemplates: await systemTemplateSource.listSystemTemplates(),
+        organizationTemplates: await documentRepository.listTemplates(
+          request.params.organizationId,
+        ),
+      }
+    },
+  )
 
-    return reply.status(201).send(template)
-  })
+  app.get<{ Params: { organizationId: string } }>(
+    "/organizations/:organizationId/documents",
+    async (request) => {
+      await requireOrganizationMembership(
+        request,
+        accountRepository,
+        request.params.organizationId,
+      )
+      const context = contextBuilder.build({
+        organization: await organizationRepository.getOrganization(
+          request.params.organizationId,
+        ),
+        vendors: await vendorRepository.listVendors(
+          request.params.organizationId,
+        ),
+      })
 
-  app.put<{ Params: { id: string } }>(
-    "/templates/organization/:id",
+      return documentRepository.listDocumentSummaries(
+        request.params.organizationId,
+        (template) => templateSourceHash(template, context),
+      )
+    },
+  )
+
+  app.post<{ Params: { organizationId: string } }>(
+    "/organizations/:organizationId/templates",
     async (request, reply) => {
+      await requireOrganizationMembership(
+        request,
+        accountRepository,
+        request.params.organizationId,
+      )
+      const body = createTemplateFromSystemSchema.parse(request.body)
+      const systemTemplates = await systemTemplateSource.listSystemTemplates()
+      const systemTemplate = systemTemplates.find(
+        (template) => template.slug === body.sourceSystemTemplateSlug,
+      )
+
+      if (!systemTemplate) {
+        throw new ApiError(
+          "SYSTEM_TEMPLATE_NOT_FOUND",
+          "System template was not found.",
+          404,
+        )
+      }
+
+      const template = await documentRepository.createTemplateFromSystem(
+        request.params.organizationId,
+        systemTemplate,
+      )
+
+      return reply.status(201).send(template)
+    },
+  )
+
+  app.put<{ Params: { organizationId: string; id: string } }>(
+    "/organizations/:organizationId/templates/:id",
+    async (request, reply) => {
+      await requireOrganizationMembership(
+        request,
+        accountRepository,
+        request.params.organizationId,
+      )
       const body = templateInputSchema.parse(request.body)
       const template = await documentRepository.updateTemplate(
+        request.params.organizationId,
         request.params.id,
         body,
       )
@@ -91,10 +137,18 @@ export async function registerDocumentRoutes(
     },
   )
 
-  app.delete<{ Params: { id: string } }>(
-    "/templates/organization/:id",
+  app.delete<{ Params: { organizationId: string; id: string } }>(
+    "/organizations/:organizationId/templates/:id",
     async (request, reply) => {
-      const deleted = await documentRepository.deleteTemplate(request.params.id)
+      await requireOrganizationMembership(
+        request,
+        accountRepository,
+        request.params.organizationId,
+      )
+      const deleted = await documentRepository.deleteTemplate(
+        request.params.organizationId,
+        request.params.id,
+      )
 
       if (!deleted) {
         throw new ApiError("TEMPLATE_NOT_FOUND", "Template was not found.", 404)
@@ -104,35 +158,57 @@ export async function registerDocumentRoutes(
     },
   )
 
-  app.post("/documents", async (request, reply) => {
-    const body = createDocumentSchema.parse(request.body)
-    const templates = await documentRepository.listTemplates()
-    const template = templates.find(
-      (currentTemplate) => currentTemplate.id === body.templateId,
-    )
-
-    if (!template) {
-      throw new ApiError("TEMPLATE_NOT_FOUND", "Template was not found.", 404)
-    }
-
-    const context = contextBuilder.build({
-      organization: await organizationRepository.getOrganization(),
-      vendors: await vendorRepository.listVendors(),
-    })
-    const document = await documentRepository.createDocument({
-      template,
-      title: template.name,
-      renderedContent: renderer.render(template, context),
-      sourceHash: templateSourceHash(template, context),
-    })
-
-    return reply.status(201).send(document)
-  })
-
-  app.get<{ Params: { id: string } }>(
-    "/documents/:id",
+  app.post<{ Params: { organizationId: string } }>(
+    "/organizations/:organizationId/documents",
     async (request, reply) => {
-      const document = await documentRepository.getDocument(request.params.id)
+      await requireOrganizationMembership(
+        request,
+        accountRepository,
+        request.params.organizationId,
+      )
+      const body = createDocumentSchema.parse(request.body)
+      const templates = await documentRepository.listTemplates(
+        request.params.organizationId,
+      )
+      const template = templates.find(
+        (currentTemplate) => currentTemplate.id === body.templateId,
+      )
+
+      if (!template) {
+        throw new ApiError("TEMPLATE_NOT_FOUND", "Template was not found.", 404)
+      }
+
+      const context = contextBuilder.build({
+        organization: await organizationRepository.getOrganization(
+          request.params.organizationId,
+        ),
+        vendors: await vendorRepository.listVendors(
+          request.params.organizationId,
+        ),
+      })
+      const document = await documentRepository.createDocument({
+        template,
+        title: template.name,
+        renderedContent: renderer.render(template, context),
+        sourceHash: templateSourceHash(template, context),
+      })
+
+      return reply.status(201).send(document)
+    },
+  )
+
+  app.get<{ Params: { organizationId: string; id: string } }>(
+    "/organizations/:organizationId/documents/:id",
+    async (request, reply) => {
+      await requireOrganizationMembership(
+        request,
+        accountRepository,
+        request.params.organizationId,
+      )
+      const document = await documentRepository.getDocument(
+        request.params.organizationId,
+        request.params.id,
+      )
 
       if (!document) {
         throw new ApiError("DOCUMENT_NOT_FOUND", "Document was not found.", 404)

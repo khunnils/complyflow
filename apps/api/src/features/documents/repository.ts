@@ -7,11 +7,19 @@ import {
 } from "@complyflow/shared"
 
 export interface DocumentRepository {
-  listTemplates(): Promise<Template[]>
-  createTemplateFromSystem(systemTemplate: SystemTemplate): Promise<Template>
-  updateTemplate(id: string, input: TemplateInput): Promise<Template | null>
-  deleteTemplate(id: string): Promise<boolean>
+  listTemplates(organizationId: string): Promise<Template[]>
+  createTemplateFromSystem(
+    organizationId: string,
+    systemTemplate: SystemTemplate,
+  ): Promise<Template>
+  updateTemplate(
+    organizationId: string,
+    id: string,
+    input: TemplateInput,
+  ): Promise<Template | null>
+  deleteTemplate(organizationId: string, id: string): Promise<boolean>
   listDocumentSummaries(
+    organizationId: string,
     sourceHashForTemplate: (template: Template) => string,
   ): Promise<DocumentSummary[]>
   createDocument(input: {
@@ -20,5 +28,5 @@ export interface DocumentRepository {
     renderedContent: string
     sourceHash: string
   }): Promise<Document>
-  getDocument(id: string): Promise<Document | null>
+  getDocument(organizationId: string, id: string): Promise<Document | null>
 }

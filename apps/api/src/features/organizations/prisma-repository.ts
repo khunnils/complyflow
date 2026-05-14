@@ -1,9 +1,5 @@
 import { mapOrganizationRecord, prisma, type PrismaClient } from "@complyflow/db"
 import {
-  emptyAccessProfile,
-  emptyCompanyProfile,
-  emptyDataHandlingProfile,
-  emptyInfrastructureProfile,
   type AccessProfile,
   type CompanyProfile,
   type DataHandlingProfile,
@@ -16,7 +12,6 @@ import {
   type SecurityProfileInput,
 } from "./repository.js"
 
-export const SINGLE_ORG_FILTER = {}
 export const ORGANIZATION_INCLUDE = {
   accessProfile: true,
   dataHandlingProfile: true,
@@ -27,9 +22,11 @@ export const ORGANIZATION_INCLUDE = {
 export class PrismaOrganizationRepository implements OrganizationRepository {
   constructor(private readonly client: PrismaClient = prisma) {}
 
-  async getOrganization(): Promise<OrganizationSecurityProfile | null> {
-    const organization = await this.client.organization.findFirst({
-      where: SINGLE_ORG_FILTER,
+  async getOrganization(
+    organizationId: string,
+  ): Promise<OrganizationSecurityProfile | null> {
+    const organization = await this.client.organization.findUnique({
+      where: { id: organizationId },
       include: ORGANIZATION_INCLUDE,
     })
 
@@ -37,136 +34,57 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
   }
 
   async upsertProfile(
+    organizationId: string,
     input: SecurityProfileInput,
   ): Promise<OrganizationSecurityProfile> {
-    const existing = await this.client.organization.findFirst({
-      where: SINGLE_ORG_FILTER,
-    })
     const organizationData = this.organizationData(input.company)
     const infrastructureData = this.infrastructureData(input.infrastructure)
     const dataHandlingData = this.dataHandlingData(input.dataHandling)
     const accessData = this.accessData(input.access)
 
-    const organization = existing
-      ? await this.client.organization.update({
-          where: { id: existing.id },
-          data: {
-            ...organizationData,
-            accessProfile: {
-              upsert: {
-                create: accessData,
-                update: accessData,
-              },
-            },
-            dataHandlingProfile: {
-              upsert: {
-                create: dataHandlingData,
-                update: dataHandlingData,
-              },
-            },
-            infrastructureProfile: {
-              upsert: {
-                create: infrastructureData,
-                update: infrastructureData,
-              },
-            },
+    const organization = await this.client.organization.update({
+      where: { id: organizationId },
+      data: {
+        ...organizationData,
+        accessProfile: {
+          upsert: {
+            create: accessData,
+            update: accessData,
           },
-          include: ORGANIZATION_INCLUDE,
-        })
-      : await this.client.organization.create({
-          data: {
-            ...organizationData,
-            accessProfile: { create: accessData },
-            dataHandlingProfile: { create: dataHandlingData },
-            dataTypes: {
-              create: this.organizationDataTypes(input.dataHandling),
-            },
-            infrastructureProfile: { create: infrastructureData },
+        },
+        dataHandlingProfile: {
+          upsert: {
+            create: dataHandlingData,
+            update: dataHandlingData,
           },
-          include: ORGANIZATION_INCLUDE,
-        })
+        },
+        infrastructureProfile: {
+          upsert: {
+            create: infrastructureData,
+            update: infrastructureData,
+          },
+        },
+      },
+      include: ORGANIZATION_INCLUDE,
+    })
 
-    if (existing) {
-      await this.syncOrganizationDataTypes(organization.id, input.dataHandling)
+    await this.syncOrganizationDataTypes(organization.id, input.dataHandling)
 
-      return mapOrganizationRecord(
-        await this.client.organization.findUniqueOrThrow({
-          where: { id: organization.id },
-          include: ORGANIZATION_INCLUDE,
-        }),
-      )
-    }
-
-    return mapOrganizationRecord(organization)
+    return mapOrganizationRecord(
+      await this.client.organization.findUniqueOrThrow({
+        where: { id: organization.id },
+        include: ORGANIZATION_INCLUDE,
+      }),
+    )
   }
 
-  async getOrCreateOrganizationId(): Promise<string> {
-    const organization = await this.getOrCreateOrganization()
-
-    return organization.id
-  }
-
-  async listDataTypeNames(): Promise<string[]> {
-    const organizationId = await this.getOrCreateOrganizationId()
+  async listDataTypeNames(organizationId: string): Promise<string[]> {
     const dataTypes = await this.client.organizationDataType.findMany({
       where: { organizationId },
       select: { name: true },
     })
 
     return dataTypes.map((dataType) => dataType.name)
-  }
-
-  private async getOrCreateOrganization() {
-    const existing = await this.client.organization.findFirst({
-      where: SINGLE_ORG_FILTER,
-    })
-
-    if (!existing) {
-      return this.client.organization.create({
-        data: {
-          ...this.organizationData({
-            ...emptyCompanyProfile,
-            companyName: "Untitled company",
-          }),
-          accessProfile: { create: this.accessData(emptyAccessProfile) },
-          dataHandlingProfile: {
-            create: this.dataHandlingData(emptyDataHandlingProfile),
-          },
-          dataTypes: {
-            create: this.organizationDataTypes(emptyDataHandlingProfile),
-          },
-          infrastructureProfile: {
-            create: this.infrastructureData(emptyInfrastructureProfile),
-          },
-        },
-        include: ORGANIZATION_INCLUDE,
-      })
-    }
-
-    return this.client.organization.update({
-      where: { id: existing.id },
-      data: {
-        accessProfile: {
-          upsert: {
-            create: this.accessData(emptyAccessProfile),
-            update: {},
-          },
-        },
-        dataHandlingProfile: {
-          upsert: {
-            create: this.dataHandlingData(emptyDataHandlingProfile),
-            update: {},
-          },
-        },
-        infrastructureProfile: {
-          upsert: {
-            create: this.infrastructureData(emptyInfrastructureProfile),
-            update: {},
-          },
-        },
-      },
-      include: ORGANIZATION_INCLUDE,
-    })
   }
 
   private organizationData(input: CompanyProfile) {

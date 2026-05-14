@@ -22,15 +22,9 @@ export class PrismaDocumentRepository implements DocumentRepository {
     private readonly client: PrismaClient = prisma,
   ) {}
 
-  async listTemplates(): Promise<Template[]> {
-    const organization = await this.organizationRepository.getOrganization()
-
-    if (!organization) {
-      return []
-    }
-
+  async listTemplates(organizationId: string): Promise<Template[]> {
     const templates = await this.client.template.findMany({
-      where: { organizationId: organization.id },
+      where: { organizationId },
       orderBy: { createdAt: "asc" },
     })
 
@@ -38,11 +32,9 @@ export class PrismaDocumentRepository implements DocumentRepository {
   }
 
   async createTemplateFromSystem(
+    organizationId: string,
     systemTemplate: SystemTemplate,
   ): Promise<Template> {
-    const organizationId =
-      await this.organizationRepository.getOrCreateOrganizationId()
-
     try {
       const template = await this.client.template.create({
         data: {
@@ -61,11 +53,10 @@ export class PrismaDocumentRepository implements DocumentRepository {
   }
 
   async updateTemplate(
+    organizationId: string,
     id: string,
     input: TemplateInput,
   ): Promise<Template | null> {
-    const organizationId =
-      await this.organizationRepository.getOrCreateOrganizationId()
     const existing = await this.client.template.findFirst({
       where: { id, organizationId },
     })
@@ -90,9 +81,7 @@ export class PrismaDocumentRepository implements DocumentRepository {
     }
   }
 
-  async deleteTemplate(id: string): Promise<boolean> {
-    const organizationId =
-      await this.organizationRepository.getOrCreateOrganizationId()
+  async deleteTemplate(organizationId: string, id: string): Promise<boolean> {
     const existing = await this.client.template.findFirst({
       where: { id, organizationId },
     })
@@ -106,16 +95,11 @@ export class PrismaDocumentRepository implements DocumentRepository {
   }
 
   async listDocumentSummaries(
+    organizationId: string,
     sourceHashForTemplate: (template: Template) => string,
   ): Promise<DocumentSummary[]> {
-    const organization = await this.organizationRepository.getOrganization()
-
-    if (!organization) {
-      return []
-    }
-
     const templates = await this.client.template.findMany({
-      where: { organizationId: organization.id },
+      where: { organizationId },
       include: { documents: true },
       orderBy: { createdAt: "asc" },
     })
@@ -160,15 +144,12 @@ export class PrismaDocumentRepository implements DocumentRepository {
     }
   }
 
-  async getDocument(id: string): Promise<Document | null> {
-    const organization = await this.organizationRepository.getOrganization()
-
-    if (!organization) {
-      return null
-    }
-
+  async getDocument(
+    organizationId: string,
+    id: string,
+  ): Promise<Document | null> {
     const document = await this.client.document.findFirst({
-      where: { id, organizationId: organization.id },
+      where: { id, organizationId },
     })
 
     return document ? mapDocumentRecord(document) : null

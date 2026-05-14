@@ -7,6 +7,10 @@ import Fastify, {
 import { registerAuth } from "./auth.js"
 import { sendError } from "./errors.js"
 import { apiConfig, type AuthConfig } from "./config.js"
+import { InMemoryAccountRepository } from "./features/accounts/in-memory-repository.js"
+import { PrismaAccountRepository } from "./features/accounts/prisma-repository.js"
+import { type AccountRepository } from "./features/accounts/repository.js"
+import { registerAccountRoutes } from "./features/accounts/routes.js"
 import { InMemoryDocumentRepository } from "./features/documents/in-memory-repository.js"
 import { PrismaDocumentRepository } from "./features/documents/prisma-repository.js"
 import { type DocumentRepository } from "./features/documents/repository.js"
@@ -32,6 +36,7 @@ import {
 
 export type CreateAppOptions = {
   auth?: false | AuthConfig
+  accountRepository?: AccountRepository
   organizationRepository?: OrganizationRepository
   vendorRepository?: VendorRepository
   documentRepository?: DocumentRepository
@@ -42,6 +47,7 @@ export type CreateAppOptions = {
 
 export async function createApp({
   auth = apiConfig.auth(),
+  accountRepository,
   organizationRepository,
   vendorRepository,
   documentRepository,
@@ -56,6 +62,7 @@ export async function createApp({
 }: CreateAppOptions = {}): Promise<FastifyInstance> {
   const app = Fastify({ logger })
   const repositories = createRepositories({
+    accountRepository,
     documentRepository,
     organizationRepository,
     vendorRepository,
@@ -83,18 +90,27 @@ export async function createApp({
   app.get("/health", async () => ({ status: "ok" }))
 
   if (auth) {
-    await registerAuth(app, { authConfig: auth })
+    await registerAuth(app, {
+      accountRepository: repositories.accountRepository,
+      authConfig: auth,
+    })
   }
 
+  await registerAccountRoutes(app, {
+    accountRepository: repositories.accountRepository,
+  })
   await registerVendorRoutes(app, {
+    accountRepository: repositories.accountRepository,
     providerSource,
     vendorRepository: repositories.vendorRepository,
   })
   await registerOrganizationRoutes(app, {
+    accountRepository: repositories.accountRepository,
     organizationRepository: repositories.organizationRepository,
     vendorRepository: repositories.vendorRepository,
   })
   await registerDocumentRoutes(app, {
+    accountRepository: repositories.accountRepository,
     documentRepository: repositories.documentRepository,
     organizationRepository: repositories.organizationRepository,
     systemTemplateSource,
@@ -105,6 +121,7 @@ export async function createApp({
 }
 
 export function createTestApp() {
+  const accountRepository = new InMemoryAccountRepository()
   const organizationRepository = new InMemoryOrganizationRepository()
   const vendorRepository = new InMemoryVendorRepository(organizationRepository)
   const documentRepository = new InMemoryDocumentRepository(
@@ -113,6 +130,7 @@ export function createTestApp() {
 
   return createApp({
     auth: false,
+    accountRepository,
     documentRepository,
     organizationRepository,
     vendorRepository,
@@ -144,14 +162,21 @@ export function createTestApp() {
 }
 
 function createRepositories({
+  accountRepository,
   documentRepository,
   organizationRepository,
   vendorRepository,
 }: {
+  accountRepository?: AccountRepository
   documentRepository?: DocumentRepository
   organizationRepository?: OrganizationRepository
   vendorRepository?: VendorRepository
 }) {
+  const resolvedAccountRepository =
+    accountRepository ??
+    (process.env.DATABASE_URL
+      ? new PrismaAccountRepository()
+      : new InMemoryAccountRepository())
   const resolvedOrganizationRepository =
     organizationRepository ??
     (process.env.DATABASE_URL
@@ -169,6 +194,7 @@ function createRepositories({
       : new InMemoryDocumentRepository(resolvedOrganizationRepository))
 
   return {
+    accountRepository: resolvedAccountRepository,
     documentRepository: resolvedDocumentRepository,
     organizationRepository: resolvedOrganizationRepository,
     vendorRepository: resolvedVendorRepository,

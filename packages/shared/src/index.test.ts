@@ -4,6 +4,7 @@ import {
   authStateSchema,
   authUserSchema,
   companyProfileSchema,
+  createOrganizationSchema,
   dataHandlingProfileSchema,
   vendorInputSchema,
   vendorCriticalitySchema,
@@ -51,8 +52,21 @@ describe("shared security profile schemas", () => {
           name: "Startup Founder",
           picture: "https://example.com/avatar.png",
         },
+        organizations: [
+          {
+            id: "org_1",
+            name: "Acme AI",
+            role: "owner",
+            createdAt: "2026-05-14T00:00:00.000Z",
+            updatedAt: "2026-05-14T00:00:00.000Z",
+          },
+        ],
       }).success,
     ).toBe(true)
+  })
+
+  it("requires organization creation to include a name", () => {
+    expect(createOrganizationSchema.safeParse({ name: "" }).success).toBe(false)
   })
 
   it("requires auth users to have a valid email", () => {

@@ -26,16 +26,17 @@ export class InMemoryDocumentRepository implements DocumentRepository {
     private readonly organizationRepository: OrganizationRepository,
   ) {}
 
-  async listTemplates(): Promise<Template[]> {
-    return Array.from(this.templates.values())
+  async listTemplates(organizationId: string): Promise<Template[]> {
+    return Array.from(this.templates.values()).filter(
+      (template) => template.organizationId === organizationId,
+    )
   }
 
   async createTemplateFromSystem(
+    organizationId: string,
     systemTemplate: SystemTemplate,
   ): Promise<Template> {
     const timestamp = now()
-    const organizationId =
-      await this.organizationRepository.getOrCreateOrganizationId()
     const existing = Array.from(this.templates.values()).find(
       (template) =>
         template.organizationId === organizationId &&
@@ -67,12 +68,13 @@ export class InMemoryDocumentRepository implements DocumentRepository {
   }
 
   async updateTemplate(
+    organizationId: string,
     id: string,
     input: TemplateInput,
   ): Promise<Template | null> {
     const currentTemplate = this.templates.get(id)
 
-    if (!currentTemplate) {
+    if (!currentTemplate || currentTemplate.organizationId !== organizationId) {
       return null
     }
 
@@ -102,7 +104,13 @@ export class InMemoryDocumentRepository implements DocumentRepository {
     return template
   }
 
-  async deleteTemplate(id: string): Promise<boolean> {
+  async deleteTemplate(organizationId: string, id: string): Promise<boolean> {
+    const currentTemplate = this.templates.get(id)
+
+    if (!currentTemplate || currentTemplate.organizationId !== organizationId) {
+      return false
+    }
+
     const deleted = this.templates.delete(id)
 
     if (deleted) {
@@ -117,9 +125,12 @@ export class InMemoryDocumentRepository implements DocumentRepository {
   }
 
   async listDocumentSummaries(
+    organizationId: string,
     sourceHashForTemplate: (template: Template) => string,
   ): Promise<DocumentSummary[]> {
-    return Array.from(this.templates.values()).map((template) => {
+    return Array.from(this.templates.values())
+      .filter((template) => template.organizationId === organizationId)
+      .map((template) => {
       const document =
         Array.from(this.documents.values()).find(
           (currentDocument) => currentDocument.templateId === template.id,
@@ -170,7 +181,12 @@ export class InMemoryDocumentRepository implements DocumentRepository {
     return document
   }
 
-  async getDocument(id: string): Promise<Document | null> {
-    return this.documents.get(id) ?? null
+  async getDocument(
+    organizationId: string,
+    id: string,
+  ): Promise<Document | null> {
+    const document = this.documents.get(id) ?? null
+
+    return document?.organizationId === organizationId ? document : null
   }
 }

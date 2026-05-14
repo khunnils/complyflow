@@ -1,11 +1,12 @@
 import oauthPlugin, { type OAuth2Namespace } from "@fastify/oauth2"
 import secureSession from "@fastify/secure-session"
-import { authUserSchema, type AuthUser } from "@complyflow/shared"
+import { type AuthUser } from "@complyflow/shared"
 import { type FastifyInstance, type FastifyRequest } from "fastify"
 import { z } from "zod"
 
 import { type AuthConfig } from "./config.js"
 import { ApiError } from "./errors.js"
+import { type AccountRepository } from "./features/accounts/repository.js"
 
 type OAuthPluginWithProviders = typeof oauthPlugin & {
   GOOGLE_CONFIGURATION: {
@@ -37,12 +38,43 @@ const googleUserInfoSchema = z.object({
 })
 
 export function getSessionUser(request: FastifyRequest) {
-  return request.session.get("user") ?? null
+  return request.session?.get("user") ?? null
+}
+
+export async function getPersistedSessionUser(
+  request: FastifyRequest,
+  accountRepository: AccountRepository,
+) {
+  const user = getSessionUser(request)
+
+  if (!user) {
+    return null
+  }
+
+  const persistedUser = await accountRepository.getUser(user.id)
+
+  if (!persistedUser) {
+    request.session.delete()
+    return null
+  }
+
+  if (
+    persistedUser.email !== user.email ||
+    persistedUser.name !== user.name ||
+    persistedUser.picture !== user.picture
+  ) {
+    request.session.set("user", persistedUser)
+  }
+
+  return persistedUser
 }
 
 export async function registerAuth(
   app: FastifyInstance,
-  { authConfig }: { authConfig: AuthConfig },
+  {
+    accountRepository,
+    authConfig,
+  }: { accountRepository: AccountRepository; authConfig: AuthConfig },
 ) {
   const cookieOptions = {
     path: "/",
@@ -108,8 +140,8 @@ export async function registerAuth(
       )
     }
 
-    const user = authUserSchema.parse({
-      id: userinfo.sub,
+    const user = await accountRepository.upsertUser({
+      googleSubject: userinfo.sub,
       email: userinfo.email,
       name: userinfo.name ?? userinfo.email,
       picture: userinfo.picture,
@@ -120,9 +152,16 @@ export async function registerAuth(
     return reply.redirect(authConfig.clientUrl)
   })
 
-  app.get("/auth/me", async (request) => ({
-    user: getSessionUser(request),
-  }))
+  app.get("/auth/me", async (request) => {
+    const user = await getPersistedSessionUser(request, accountRepository)
+
+    return {
+      user,
+      organizations: user
+        ? await accountRepository.listOrganizations(user.id)
+        : [],
+    }
+  })
 
   app.post("/auth/logout", async (request, reply) => {
     request.session.delete()
@@ -135,7 +174,7 @@ export async function registerAuth(
       return
     }
 
-    if (!getSessionUser(request)) {
+    if (!(await getPersistedSessionUser(request, accountRepository))) {
       throw new ApiError(
         "AUTHENTICATION_REQUIRED",
         "Authentication is required.",

@@ -1,22 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
+  type CreateOrganization,
+  type CreateDocument,
+  type CreateTemplateFromSystem,
   type Template,
+  type TemplateInput,
   type Vendor,
   type VendorInput,
 } from "@complyflow/shared"
 
 import {
   createDocument,
+  createOrganization,
   createTemplateFromSystem,
   createVendor,
   deleteTemplate,
   deleteVendor,
   getAuthState,
   getDocument,
-  getDocuments,
+  getOrganizationDocuments,
+  getOrganizationSecurityProfile,
+  getOrganizationTemplates,
   getProviders,
-  getSecurityProfile,
-  getTemplates,
   logout,
   saveSecurityProfile,
   updateTemplate,
@@ -24,11 +29,14 @@ import {
 } from "@/lib/api"
 import { type ProfileDraft } from "@/types/security-profile"
 
-const securityProfileQueryKey = ["security-profile"] as const
 const authStateQueryKey = ["auth"] as const
 const providersQueryKey = ["providers"] as const
-const templatesQueryKey = ["templates"] as const
-const documentsQueryKey = ["documents"] as const
+const securityProfileQueryKey = (organizationId: string) =>
+  ["security-profile", organizationId] as const
+const templatesQueryKey = (organizationId: string) =>
+  ["templates", organizationId] as const
+const documentsQueryKey = (organizationId: string) =>
+  ["documents", organizationId] as const
 
 export const useAuthState = () =>
   useQuery({
@@ -36,27 +44,44 @@ export const useAuthState = () =>
     queryFn: getAuthState,
   })
 
+export const useCreateOrganization = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (input: CreateOrganization) => createOrganization(input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: authStateQueryKey })
+    },
+  })
+}
+
 export const useLogout = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: logout,
     onSuccess: () => {
-      queryClient.setQueryData(authStateQueryKey, { user: null })
-      queryClient.removeQueries({ queryKey: securityProfileQueryKey })
+      queryClient.setQueryData(authStateQueryKey, {
+        user: null,
+        organizations: [],
+      })
+      queryClient.removeQueries({ queryKey: ["security-profile"] })
       queryClient.removeQueries({ queryKey: providersQueryKey })
-      queryClient.removeQueries({ queryKey: templatesQueryKey })
-      queryClient.removeQueries({ queryKey: documentsQueryKey })
+      queryClient.removeQueries({ queryKey: ["templates"] })
+      queryClient.removeQueries({ queryKey: ["documents"] })
       queryClient.removeQueries({ queryKey: ["document"] })
     },
   })
 }
 
-export const useSecurityProfile = (enabled = true) =>
+export const useSecurityProfile = (
+  organizationId: string | null,
+  enabled = true
+) =>
   useQuery({
-    enabled,
-    queryKey: securityProfileQueryKey,
-    queryFn: getSecurityProfile,
+    enabled: enabled && Boolean(organizationId),
+    queryKey: securityProfileQueryKey(organizationId ?? ""),
+    queryFn: () => getOrganizationSecurityProfile(organizationId ?? ""),
   })
 
 export const useProviders = (enabled = true) =>
@@ -66,74 +91,94 @@ export const useProviders = (enabled = true) =>
     queryFn: getProviders,
   })
 
-export const useTemplates = (enabled = true) =>
+export const useTemplates = (organizationId: string | null, enabled = true) =>
   useQuery({
-    enabled,
-    queryKey: templatesQueryKey,
-    queryFn: getTemplates,
+    enabled: enabled && Boolean(organizationId),
+    queryKey: templatesQueryKey(organizationId ?? ""),
+    queryFn: () => getOrganizationTemplates(organizationId ?? ""),
   })
 
-export const useDocuments = (enabled = true) =>
+export const useDocuments = (organizationId: string | null, enabled = true) =>
   useQuery({
-    enabled,
-    queryKey: documentsQueryKey,
-    queryFn: getDocuments,
+    enabled: enabled && Boolean(organizationId),
+    queryKey: documentsQueryKey(organizationId ?? ""),
+    queryFn: () => getOrganizationDocuments(organizationId ?? ""),
   })
 
-export const useDocument = (id: string | null, enabled = true) =>
+export const useDocument = (
+  organizationId: string | null,
+  id: string | null,
+  enabled = true
+) =>
   useQuery({
-    enabled: enabled && Boolean(id),
-    queryKey: ["document", id] as const,
-    queryFn: () => getDocument(id ?? ""),
+    enabled: enabled && Boolean(organizationId) && Boolean(id),
+    queryKey: ["document", organizationId, id] as const,
+    queryFn: () => getDocument(organizationId ?? "", id ?? ""),
   })
 
-export const useSaveSecurityProfile = () => {
+export const useSaveSecurityProfile = (organizationId: string | null) => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: saveSecurityProfile,
+    mutationFn: (profile: ProfileDraft) =>
+      saveSecurityProfile(organizationId ?? "", profile),
     onSuccess: (snapshot) => {
-      queryClient.setQueryData(securityProfileQueryKey, snapshot)
+      queryClient.setQueryData(
+        securityProfileQueryKey(organizationId ?? ""),
+        snapshot
+      )
+      void queryClient.invalidateQueries({
+        queryKey: ["auth"],
+      })
     },
   })
 }
 
-export const useCreateVendor = () => {
+export const useCreateVendor = (organizationId: string | null) => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: createVendor,
+    mutationFn: (vendor: VendorInput) =>
+      createVendor(organizationId ?? "", vendor),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: securityProfileQueryKey })
+      void queryClient.invalidateQueries({
+        queryKey: securityProfileQueryKey(organizationId ?? ""),
+      })
     },
   })
 }
 
-export const useCreateVendors = () => {
+export const useCreateVendors = (organizationId: string | null) => {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (vendors: VendorInput[]) =>
-      Promise.all(vendors.map(createVendor)),
+      Promise.all(
+        vendors.map((vendor) => createVendor(organizationId ?? "", vendor))
+      ),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: securityProfileQueryKey })
+      void queryClient.invalidateQueries({
+        queryKey: securityProfileQueryKey(organizationId ?? ""),
+      })
     },
   })
 }
 
-export const useUpdateVendor = () => {
+export const useUpdateVendor = (organizationId: string | null) => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: updateVendor,
+    mutationFn: (input: { id: string; vendor: VendorInput }) =>
+      updateVendor({ organizationId: organizationId ?? "", ...input }),
     onMutate: async ({ id, vendor }) => {
-      await queryClient.cancelQueries({ queryKey: securityProfileQueryKey })
+      const key = securityProfileQueryKey(organizationId ?? "")
+      await queryClient.cancelQueries({ queryKey: key })
       const previousSnapshot = queryClient.getQueryData<{
         organization: unknown
         vendors: Vendor[]
-      }>(securityProfileQueryKey)
+      }>(key)
 
-      queryClient.setQueryData(securityProfileQueryKey, (current: unknown) => {
+      queryClient.setQueryData(key, (current: unknown) => {
         if (!current || typeof current !== "object") {
           return current
         }
@@ -154,30 +199,33 @@ export const useUpdateVendor = () => {
     onError: (_error, _variables, context) => {
       if (context?.previousSnapshot) {
         queryClient.setQueryData(
-          securityProfileQueryKey,
+          securityProfileQueryKey(organizationId ?? ""),
           context.previousSnapshot
         )
       }
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: securityProfileQueryKey })
+      void queryClient.invalidateQueries({
+        queryKey: securityProfileQueryKey(organizationId ?? ""),
+      })
     },
   })
 }
 
-export const useDeleteVendor = () => {
+export const useDeleteVendor = (organizationId: string | null) => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: deleteVendor,
+    mutationFn: (id: string) => deleteVendor(organizationId ?? "", id),
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: securityProfileQueryKey })
+      const key = securityProfileQueryKey(organizationId ?? "")
+      await queryClient.cancelQueries({ queryKey: key })
       const previousSnapshot = queryClient.getQueryData<{
         organization: unknown
         vendors: Vendor[]
-      }>(securityProfileQueryKey)
+      }>(key)
 
-      queryClient.setQueryData(securityProfileQueryKey, (current: unknown) => {
+      queryClient.setQueryData(key, (current: unknown) => {
         if (!current || typeof current !== "object") {
           return current
         }
@@ -194,42 +242,51 @@ export const useDeleteVendor = () => {
     onError: (_error, _id, context) => {
       if (context?.previousSnapshot) {
         queryClient.setQueryData(
-          securityProfileQueryKey,
+          securityProfileQueryKey(organizationId ?? ""),
           context.previousSnapshot
         )
       }
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: securityProfileQueryKey })
+      void queryClient.invalidateQueries({
+        queryKey: securityProfileQueryKey(organizationId ?? ""),
+      })
     },
   })
 }
 
-export const useCreateTemplateFromSystem = () => {
+export const useCreateTemplateFromSystem = (organizationId: string | null) => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: createTemplateFromSystem,
+    mutationFn: (input: CreateTemplateFromSystem) =>
+      createTemplateFromSystem(organizationId ?? "", input),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: templatesQueryKey })
-      void queryClient.invalidateQueries({ queryKey: documentsQueryKey })
+      void queryClient.invalidateQueries({
+        queryKey: templatesQueryKey(organizationId ?? ""),
+      })
+      void queryClient.invalidateQueries({
+        queryKey: documentsQueryKey(organizationId ?? ""),
+      })
     },
   })
 }
 
-export const useUpdateTemplate = () => {
+export const useUpdateTemplate = (organizationId: string | null) => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: updateTemplate,
+    mutationFn: (input: { id: string; template: TemplateInput }) =>
+      updateTemplate({ organizationId: organizationId ?? "", ...input }),
     onMutate: async ({ id, template }) => {
-      await queryClient.cancelQueries({ queryKey: templatesQueryKey })
+      const key = templatesQueryKey(organizationId ?? "")
+      await queryClient.cancelQueries({ queryKey: key })
       const previousCatalog = queryClient.getQueryData<{
         systemTemplates: unknown[]
         organizationTemplates: Template[]
-      }>(templatesQueryKey)
+      }>(key)
 
-      queryClient.setQueryData(templatesQueryKey, (current: unknown) => {
+      queryClient.setQueryData(key, (current: unknown) => {
         if (!current || typeof current !== "object") {
           return current
         }
@@ -252,29 +309,37 @@ export const useUpdateTemplate = () => {
     },
     onError: (_error, _variables, context) => {
       if (context?.previousCatalog) {
-        queryClient.setQueryData(templatesQueryKey, context.previousCatalog)
+        queryClient.setQueryData(
+          templatesQueryKey(organizationId ?? ""),
+          context.previousCatalog
+        )
       }
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: templatesQueryKey })
-      void queryClient.invalidateQueries({ queryKey: documentsQueryKey })
+      void queryClient.invalidateQueries({
+        queryKey: templatesQueryKey(organizationId ?? ""),
+      })
+      void queryClient.invalidateQueries({
+        queryKey: documentsQueryKey(organizationId ?? ""),
+      })
     },
   })
 }
 
-export const useDeleteTemplate = () => {
+export const useDeleteTemplate = (organizationId: string | null) => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: deleteTemplate,
+    mutationFn: (id: string) => deleteTemplate(organizationId ?? "", id),
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: templatesQueryKey })
+      const key = templatesQueryKey(organizationId ?? "")
+      await queryClient.cancelQueries({ queryKey: key })
       const previousCatalog = queryClient.getQueryData<{
         systemTemplates: unknown[]
         organizationTemplates: Template[]
-      }>(templatesQueryKey)
+      }>(key)
 
-      queryClient.setQueryData(templatesQueryKey, (current: unknown) => {
+      queryClient.setQueryData(key, (current: unknown) => {
         if (!current || typeof current !== "object") {
           return current
         }
@@ -294,24 +359,37 @@ export const useDeleteTemplate = () => {
     },
     onError: (_error, _id, context) => {
       if (context?.previousCatalog) {
-        queryClient.setQueryData(templatesQueryKey, context.previousCatalog)
+        queryClient.setQueryData(
+          templatesQueryKey(organizationId ?? ""),
+          context.previousCatalog
+        )
       }
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: templatesQueryKey })
-      void queryClient.invalidateQueries({ queryKey: documentsQueryKey })
+      void queryClient.invalidateQueries({
+        queryKey: templatesQueryKey(organizationId ?? ""),
+      })
+      void queryClient.invalidateQueries({
+        queryKey: documentsQueryKey(organizationId ?? ""),
+      })
     },
   })
 }
 
-export const useCreateDocument = () => {
+export const useCreateDocument = (organizationId: string | null) => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: createDocument,
+    mutationFn: (input: CreateDocument) =>
+      createDocument(organizationId ?? "", input),
     onSuccess: (document) => {
-      void queryClient.invalidateQueries({ queryKey: documentsQueryKey })
-      queryClient.setQueryData(["document", document.id], document)
+      void queryClient.invalidateQueries({
+        queryKey: documentsQueryKey(organizationId ?? ""),
+      })
+      queryClient.setQueryData(
+        ["document", organizationId, document.id],
+        document
+      )
     },
   })
 }

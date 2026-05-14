@@ -9,8 +9,11 @@ import {
   documentSchema,
   documentSummarySchema,
   templateSchema,
+  createOrganizationSchema,
+  organizationSummarySchema,
   type Provider,
   type CreateDocument,
+  type CreateOrganization,
   type CreateTemplateFromSystem,
   type Document,
   type DocumentSummary,
@@ -21,6 +24,7 @@ import {
   type TemplateInput,
   type Vendor,
   type VendorInput,
+  type OrganizationSummary,
 } from "@complyflow/shared"
 import { z } from "zod"
 
@@ -82,78 +86,122 @@ export const logout = async (): Promise<void> => {
   }
 }
 
-export const getSecurityProfile = (): Promise<SecurityProgramSnapshot> =>
-  apiRequest("/security-profile", securityProgramSnapshotSchema)
+export const getOrganizationSecurityProfile = (
+  organizationId: string
+): Promise<SecurityProgramSnapshot> =>
+  apiRequest(
+    `/organizations/${organizationId}/security-profile`,
+    securityProgramSnapshotSchema
+  )
 
 export const getProviders = (): Promise<Provider[]> =>
   apiRequest("/providers", z.array(providerSchema))
 
-export const getTemplates = (): Promise<TemplateCatalog> =>
-  apiRequest("/templates", templateCatalogSchema)
+export const getOrganizationTemplates = (
+  organizationId: string
+): Promise<TemplateCatalog> =>
+  apiRequest(
+    `/organizations/${organizationId}/templates`,
+    templateCatalogSchema
+  )
 
-export const getDocuments = (): Promise<DocumentSummary[]> =>
-  apiRequest("/documents", z.array(documentSummarySchema))
+export const getOrganizationDocuments = (
+  organizationId: string
+): Promise<DocumentSummary[]> =>
+  apiRequest(
+    `/organizations/${organizationId}/documents`,
+    z.array(documentSummarySchema)
+  )
 
 export const saveSecurityProfile = (
+  organizationId: string,
   profile: ProfileDraft
 ): Promise<SecurityProgramSnapshot> =>
-  apiRequest("/security-profile", securityProgramSnapshotSchema, {
-    method: "PUT",
-    body: JSON.stringify(profile),
-  })
+  apiRequest(
+    `/organizations/${organizationId}/security-profile`,
+    securityProgramSnapshotSchema,
+    {
+      method: "PUT",
+      body: JSON.stringify(profile),
+    }
+  )
 
-export const createVendor = (vendor: VendorInput): Promise<Vendor> =>
-  apiRequest("/vendors", vendorSchema, {
+export const createVendor = (
+  organizationId: string,
+  vendor: VendorInput
+): Promise<Vendor> =>
+  apiRequest(`/organizations/${organizationId}/vendors`, vendorSchema, {
     method: "POST",
     body: JSON.stringify(vendor),
   })
 
 export const createTemplateFromSystem = (
+  organizationId: string,
   input: CreateTemplateFromSystem
 ): Promise<Template> =>
-  apiRequest("/templates/organization", templateSchema, {
+  apiRequest(`/organizations/${organizationId}/templates`, templateSchema, {
     method: "POST",
     body: JSON.stringify(input),
   })
 
 export const updateTemplate = ({
+  organizationId,
   id,
   template,
 }: {
+  organizationId: string
   id: string
   template: TemplateInput
 }): Promise<Template> =>
-  apiRequest(`/templates/organization/${id}`, templateSchema, {
-    method: "PUT",
-    body: JSON.stringify(template),
-  })
+  apiRequest(
+    `/organizations/${organizationId}/templates/${id}`,
+    templateSchema,
+    {
+      method: "PUT",
+      body: JSON.stringify(template),
+    }
+  )
 
-export const createDocument = (input: CreateDocument): Promise<Document> =>
-  apiRequest("/documents", documentSchema, {
+export const createDocument = (
+  organizationId: string,
+  input: CreateDocument
+): Promise<Document> =>
+  apiRequest(`/organizations/${organizationId}/documents`, documentSchema, {
     method: "POST",
     body: JSON.stringify(createDocumentSchema.parse(input)),
   })
 
-export const getDocument = (id: string): Promise<Document> =>
-  apiRequest(`/documents/${id}`, documentSchema)
+export const getDocument = (
+  organizationId: string,
+  id: string
+): Promise<Document> =>
+  apiRequest(`/organizations/${organizationId}/documents/${id}`, documentSchema)
 
 export const updateVendor = ({
+  organizationId,
   id,
   vendor,
 }: {
+  organizationId: string
   id: string
   vendor: VendorInput
 }): Promise<Vendor> =>
-  apiRequest(`/vendors/${id}`, vendorSchema, {
+  apiRequest(`/organizations/${organizationId}/vendors/${id}`, vendorSchema, {
     method: "PUT",
     body: JSON.stringify(vendor),
   })
 
-export const deleteVendor = async (id: string): Promise<void> => {
-  const response = await fetch(`${API_URL}/vendors/${id}`, {
-    credentials: "include",
-    method: "DELETE",
-  })
+export const deleteVendor = async (
+  organizationId: string,
+  id: string
+): Promise<void> => {
+  const response = await fetch(
+    `${API_URL}/organizations/${organizationId}/vendors/${id}`,
+    {
+      credentials: "include",
+      method: "DELETE",
+    }
+  )
 
   if (!response.ok) {
     const body = await response.json().catch(() => null)
@@ -164,11 +212,17 @@ export const deleteVendor = async (id: string): Promise<void> => {
   }
 }
 
-export const deleteTemplate = async (id: string): Promise<void> => {
-  const response = await fetch(`${API_URL}/templates/organization/${id}`, {
-    credentials: "include",
-    method: "DELETE",
-  })
+export const deleteTemplate = async (
+  organizationId: string,
+  id: string
+): Promise<void> => {
+  const response = await fetch(
+    `${API_URL}/organizations/${organizationId}/templates/${id}`,
+    {
+      credentials: "include",
+      method: "DELETE",
+    }
+  )
 
   if (!response.ok) {
     const body = await response.json().catch(() => null)
@@ -178,3 +232,11 @@ export const deleteTemplate = async (id: string): Promise<void> => {
     )
   }
 }
+
+export const createOrganization = (
+  input: CreateOrganization
+): Promise<OrganizationSummary> =>
+  apiRequest("/organizations", organizationSummarySchema, {
+    method: "POST",
+    body: JSON.stringify(createOrganizationSchema.parse(input)),
+  })

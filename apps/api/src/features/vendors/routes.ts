@@ -2,6 +2,8 @@ import { vendorInputSchema } from "@complyflow/shared"
 import { type FastifyInstance } from "fastify"
 
 import { ApiError } from "../../errors.js"
+import { requireOrganizationMembership } from "../../organization-context.js"
+import { type AccountRepository } from "../accounts/repository.js"
 import { type ProviderSource } from "../../providers.js"
 import { type VendorRepository } from "./repository.js"
 
@@ -10,27 +12,57 @@ export async function registerVendorRoutes(
   {
     providerSource,
     vendorRepository,
+    accountRepository,
   }: {
+    accountRepository: AccountRepository
     providerSource: ProviderSource
     vendorRepository: VendorRepository
   },
 ) {
   app.get("/providers", async () => providerSource.listProviders())
 
-  app.get("/vendors", async () => vendorRepository.listVendors())
+  app.get<{ Params: { organizationId: string } }>(
+    "/organizations/:organizationId/vendors",
+    async (request) => {
+      await requireOrganizationMembership(
+        request,
+        accountRepository,
+        request.params.organizationId,
+      )
 
-  app.post("/vendors", async (request, reply) => {
-    const body = vendorInputSchema.parse(request.body)
-    const vendor = await vendorRepository.createVendor(body)
+      return vendorRepository.listVendors(request.params.organizationId)
+    },
+  )
 
-    return reply.status(201).send(vendor)
-  })
-
-  app.put<{ Params: { id: string } }>(
-    "/vendors/:id",
+  app.post<{ Params: { organizationId: string } }>(
+    "/organizations/:organizationId/vendors",
     async (request, reply) => {
+      await requireOrganizationMembership(
+        request,
+        accountRepository,
+        request.params.organizationId,
+      )
+      const body = vendorInputSchema.parse(request.body)
+      const vendor = await vendorRepository.createVendor(
+        request.params.organizationId,
+        body,
+      )
+
+      return reply.status(201).send(vendor)
+    },
+  )
+
+  app.put<{ Params: { organizationId: string; id: string } }>(
+    "/organizations/:organizationId/vendors/:id",
+    async (request, reply) => {
+      await requireOrganizationMembership(
+        request,
+        accountRepository,
+        request.params.organizationId,
+      )
       const body = vendorInputSchema.parse(request.body)
       const vendor = await vendorRepository.updateVendor(
+        request.params.organizationId,
         request.params.id,
         body,
       )
@@ -43,10 +75,18 @@ export async function registerVendorRoutes(
     },
   )
 
-  app.delete<{ Params: { id: string } }>(
-    "/vendors/:id",
+  app.delete<{ Params: { organizationId: string; id: string } }>(
+    "/organizations/:organizationId/vendors/:id",
     async (request, reply) => {
-      const deleted = await vendorRepository.deleteVendor(request.params.id)
+      await requireOrganizationMembership(
+        request,
+        accountRepository,
+        request.params.organizationId,
+      )
+      const deleted = await vendorRepository.deleteVendor(
+        request.params.organizationId,
+        request.params.id,
+      )
 
       if (!deleted) {
         throw new ApiError("VENDOR_NOT_FOUND", "Vendor was not found.", 404)

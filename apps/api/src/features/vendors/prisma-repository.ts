@@ -18,15 +18,9 @@ export class PrismaVendorRepository implements VendorRepository {
     private readonly client: PrismaClient = prisma,
   ) {}
 
-  async listVendors(): Promise<Vendor[]> {
-    const organization = await this.organizationRepository.getOrganization()
-
-    if (!organization) {
-      return []
-    }
-
+  async listVendors(organizationId: string): Promise<Vendor[]> {
     const vendors = await this.client.vendor.findMany({
-      where: { organizationId: organization.id },
+      where: { organizationId },
       include: VENDOR_INCLUDE,
       orderBy: { createdAt: "asc" },
     })
@@ -34,10 +28,11 @@ export class PrismaVendorRepository implements VendorRepository {
     return vendors.map(mapVendorRecord)
   }
 
-  async createVendor(input: VendorInput): Promise<Vendor> {
-    const organizationId =
-      await this.organizationRepository.getOrCreateOrganizationId()
-    const dataProcessed = await this.validVendorDataTypeNames(input)
+  async createVendor(organizationId: string, input: VendorInput): Promise<Vendor> {
+    const dataProcessed = await this.validVendorDataTypeNames(
+      organizationId,
+      input,
+    )
     const vendor = await this.client.vendor.create({
       data: {
         organizationId,
@@ -54,9 +49,11 @@ export class PrismaVendorRepository implements VendorRepository {
     return mapVendorRecord(vendor)
   }
 
-  async updateVendor(id: string, input: VendorInput): Promise<Vendor | null> {
-    const organizationId =
-      await this.organizationRepository.getOrCreateOrganizationId()
+  async updateVendor(
+    organizationId: string,
+    id: string,
+    input: VendorInput,
+  ): Promise<Vendor | null> {
     const existing = await this.client.vendor.findFirst({
       where: { id, organizationId },
     })
@@ -65,7 +62,10 @@ export class PrismaVendorRepository implements VendorRepository {
       return null
     }
 
-    const dataProcessed = await this.validVendorDataTypeNames(input)
+    const dataProcessed = await this.validVendorDataTypeNames(
+      organizationId,
+      input,
+    )
     const vendor = await this.client.vendor.update({
       where: { id },
       data: {
@@ -83,9 +83,7 @@ export class PrismaVendorRepository implements VendorRepository {
     return mapVendorRecord(vendor)
   }
 
-  async deleteVendor(id: string): Promise<boolean> {
-    const organizationId =
-      await this.organizationRepository.getOrCreateOrganizationId()
+  async deleteVendor(organizationId: string, id: string): Promise<boolean> {
     const existing = await this.client.vendor.findFirst({
       where: { id, organizationId },
     })
@@ -98,7 +96,10 @@ export class PrismaVendorRepository implements VendorRepository {
     return true
   }
 
-  private async validVendorDataTypeNames(input: VendorInput) {
+  private async validVendorDataTypeNames(
+    organizationId: string,
+    input: VendorInput,
+  ) {
     if (input.dataProcessingLevel === "none") {
       return []
     }
@@ -110,7 +111,7 @@ export class PrismaVendorRepository implements VendorRepository {
     }
 
     const existingNames = new Set(
-      await this.organizationRepository.listDataTypeNames(),
+      await this.organizationRepository.listDataTypeNames(organizationId),
     )
     const missingNames = requestedNames.filter(
       (name) => !existingNames.has(name),

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { createApp, createTestApp } from "../src/app.js"
 import { readAuthConfig } from "../src/config.js"
+import { InMemoryAccountRepository } from "../src/features/accounts/in-memory-repository.js"
 import { InMemoryDocumentRepository } from "../src/features/documents/in-memory-repository.js"
 import { InMemoryOrganizationRepository } from "../src/features/organizations/in-memory-repository.js"
 import { InMemoryVendorRepository } from "../src/features/vendors/in-memory-repository.js"
@@ -101,7 +102,7 @@ describe("security profile API", () => {
     })
     const response = await app.inject({
       method: "GET",
-      url: "/security-profile",
+      url: "/organizations/org-test/security-profile",
     })
 
     expect(response.statusCode).toBe(401)
@@ -121,7 +122,7 @@ describe("security profile API", () => {
     const response = await app.inject({ method: "GET", url: "/auth/me" })
 
     expect(response.statusCode).toBe(200)
-    expect(response.json()).toEqual({ user: null })
+    expect(response.json()).toEqual({ user: null, organizations: [] })
   })
 
   it("supports idempotent logout without a session", async () => {
@@ -132,6 +133,24 @@ describe("security profile API", () => {
     const response = await app.inject({ method: "POST", url: "/auth/logout" })
 
     expect(response.statusCode).toBe(204)
+  })
+
+  it("clears stale authenticated sessions whose user no longer exists", async () => {
+    const app = await createApp({
+      ...createInMemoryRepositories(),
+      auth: authConfig,
+    })
+
+    const staleCookieResponse = await app.inject({
+      method: "GET",
+      url: "/auth/me",
+      cookies: {
+        cf_session:
+          "Fe26.2**stale-session-cookie-placeholder**placeholder",
+      },
+    })
+
+    expect(staleCookieResponse.statusCode).toBe(200)
   })
 
   it("requires auth config values when auth config is read", () => {
@@ -156,7 +175,7 @@ describe("security profile API", () => {
     const app = await createTestApp()
     const saveResponse = await app.inject({
       method: "PUT",
-      url: "/security-profile",
+      url: "/organizations/org-test/security-profile",
       payload: profileBody,
     })
 
@@ -168,7 +187,7 @@ describe("security profile API", () => {
 
     const getResponse = await app.inject({
       method: "GET",
-      url: "/security-profile",
+      url: "/organizations/org-test/security-profile",
     })
 
     expect(getResponse.statusCode).toBe(200)
@@ -182,7 +201,7 @@ describe("security profile API", () => {
     const app = await createTestApp()
     const response = await app.inject({
       method: "PUT",
-      url: "/security-profile",
+      url: "/organizations/org-test/security-profile",
       payload: {
         ...profileBody,
         company: { ...profileBody.company, companyName: "" },
@@ -197,13 +216,13 @@ describe("security profile API", () => {
     const app = await createTestApp()
     await app.inject({
       method: "PUT",
-      url: "/security-profile",
+      url: "/organizations/org-test/security-profile",
       payload: profileBody,
     })
 
     const createResponse = await app.inject({
       method: "POST",
-      url: "/vendors",
+      url: "/organizations/org-test/vendors",
       payload: vendorBody,
     })
 
@@ -213,7 +232,7 @@ describe("security profile API", () => {
 
     const updateResponse = await app.inject({
       method: "PUT",
-      url: `/vendors/${createdVendor.id}`,
+      url: `/organizations/org-test/vendors/${createdVendor.id}`,
       payload: {
         ...vendorBody,
         dpaStatus: "in_review",
@@ -224,25 +243,25 @@ describe("security profile API", () => {
     expect(updateResponse.statusCode).toBe(200)
     expect(updateResponse.json().dpaStatus).toBe("in_review")
 
-    const listResponse = await app.inject({ method: "GET", url: "/vendors" })
+    const listResponse = await app.inject({ method: "GET", url: "/organizations/org-test/vendors" })
     expect(listResponse.json()).toHaveLength(1)
 
     const deleteResponse = await app.inject({
       method: "DELETE",
-      url: `/vendors/${createdVendor.id}`,
+      url: `/organizations/org-test/vendors/${createdVendor.id}`,
     })
     expect(deleteResponse.statusCode).toBe(204)
 
     const emptyListResponse = await app.inject({
       method: "GET",
-      url: "/vendors",
+      url: "/organizations/org-test/vendors",
     })
     expect(emptyListResponse.json()).toHaveLength(0)
   })
 
   it("returns system and organization templates", async () => {
     const app = await createTestApp()
-    const response = await app.inject({ method: "GET", url: "/templates" })
+    const response = await app.inject({ method: "GET", url: "/organizations/org-test/templates" })
 
     expect(response.statusCode).toBe(200)
     expect(response.json()).toMatchObject({
@@ -266,7 +285,7 @@ describe("security profile API", () => {
     const app = await createTestApp()
     const createResponse = await app.inject({
       method: "POST",
-      url: "/templates/organization",
+      url: "/organizations/org-test/templates",
       payload: { sourceSystemTemplateSlug: "security-policy" },
     })
 
@@ -281,7 +300,7 @@ describe("security profile API", () => {
 
     const updateResponse = await app.inject({
       method: "PUT",
-      url: `/templates/organization/${createdTemplate.id}`,
+      url: `/organizations/org-test/templates/${createdTemplate.id}`,
       payload: {
         name: "Customer Security Policy",
         slug: "customer-security-policy",
@@ -297,12 +316,12 @@ describe("security profile API", () => {
       content: "# Updated policy\n",
     })
 
-    const listResponse = await app.inject({ method: "GET", url: "/templates" })
+    const listResponse = await app.inject({ method: "GET", url: "/organizations/org-test/templates" })
     expect(listResponse.json().organizationTemplates).toHaveLength(1)
 
     const deleteResponse = await app.inject({
       method: "DELETE",
-      url: `/templates/organization/${createdTemplate.id}`,
+      url: `/organizations/org-test/templates/${createdTemplate.id}`,
     })
     expect(deleteResponse.statusCode).toBe(204)
   })
@@ -311,7 +330,7 @@ describe("security profile API", () => {
     const app = await createTestApp()
     const response = await app.inject({
       method: "POST",
-      url: "/templates/organization",
+      url: "/organizations/org-test/templates",
       payload: { sourceSystemTemplateSlug: "missing-template" },
     })
 
@@ -323,19 +342,19 @@ describe("security profile API", () => {
     const app = await createTestApp()
     await app.inject({
       method: "PUT",
-      url: "/security-profile",
+      url: "/organizations/org-test/security-profile",
       payload: profileBody,
     })
     const createTemplateResponse = await app.inject({
       method: "POST",
-      url: "/templates/organization",
+      url: "/organizations/org-test/templates",
       payload: { sourceSystemTemplateSlug: "security-policy" },
     })
     const template = createTemplateResponse.json()
 
     const emptyDocumentsResponse = await app.inject({
       method: "GET",
-      url: "/documents",
+      url: "/organizations/org-test/documents",
     })
     expect(emptyDocumentsResponse.statusCode).toBe(200)
     expect(emptyDocumentsResponse.json()).toMatchObject([
@@ -348,7 +367,7 @@ describe("security profile API", () => {
 
     const generateResponse = await app.inject({
       method: "POST",
-      url: "/documents",
+      url: "/organizations/org-test/documents",
       payload: { templateId: template.id },
     })
 
@@ -362,7 +381,7 @@ describe("security profile API", () => {
 
     const currentDocumentsResponse = await app.inject({
       method: "GET",
-      url: "/documents",
+      url: "/organizations/org-test/documents",
     })
     expect(currentDocumentsResponse.json()).toMatchObject([
       {
@@ -373,7 +392,7 @@ describe("security profile API", () => {
 
     const duplicateResponse = await app.inject({
       method: "POST",
-      url: "/documents",
+      url: "/organizations/org-test/documents",
       payload: { templateId: template.id },
     })
     expect(duplicateResponse.statusCode).toBe(409)
@@ -381,7 +400,7 @@ describe("security profile API", () => {
 
     const documentResponse = await app.inject({
       method: "GET",
-      url: `/documents/${generateResponse.json().id}`,
+      url: `/organizations/org-test/documents/${generateResponse.json().id}`,
     })
     expect(documentResponse.statusCode).toBe(200)
     expect(documentResponse.json().renderedContent).toBe(
@@ -390,7 +409,7 @@ describe("security profile API", () => {
 
     await app.inject({
       method: "PUT",
-      url: `/templates/organization/${template.id}`,
+      url: `/organizations/org-test/templates/${template.id}`,
       payload: {
         name: "Security Policy",
         slug: "security-policy",
@@ -400,7 +419,7 @@ describe("security profile API", () => {
 
     const staleDocumentsResponse = await app.inject({
       method: "GET",
-      url: "/documents",
+      url: "/organizations/org-test/documents",
     })
     expect(staleDocumentsResponse.json()).toMatchObject([
       {
@@ -414,7 +433,7 @@ describe("security profile API", () => {
     const app = await createTestApp()
     const response = await app.inject({
       method: "POST",
-      url: "/documents",
+      url: "/organizations/org-test/documents",
       payload: { templateId: "template_missing" },
     })
 
@@ -426,13 +445,13 @@ describe("security profile API", () => {
     const app = await createTestApp()
     await app.inject({
       method: "PUT",
-      url: "/security-profile",
+      url: "/organizations/org-test/security-profile",
       payload: profileBody,
     })
 
     const response = await app.inject({
       method: "POST",
-      url: "/vendors",
+      url: "/organizations/org-test/vendors",
       payload: {
         ...vendorBody,
         dataProcessed: ["source code"],
@@ -528,9 +547,11 @@ describe("security profile API", () => {
 })
 
 function createInMemoryRepositories() {
+  const accountRepository = new InMemoryAccountRepository()
   const organizationRepository = new InMemoryOrganizationRepository()
 
   return {
+    accountRepository,
     documentRepository: new InMemoryDocumentRepository(organizationRepository),
     organizationRepository,
     vendorRepository: new InMemoryVendorRepository(organizationRepository),

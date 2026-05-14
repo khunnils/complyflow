@@ -18,6 +18,7 @@ import {
   type Document,
   type DocumentSummary,
   type AuthUser,
+  type OrganizationSummary,
   type Provider,
   type Template,
   type TemplateCatalog,
@@ -53,6 +54,7 @@ import {
   ProfileInfrastructureFields,
 } from "@/components/security/profile-form"
 import { ProviderSelector } from "@/components/security/provider-selector"
+import { OrganizationSwitcher } from "@/components/security/organization-switcher"
 import { Section } from "@/components/security/section"
 import { SummaryTiles } from "@/components/security/summary-tiles"
 import { VendorEmptyState } from "@/components/security/vendor-empty-state"
@@ -385,6 +387,10 @@ export const Workspace = ({
   onCreateVendor,
   onUpdateVendor,
   onDeleteVendor,
+  organizations,
+  selectedOrganizationId,
+  onCreateOrganization,
+  onSelectOrganization,
 }: {
   defaultValues: ProfileDraft
   vendors: Vendor[]
@@ -400,6 +406,8 @@ export const Workspace = ({
   error: string | null
   saveState: MutationState
   user: AuthUser
+  organizations: OrganizationSummary[]
+  selectedOrganizationId: string
   onLogout: () => void
   onSaveProfile: (profile: ProfileDraft) => void
   onAddSystemTemplate: (sourceSystemTemplateSlug: string) => void
@@ -409,6 +417,8 @@ export const Workspace = ({
   onCreateVendor: (vendor: VendorInput) => void
   onUpdateVendor: (id: string, vendor: VendorInput) => void
   onDeleteVendor: (vendor: Vendor) => void
+  onCreateOrganization: () => void
+  onSelectOrganization: (organizationId: string) => void
 }) => {
   const [showVendorCatalog, setShowVendorCatalog] = useState(false)
   const [showCustomVendorForm, setShowCustomVendorForm] = useState(false)
@@ -445,9 +455,14 @@ export const Workspace = ({
       <Sidebar>
         <SidebarHeader>
           <p className="text-sm font-semibold text-blue-700">ComplyFlow</p>
-          <p className="mt-1 text-lg font-semibold text-slate-950">
-            {defaultValues.company.companyName || "Security workspace"}
-          </p>
+          <div className="mt-3">
+            <OrganizationSwitcher
+              organizations={organizations}
+              selectedOrganizationId={selectedOrganizationId}
+              onCreateOrganization={onCreateOrganization}
+              onSelectOrganization={onSelectOrganization}
+            />
+          </div>
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
@@ -491,20 +506,14 @@ export const Workspace = ({
         <SidebarFooter>
           <div className="flex items-center gap-3 rounded-md px-2 py-2">
             {user.picture ? (
-              <img
-                alt=""
-                className="size-9 rounded-full"
-                src={user.picture}
-              />
+              <img alt="" className="size-9 rounded-full" src={user.picture} />
             ) : (
               <div className="flex size-9 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
                 {user.name.slice(0, 1).toUpperCase()}
               </div>
             )}
             <div>
-              <p className="text-sm font-medium text-slate-900">
-                {user.name}
-              </p>
+              <p className="text-sm font-medium text-slate-900">{user.name}</p>
               <p className="text-xs text-slate-500">{user.email}</p>
             </div>
           </div>

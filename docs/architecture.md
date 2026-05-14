@@ -61,16 +61,19 @@ complyflow/
 
 ## Sprint 1 Runtime
 
-Sprint 1 implements the Security Program Snapshot with authenticated single-organization semantics:
+The runtime now supports persistent Google-backed user accounts and explicit
+organization-scoped workspace routes:
 
 - Google OAuth login is required
-- no persistent user or membership model
-- one current organization profile
-- vendor inventory scoped to that organization
-- organization document templates scoped to that organization
+- users are persisted and linked to organizations through memberships
+- a user can belong to multiple organizations as `owner` or `member`
+- the client selects the current organization locally
+- workspace API paths include `/organizations/:organizationId`
+- vendor inventory is scoped to the route organization
+- organization document templates are scoped to the route organization
 - generated documents scoped to templates
 
-The API validates request payloads with `packages/shared` schemas. Google OAuth is handled by Fastify with an encrypted HTTP-only session cookie that stores minimal Google profile details for the current browser session. `packages/db` owns Prisma models and database mapping. Company attributes live on the `organizations` table, profile sections are stored in one-to-one relational tables, organization data types are stored in `organization_data_types`, and vendor inventory is stored relationally with `vendor_data_types` linking vendors to the data categories they process. System document templates are versioned markdown files in `apps/api/data/templates`, editable organization copies are stored in `templates`, and generated markdown documents are stored in `documents`.
+The API validates request payloads with `packages/shared` schemas. Google OAuth is handled by Fastify with an encrypted HTTP-only session cookie that stores the persisted account identity. `packages/db` owns Prisma models and database mapping. Company attributes live on the `organizations` table, profile sections are stored in one-to-one relational tables, organization data types are stored in `organization_data_types`, and vendor inventory is stored relationally with `vendor_data_types` linking vendors to the data categories they process. System document templates are versioned markdown files in `apps/api/data/templates`, editable organization copies are stored in `templates`, and generated markdown documents are stored in `documents`.
 
 ## Local Development
 

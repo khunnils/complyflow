@@ -9,85 +9,37 @@ function now() {
   return new Date().toISOString()
 }
 
-function newId(prefix: string) {
-  return `${prefix}_${crypto.randomUUID()}`
-}
-
 export class InMemoryOrganizationRepository implements OrganizationRepository {
-  private organization: OrganizationSecurityProfile | null = null
+  private organizations = new Map<string, OrganizationSecurityProfile>()
 
-  async getOrganization(): Promise<OrganizationSecurityProfile | null> {
-    return this.organization
+  async getOrganization(
+    organizationId: string,
+  ): Promise<OrganizationSecurityProfile | null> {
+    return this.organizations.get(organizationId) ?? null
   }
 
   async upsertProfile(
+    organizationId: string,
     input: SecurityProfileInput,
   ): Promise<OrganizationSecurityProfile> {
     const timestamp = now()
+    const existing = this.organizations.get(organizationId)
     const organization: OrganizationSecurityProfile = {
-      id: this.organization?.id ?? newId("org"),
+      id: organizationId,
       ...input,
-      createdAt: this.organization?.createdAt ?? timestamp,
+      createdAt: existing?.createdAt ?? timestamp,
       updatedAt: timestamp,
     }
 
-    this.organization = organization
+    this.organizations.set(organizationId, organization)
     return organization
   }
 
-  async getOrCreateOrganizationId(): Promise<string> {
-    if (!this.organization) {
-      const timestamp = now()
-
-      this.organization = {
-        id: newId("org"),
-        company: {
-          companyName: "Untitled company",
-          employeeCount: 1,
-          industries: [],
-          regions: [],
-          handlesPii: false,
-          handlesSensitiveData: false,
-          complianceGoals: [],
-        },
-        infrastructure: {
-          cloudProviders: [],
-          sourceControlProvider: "",
-          authProvider: "",
-          passwordManager: "",
-          mfaEnabled: false,
-          encryptedDevicesRequired: false,
-          backupsEnabled: false,
-          centralizedLoggingEnabled: false,
-        },
-        dataHandling: {
-          dataTypesStored: [],
-          storesPii: false,
-          storesHealthcareData: false,
-          encryptionAtRest: false,
-          encryptionInTransit: false,
-          productionDataInDevelopment: false,
-          retentionPolicyExists: false,
-        },
-        access: {
-          mfaRequired: false,
-          ssoEnabled: false,
-          sharedAccountsExist: false,
-          offboardingProcessExists: false,
-          accessReviewsPerformed: false,
-          privilegedAccessRestricted: false,
-        },
-        createdAt: timestamp,
-        updatedAt: timestamp,
-      }
-    }
-
-    return this.organization.id
-  }
-
-  async listDataTypeNames(): Promise<string[]> {
+  async listDataTypeNames(organizationId: string): Promise<string[]> {
     return (
-      this.organization?.dataHandling.dataTypesStored.map(
+      this.organizations
+        .get(organizationId)
+        ?.dataHandling.dataTypesStored.map(
         (dataType) => dataType.name,
       ) ?? []
     )

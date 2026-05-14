@@ -6,10 +6,12 @@ export type SecurityProfileInput = Pick<
 >
 
 export interface OrganizationRepository {
-  getOrganization(): Promise<OrganizationSecurityProfile | null>
+  getOrganization(
+    organizationId: string,
+  ): Promise<OrganizationSecurityProfile | null>
   upsertProfile(
+    organizationId: string,
     input: SecurityProfileInput,
   ): Promise<OrganizationSecurityProfile>
-  getOrCreateOrganizationId(): Promise<string>
-  listDataTypeNames(): Promise<string[]>
+  listDataTypeNames(organizationId: string): Promise<string[]>
 }
