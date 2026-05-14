@@ -417,7 +417,7 @@ export const Workspace = ({
   onCreateVendor: (vendor: VendorInput) => void
   onUpdateVendor: (id: string, vendor: VendorInput) => void
   onDeleteVendor: (vendor: Vendor) => void
-  onCreateOrganization: () => void
+  onCreateOrganization: (name: string) => void
   onSelectOrganization: (organizationId: string) => void
 }) => {
   const [showVendorCatalog, setShowVendorCatalog] = useState(false)
@@ -457,8 +457,11 @@ export const Workspace = ({
           <p className="text-sm font-semibold text-blue-700">ComplyFlow</p>
           <div className="mt-3">
             <OrganizationSwitcher
+              error={error}
               organizations={organizations}
+              saveState={saveState}
               selectedOrganizationId={selectedOrganizationId}
+              user={user}
               onCreateOrganization={onCreateOrganization}
               onSelectOrganization={onSelectOrganization}
             />

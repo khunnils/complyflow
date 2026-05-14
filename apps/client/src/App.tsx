@@ -249,23 +249,19 @@ export const App = () => {
       onAddSystemTemplate={(sourceSystemTemplateSlug) =>
         createTemplate.mutate({ sourceSystemTemplateSlug })
       }
-      onCreateOrganization={() => {
-        const name = window.prompt("Organization name")
-
-        if (name?.trim()) {
-          createOrganization.mutate(
-            { name },
-            {
-              onSuccess: (organization) => {
-                setSelectedOrganizationId(organization.id)
-                setOnboardingOrganizationIds((current) =>
-                  new Set(current).add(organization.id)
-                )
-              },
-            }
-          )
-        }
-      }}
+      onCreateOrganization={(name) =>
+        createOrganization.mutate(
+          { name },
+          {
+            onSuccess: (organization) => {
+              setSelectedOrganizationId(organization.id)
+              setOnboardingOrganizationIds((current) =>
+                new Set(current).add(organization.id)
+              )
+            },
+          }
+        )
+      }
       onCreateVendor={(vendor) => createVendor.mutate(vendor)}
       onLogout={() => logout.mutate()}
       onDeleteTemplate={(template) => deleteTemplate.mutate(template.id)}

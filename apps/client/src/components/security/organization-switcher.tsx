@@ -1,40 +1,177 @@
-import { Building2, Plus } from "lucide-react"
-import { type OrganizationSummary } from "@complyflow/shared"
+import { Building2, Check, ChevronDown, Plus, X } from "lucide-react"
+import { type AuthUser, type OrganizationSummary } from "@complyflow/shared"
+import { useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { CreateOrganizationPanel } from "@/components/security/create-organization-screen"
+import { type MutationState } from "@/types/security-profile"
 
 export const OrganizationSwitcher = ({
+  error,
   organizations,
+  saveState,
   selectedOrganizationId,
+  user,
   onCreateOrganization,
   onSelectOrganization,
 }: {
+  error: string | null
   organizations: OrganizationSummary[]
+  saveState: MutationState
   selectedOrganizationId: string
-  onCreateOrganization: () => void
+  user: AuthUser
+  onCreateOrganization: (name: string) => void
   onSelectOrganization: (organizationId: string) => void
-}) => (
-  <div className="grid gap-2">
-    <label className="grid gap-1">
-      <span className="text-xs font-medium text-slate-500">Organization</span>
-      <span className="relative">
-        <Building2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
-        <select
-          className="h-10 w-full rounded-md border border-slate-200 bg-white pr-3 pl-9 text-sm font-medium text-slate-900 transition outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          value={selectedOrganizationId}
-          onChange={(event) => onSelectOrganization(event.target.value)}
+}) => {
+  const [open, setOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const selectedOrganization =
+    organizations.find(
+      (organization) => organization.id === selectedOrganizationId
+    ) ?? organizations[0]
+
+  useEffect(() => {
+    if (!open && !creating) {
+      return
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (open && !containerRef.current?.contains(event.target as Node)) {
+        setOpen(false)
+      }
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false)
+        setCreating(false)
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown)
+    document.addEventListener("keydown", handleKeyDown)
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown)
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [creating, open])
+
+  const handleSelectOrganization = (organizationId: string) => {
+    onSelectOrganization(organizationId)
+    setOpen(false)
+  }
+
+  const handleCreateOrganization = (name: string) => {
+    onCreateOrganization(name)
+  }
+
+  return (
+    <div ref={containerRef} className="relative">
+      <Button
+        className="h-auto w-full justify-between gap-3 bg-blue-50 px-3 py-2 text-left text-blue-700 hover:bg-blue-100"
+        type="button"
+        variant="ghost"
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        onClick={() => {
+          setOpen((current) => !current)
+        }}
+      >
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-blue-100">
+            <Building2 className="size-4" />
+          </span>
+          <span className="grid min-w-0 gap-0.5">
+            <span className="truncate text-sm font-semibold text-blue-700">
+              {selectedOrganization.name}
+            </span>
+            <span className="text-xs font-medium text-blue-600">
+              All workspace data
+            </span>
+          </span>
+        </span>
+        <ChevronDown className="size-4 shrink-0" />
+      </Button>
+
+      {open && (
+        <div
+          className="absolute top-[calc(100%+0.5rem)] left-0 z-50 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl"
+          role="dialog"
+          aria-label="Organization switcher"
         >
-          {organizations.map((organization) => (
-            <option key={organization.id} value={organization.id}>
-              {organization.name}
-            </option>
-          ))}
-        </select>
-      </span>
-    </label>
-    <Button type="button" variant="outline" onClick={onCreateOrganization}>
-      <Plus />
-      New organization
-    </Button>
-  </div>
-)
+          <>
+            <div className="border-b border-slate-100 px-4 py-3 text-center text-sm font-semibold text-slate-900">
+              Organizations ({organizations.length})
+            </div>
+            <div className="grid gap-1 p-3">
+              {organizations.map((organization) => {
+                const selected = organization.id === selectedOrganizationId
+
+                return (
+                  <button
+                    key={organization.id}
+                    className={
+                      selected
+                        ? "flex min-h-11 items-center justify-between gap-3 rounded-md bg-blue-50 px-3 text-left text-sm font-semibold text-blue-700"
+                        : "flex min-h-11 items-center justify-between gap-3 rounded-md px-3 text-left text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                    }
+                    type="button"
+                    onClick={() => handleSelectOrganization(organization.id)}
+                  >
+                    <span className="truncate">{organization.name}</span>
+                    {selected && <Check className="size-4 shrink-0" />}
+                  </button>
+                )
+              })}
+            </div>
+            <div className="border-t border-slate-200 bg-slate-50 p-3">
+              <Button
+                className="w-full"
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setOpen(false)
+                  setCreating(true)
+                }}
+              >
+                <Plus />
+                Create organization
+              </Button>
+            </div>
+          </>
+        </div>
+      )}
+
+      {creating && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-slate-950/30 px-4 py-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Create organization"
+        >
+          <div className="w-full max-w-xl">
+            <CreateOrganizationPanel
+              className="rounded-lg border border-slate-200 bg-white p-6 shadow-xl"
+              error={error}
+              saveState={saveState}
+              user={user}
+              onCreate={handleCreateOrganization}
+              actions={
+                <Button
+                  type="button"
+                  size="icon-sm"
+                  variant="outline"
+                  aria-label="Close create organization"
+                  onClick={() => setCreating(false)}
+                >
+                  <X />
+                </Button>
+              }
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
