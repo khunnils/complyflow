@@ -23,12 +23,9 @@ export const App = () => {
   )
   const logout = useLogout()
 
-  const snapshot = securityProfile.data
-  const shouldShowOnboarding =
-    !snapshot?.organization ||
-    (selectedOrganization
-      ? onboardingOrganizationIds.has(selectedOrganization.id)
-      : false)
+  const shouldShowOnboarding = selectedOrganization
+    ? onboardingOrganizationIds.has(selectedOrganization.id)
+    : false
 
   if (
     authState.isLoading ||

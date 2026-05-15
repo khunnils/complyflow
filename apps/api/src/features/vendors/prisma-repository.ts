@@ -145,6 +145,7 @@ export class PrismaVendorRepository implements VendorRepository {
       name: input.name,
       category: input.category,
       purpose: input.purpose,
+      countryOfRegistration: input.countryOfRegistration,
       hasSubprocessors: input.hasSubprocessors,
       dataProcessingLevel: input.dataProcessingLevel,
       dpaStatus: input.dpaStatus,

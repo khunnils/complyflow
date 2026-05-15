@@ -207,6 +207,7 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
       purpose: provider.url
         ? `Operational provider listed at ${provider.url}`
         : "Operational provider",
+      countryOfRegistration: "",
       hasSubprocessors: false,
       dataProcessingLevel: provider.handlesCustomerData ? "limited" : "none",
       dpaStatus: "not_started",

@@ -134,6 +134,7 @@ export function mapVendorRecord(record: {
   name: string
   category: string
   purpose: string
+  countryOfRegistration: string
   hasSubprocessors: boolean
   dataProcessingLevel: string
   dpaStatus: string
@@ -154,6 +155,7 @@ export function mapVendorRecord(record: {
     name: record.name,
     category: record.category,
     purpose: record.purpose,
+    countryOfRegistration: record.countryOfRegistration,
     hasSubprocessors: record.hasSubprocessors,
     dataProcessingLevel: record.dataProcessingLevel,
     dataProcessed: record.dataTypes.map(

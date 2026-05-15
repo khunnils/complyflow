@@ -10,13 +10,23 @@ import {
 import { useEffect } from "react"
 import { type Resolver, useForm, useWatch } from "react-hook-form"
 
-import { ListField } from "@/components/form/list-field"
 import { MultiSelectField } from "@/components/form/multi-select-field"
 import { SelectField } from "@/components/form/select-field"
 import { TextAreaField } from "@/components/form/text-area-field"
 import { TextField } from "@/components/form/text-field"
 import { ToggleField } from "@/components/form/toggle-field"
 import { Button } from "@/components/ui/button"
+
+const dataRegionOptions = [
+  { value: "US", label: "United States" },
+  { value: "EU", label: "European Union" },
+  { value: "UK", label: "United Kingdom" },
+  { value: "Canada", label: "Canada" },
+  { value: "APAC", label: "APAC" },
+  { value: "Australia", label: "Australia" },
+  { value: "Latin America", label: "Latin America" },
+  { value: "Middle East & Africa", label: "Middle East & Africa" },
+]
 
 const dpaStatusOptions: Array<{ value: DpaStatus; label: string }> = [
   { value: "not_started", label: "Not started" },
@@ -113,6 +123,13 @@ export const VendorForm = ({
           register={form.register}
         />
         <TextField
+          error={form.formState.errors.countryOfRegistration}
+          label="Country of registration"
+          name="countryOfRegistration"
+          placeholder="United States"
+          register={form.register}
+        />
+        <TextField
           error={form.formState.errors.owner}
           label="Owner"
           name="owner"
@@ -146,12 +163,13 @@ export const VendorForm = ({
                   : "No organization data types defined"
               }
             />
-            <ListField
+            <MultiSelectField
               control={form.control}
               error={form.formState.errors.dataRegions?.root}
               label="Data regions"
               name="dataRegions"
-              placeholder="US, EU"
+              options={dataRegionOptions}
+              placeholder="Select data regions"
             />
             <SelectField
               control={form.control}

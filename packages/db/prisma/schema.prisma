@@ -130,6 +130,7 @@ model OrganizationProvider {
   name             String
   category         String
   purpose          String
+  countryOfRegistration String  @default("") @map("country_of_registration")
   hasSubprocessors Boolean      @map("has_subprocessors")
   dataProcessingLevel String    @default("limited") @map("data_processing_level")
   dpaStatus        String       @map("dpa_status")

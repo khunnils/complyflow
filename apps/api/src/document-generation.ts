@@ -56,6 +56,7 @@ export class ReportContextBuilder {
       name: vendor.name,
       category: vendor.category,
       purpose: vendor.purpose,
+      countryOfRegistration: vendor.countryOfRegistration,
       hasSubprocessors: vendor.hasSubprocessors,
       dataProcessingLevel: vendor.dataProcessingLevel,
       dataProcessed: vendor.dataProcessed,

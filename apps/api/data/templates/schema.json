@@ -271,6 +271,7 @@
           "name": "GitHub",
           "category": "Source control",
           "purpose": "Code hosting and pull requests",
+          "countryOfRegistration": "United States",
           "hasSubprocessors": true,
           "dataProcessingLevel": "limited",
           "dataProcessed": [
@@ -306,6 +307,13 @@
           "type": "string",
           "description": "Why the organization uses the vendor.",
           "example": "Code hosting and pull requests"
+        },
+        {
+          "key": "countryOfRegistration",
+          "label": "Country of registration",
+          "type": "string",
+          "description": "Country where the vendor legal entity is registered.",
+          "example": "United States"
         },
         {
           "key": "hasSubprocessors",
@@ -378,6 +386,7 @@
       "example": [
         {
           "name": "GitHub",
+          "countryOfRegistration": "United States",
           "dataProcessingLevel": "limited",
           "dataProcessed": [
             "customer account data"
@@ -409,6 +418,13 @@
           "type": "string",
           "description": "Why the organization uses the vendor.",
           "example": "Code hosting and pull requests"
+        },
+        {
+          "key": "countryOfRegistration",
+          "label": "Country of registration",
+          "type": "string",
+          "description": "Country where the vendor legal entity is registered.",
+          "example": "United States"
         },
         {
           "key": "hasSubprocessors",
@@ -482,6 +498,7 @@
         {
           "name": "Stripe",
           "purpose": "Payment processing",
+          "countryOfRegistration": "United States",
           "dataRegions": [
             "US",
             "EU"
@@ -510,6 +527,13 @@
           "type": "string",
           "description": "Why the organization uses the vendor.",
           "example": "Code hosting and pull requests"
+        },
+        {
+          "key": "countryOfRegistration",
+          "label": "Country of registration",
+          "type": "string",
+          "description": "Country where the vendor legal entity is registered.",
+          "example": "United States"
         },
         {
           "key": "hasSubprocessors",

@@ -73,6 +73,7 @@ const vendorBody = {
   name: "GitHub",
   category: "Source control",
   purpose: "Code hosting and pull requests",
+  countryOfRegistration: "United States",
   hasSubprocessors: true,
   dataProcessingLevel: "limited",
   dataProcessed: ["customer account data"],
@@ -380,6 +381,7 @@ describe("security profile API", () => {
     expect(createResponse.statusCode).toBe(201)
     const createdVendor = createResponse.json()
     expect(createdVendor.name).toBe("GitHub")
+    expect(createdVendor.countryOfRegistration).toBe("United States")
 
     const updateResponse = await app.inject({
       method: "PUT",

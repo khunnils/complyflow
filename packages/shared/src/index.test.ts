@@ -30,6 +30,7 @@ describe("shared security profile schemas", () => {
       name: "GitHub",
       category: "Source control",
       purpose: "Code hosting",
+      countryOfRegistration: "United States",
       hasSubprocessors: true,
       dataProcessingLevel: "limited",
       dataProcessed: ["source code"],

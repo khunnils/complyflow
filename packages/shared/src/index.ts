@@ -75,6 +75,7 @@ const vendorInputBaseSchema = z.object({
   name: z.string().trim().min(1, "Vendor name is required"),
   category: z.string().trim().min(1, "Category is required"),
   purpose: z.string().trim().min(1, "Purpose is required"),
+  countryOfRegistration: z.string().trim().default(""),
   hasSubprocessors: z.boolean(),
   dataProcessingLevel: vendorDataProcessingLevelSchema.default("limited"),
   dataProcessed: z.array(z.string().trim().min(1)).default([]),

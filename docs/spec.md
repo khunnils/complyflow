@@ -145,6 +145,7 @@ Fields:
 Fields:
 
 - vendor inventory
+- country of registration
 - subprocessors
 - DPA status
 - data regions
