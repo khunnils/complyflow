@@ -159,6 +159,13 @@ export function createTestApp() {
         description: "A lightweight incident response outline.",
         content: "# {{ company.name }} Incident Response Plan\n",
       },
+      {
+        slug: "subprocessors",
+        name: "Subprocessors",
+        description:
+          "A customer-facing subprocessor summary based on the organization's vendor data processors.",
+        content: "# {{ organization.name }} Data Processors and Subprocessors\n",
+      },
     ]),
   })
 }

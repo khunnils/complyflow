@@ -213,8 +213,14 @@ export const Onboarding = ({
                               ? toVendorInput(editingVendor)
                               : emptyVendorDraft
                           }
-                          submitLabel={
-                            editingVendor ? "Update vendor" : "Add vendor"
+                          submitLabel={editingVendor ? "Save" : "Add vendor"}
+                          onCancel={
+                            editingVendor
+                              ? () => {
+                                  startEditingVendor(null)
+                                  setShowCustomVendorForm(false)
+                                }
+                              : undefined
                           }
                           onSubmit={(vendor) => {
                             if (editingVendor) {

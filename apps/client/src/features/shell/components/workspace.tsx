@@ -583,7 +583,16 @@ export const Workspace = ({ user }: { user: AuthUser }) => {
                       : emptyVendorDraft
                   }
                   submitDisabled={isVendorMutationPending}
-                  submitLabel={editingVendor ? "Update vendor" : "Add vendor"}
+                  submitLabel={editingVendor ? "Save" : "Add vendor"}
+                  onCancel={
+                    editingVendor
+                      ? () => {
+                          startEditingVendor(null)
+                          setShowVendorCatalog(false)
+                          setShowCustomVendorForm(false)
+                        }
+                      : undefined
+                  }
                   onSubmit={(vendor) => {
                     if (editingVendor) {
                       updateVendor.mutate(

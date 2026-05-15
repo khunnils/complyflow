@@ -1,12 +1,21 @@
+import { readFile } from "node:fs/promises"
+import { fileURLToPath } from "node:url"
+
+import { type SecurityProgramSnapshot } from "@complyflow/shared"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { createApp, createTestApp } from "../src/app.js"
 import { readAuthConfig } from "../src/config.js"
+import {
+  Jinja2Renderer,
+  ReportContextBuilder,
+} from "../src/document-generation.js"
 import { InMemoryAccountRepository } from "../src/features/accounts/in-memory-repository.js"
 import { InMemoryDocumentRepository } from "../src/features/documents/in-memory-repository.js"
 import { InMemoryOrganizationRepository } from "../src/features/organizations/in-memory-repository.js"
 import { InMemoryVendorRepository } from "../src/features/vendors/in-memory-repository.js"
 import { AirtableProviderSource } from "../src/providers.js"
+import { parseSystemTemplate } from "../src/system-templates.js"
 
 const profileBody = {
   company: {
@@ -72,6 +81,33 @@ const vendorBody = {
   criticality: "high",
   owner: "Engineering",
   notes: "Critical engineering system",
+}
+
+const subprocessorBody = {
+  ...vendorBody,
+  name: "Stripe",
+  category: "Payments",
+  purpose: "Payment processing",
+  dataProcessingLevel: "subprocessor",
+  dataRegions: ["US", "EU"],
+  criticality: "medium",
+  owner: "Finance",
+  notes: "Customer payment processor",
+}
+
+const noProcessingVendorBody = {
+  ...vendorBody,
+  name: "Linear",
+  category: "Project management",
+  purpose: "Issue tracking",
+  hasSubprocessors: false,
+  dataProcessingLevel: "none",
+  dataProcessed: [],
+  dpaStatus: "not_required",
+  dataRegions: [],
+  criticality: "low",
+  owner: "Product",
+  notes: "",
 }
 
 const authConfig = {
@@ -199,6 +235,119 @@ describe("security profile API", () => {
     ).toEqual(profileBody.dataHandling.dataTypesStored)
   })
 
+  it("builds report context with organization aliases and vendor collections", () => {
+    const snapshot: SecurityProgramSnapshot = {
+      organization: {
+        id: "org-test",
+        ...profileBody,
+        createdAt: "2026-05-15T00:00:00.000Z",
+        updatedAt: "2026-05-15T00:00:00.000Z",
+      },
+      vendors: [
+        {
+          id: "vendor-limited",
+          ...vendorBody,
+          createdAt: "2026-05-15T00:00:00.000Z",
+          updatedAt: "2026-05-15T00:00:00.000Z",
+        },
+        {
+          id: "vendor-subprocessor",
+          ...subprocessorBody,
+          createdAt: "2026-05-15T00:00:00.000Z",
+          updatedAt: "2026-05-15T00:00:00.000Z",
+        },
+        {
+          id: "vendor-none",
+          ...noProcessingVendorBody,
+          createdAt: "2026-05-15T00:00:00.000Z",
+          updatedAt: "2026-05-15T00:00:00.000Z",
+        },
+      ],
+    }
+
+    const context = new ReportContextBuilder().build(snapshot)
+
+    expect(context.organization.name).toBe("Acme AI")
+    expect(context.organization.employeeCount).toBe(12)
+    expect(context.company.name).toBe("Acme AI")
+    expect(context.vendors.all.map((vendor) => vendor.name)).toEqual([
+      "GitHub",
+      "Stripe",
+      "Linear",
+    ])
+    expect(context.vendors.dataProcessors.map((vendor) => vendor.name)).toEqual(
+      ["GitHub", "Stripe"],
+    )
+    expect(context.vendors.subprocessors.map((vendor) => vendor.name)).toEqual([
+      "Stripe",
+    ])
+  })
+
+  it("loads the report builder variable schema", async () => {
+    const schemaPath = fileURLToPath(
+      new URL("../data/templates/schema.json", import.meta.url),
+    )
+    const schema = JSON.parse(await readFile(schemaPath, "utf8"))
+
+    expect(schema.version).toBe(1)
+    expect(schema.variables).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ key: "organization.name" }),
+        expect.objectContaining({ key: "vendors.all" }),
+        expect.objectContaining({ key: "vendors.dataProcessors" }),
+        expect.objectContaining({ key: "vendors.subprocessors" }),
+      ]),
+    )
+  })
+
+  it("renders the subprocessors system template with data processors", async () => {
+    const templatePath = fileURLToPath(
+      new URL("../data/templates/subprocessors.md", import.meta.url),
+    )
+    const systemTemplate = parseSystemTemplate(
+      await readFile(templatePath, "utf8"),
+      "subprocessors.md",
+    )
+    const context = new ReportContextBuilder().build({
+      organization: {
+        id: "org-test",
+        ...profileBody,
+        createdAt: "2026-05-15T00:00:00.000Z",
+        updatedAt: "2026-05-15T00:00:00.000Z",
+      },
+      vendors: [
+        {
+          id: "vendor-limited",
+          ...vendorBody,
+          createdAt: "2026-05-15T00:00:00.000Z",
+          updatedAt: "2026-05-15T00:00:00.000Z",
+        },
+        {
+          id: "vendor-subprocessor",
+          ...subprocessorBody,
+          createdAt: "2026-05-15T00:00:00.000Z",
+          updatedAt: "2026-05-15T00:00:00.000Z",
+        },
+      ],
+    })
+    const renderedContent = new Jinja2Renderer().render(
+      {
+        id: "template-subprocessors",
+        organizationId: "org-test",
+        sourceSystemTemplateSlug: systemTemplate.slug,
+        createdAt: "2026-05-15T00:00:00.000Z",
+        updatedAt: "2026-05-15T00:00:00.000Z",
+        ...systemTemplate,
+      },
+      context,
+    )
+
+    expect(renderedContent).toContain("# Acme AI Data Processors")
+    expect(renderedContent).toContain("| GitHub | limited |")
+    expect(renderedContent).toContain("| Stripe | subprocessor |")
+    expect(renderedContent).toContain("| Stripe | Payment processing |")
+  })
+
   it("returns structured validation errors", async () => {
     const app = await createTestApp()
     const response = await app.inject({
@@ -277,6 +426,12 @@ describe("security profile API", () => {
           slug: "security-policy",
           name: "Security Policy",
           description: "A practical starter security policy.",
+        },
+        {
+          slug: "subprocessors",
+          name: "Subprocessors",
+          description:
+            "A customer-facing subprocessor summary based on the organization's vendor data processors.",
         },
       ],
       organizationTemplates: [],

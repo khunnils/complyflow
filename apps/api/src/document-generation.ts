@@ -8,28 +8,46 @@ import {
 } from "@complyflow/shared"
 
 export type NormalizedTemplateContext = {
+  organization: Record<string, unknown>
   company: Record<string, unknown>
   infrastructure: Record<string, unknown>
   dataHandling: Record<string, unknown>
   access: Record<string, unknown>
-  vendors: Array<Record<string, unknown>>
+  vendors: {
+    all: Array<Record<string, unknown>>
+    dataProcessors: Array<Record<string, unknown>>
+    subprocessors: Array<Record<string, unknown>>
+  }
 }
 
 export class ReportContextBuilder {
   build(snapshot: SecurityProgramSnapshot): NormalizedTemplateContext {
     const organization = snapshot.organization
+    const organizationContext = organization
+      ? {
+          ...organization.company,
+          name: organization.company.companyName,
+        }
+      : {}
+    const vendors = snapshot.vendors.map((vendor) => this.vendorContext(vendor))
 
     return {
-      company: organization
-        ? {
-            ...organization.company,
-            name: organization.company.companyName,
-          }
-        : {},
+      organization: organizationContext,
+      company: organizationContext,
       infrastructure: organization?.infrastructure ?? {},
       dataHandling: organization?.dataHandling ?? {},
       access: organization?.access ?? {},
-      vendors: snapshot.vendors.map((vendor) => this.vendorContext(vendor)),
+      vendors: {
+        all: vendors,
+        dataProcessors: vendors.filter((vendor) =>
+          ["limited", "subprocessor"].includes(
+            String(vendor.dataProcessingLevel),
+          ),
+        ),
+        subprocessors: vendors.filter(
+          (vendor) => vendor.dataProcessingLevel === "subprocessor",
+        ),
+      },
     }
   }
 

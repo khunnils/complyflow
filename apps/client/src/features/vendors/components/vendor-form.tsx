@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Plus } from "lucide-react"
+import { Plus, Save, X } from "lucide-react"
 import {
   vendorInputSchema,
   type DpaStatus,
@@ -47,12 +47,14 @@ export const VendorForm = ({
   submitLabel,
   submitDisabled = false,
   onSubmit,
+  onCancel,
 }: {
   dataTypeOptions: Array<{ value: string; label: string }>
   defaultValues: VendorInput
   submitLabel: string
   submitDisabled?: boolean
   onSubmit: (vendor: VendorInput) => void
+  onCancel?: () => void
 }) => {
   const form = useForm<VendorInput>({
     defaultValues,
@@ -172,9 +174,20 @@ export const VendorForm = ({
         placeholder="Key contract, DPA, or review context"
         register={form.register}
       />
-      <div>
+      <div className="flex items-center gap-2">
+        {onCancel ? (
+          <Button
+            disabled={submitDisabled}
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+          >
+            <X />
+            Cancel
+          </Button>
+        ) : null}
         <Button disabled={submitDisabled} type="button" onClick={submitVendor}>
-          <Plus />
+          {onCancel ? <Save /> : <Plus />}
           {submitLabel}
         </Button>
       </div>

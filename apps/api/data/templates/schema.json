@@ -1,0 +1,577 @@
+{
+  "version": 1,
+  "variables": [
+    {
+      "key": "organization.name",
+      "label": "Organization name",
+      "type": "string",
+      "category": "Organization",
+      "description": "Legal or display name of the organization.",
+      "example": "Acme AI"
+    },
+    {
+      "key": "organization.employeeCount",
+      "label": "Employee count",
+      "type": "number",
+      "category": "Organization",
+      "description": "Approximate number of employees in the organization.",
+      "example": 42
+    },
+    {
+      "key": "organization.industries",
+      "label": "Industries",
+      "type": "string[]",
+      "category": "Organization",
+      "description": "Industries the organization operates in.",
+      "example": [
+        "SaaS",
+        "AI"
+      ]
+    },
+    {
+      "key": "organization.regions",
+      "label": "Operating regions",
+      "type": "string[]",
+      "category": "Organization",
+      "description": "Geographic regions where the organization operates.",
+      "example": [
+        "US",
+        "EU"
+      ]
+    },
+    {
+      "key": "organization.handlesPii",
+      "label": "Handles PII",
+      "type": "boolean",
+      "category": "Organization",
+      "description": "Whether the organization handles personally identifiable information.",
+      "example": true
+    },
+    {
+      "key": "organization.handlesSensitiveData",
+      "label": "Handles sensitive data",
+      "type": "boolean",
+      "category": "Organization",
+      "description": "Whether the organization handles sensitive business, regulated, or high-risk data.",
+      "example": true
+    },
+    {
+      "key": "organization.complianceGoals",
+      "label": "Compliance goals",
+      "type": "string[]",
+      "category": "Organization",
+      "description": "Compliance programs or customer security goals the organization is working toward.",
+      "example": [
+        "SOC 2",
+        "GDPR"
+      ]
+    },
+    {
+      "key": "infrastructure.organizationProviders",
+      "label": "Organization providers",
+      "type": "collection",
+      "category": "Infrastructure",
+      "description": "Selected providers for critical infrastructure systems.",
+      "example": [
+        {
+          "systemType": "source-control",
+          "providerId": "prov-github"
+        }
+      ],
+      "itemFields": [
+        {
+          "key": "systemType",
+          "label": "System type",
+          "type": "string",
+          "description": "The infrastructure system category, such as cloud, source-control, auth, or password-manager.",
+          "example": "source-control"
+        },
+        {
+          "key": "providerId",
+          "label": "Provider ID",
+          "type": "string",
+          "description": "Catalog identifier for the selected provider.",
+          "example": "prov-github"
+        }
+      ]
+    },
+    {
+      "key": "infrastructure.mfaEnabled",
+      "label": "MFA enabled",
+      "type": "boolean",
+      "category": "Infrastructure",
+      "description": "Whether multi-factor authentication is enabled for critical infrastructure.",
+      "example": true
+    },
+    {
+      "key": "infrastructure.encryptedDevicesRequired",
+      "label": "Encrypted devices required",
+      "type": "boolean",
+      "category": "Infrastructure",
+      "description": "Whether employee devices are required to use disk encryption.",
+      "example": true
+    },
+    {
+      "key": "infrastructure.backupsEnabled",
+      "label": "Backups enabled",
+      "type": "boolean",
+      "category": "Infrastructure",
+      "description": "Whether backups are enabled for important systems or data.",
+      "example": true
+    },
+    {
+      "key": "infrastructure.centralizedLoggingEnabled",
+      "label": "Centralized logging enabled",
+      "type": "boolean",
+      "category": "Infrastructure",
+      "description": "Whether logs from important systems are centralized for monitoring or review.",
+      "example": false
+    },
+    {
+      "key": "dataHandling.dataTypesStored",
+      "label": "Data types stored",
+      "type": "collection",
+      "category": "Data Handling",
+      "description": "Categories of data stored by the organization.",
+      "example": [
+        {
+          "name": "customer account data",
+          "isSensitive": true,
+          "description": "Profile and billing contact details"
+        }
+      ],
+      "itemFields": [
+        {
+          "key": "name",
+          "label": "Name",
+          "type": "string",
+          "description": "Name of the data category.",
+          "example": "customer account data"
+        },
+        {
+          "key": "isSensitive",
+          "label": "Sensitive",
+          "type": "boolean",
+          "description": "Whether this data category is considered sensitive.",
+          "example": true
+        },
+        {
+          "key": "description",
+          "label": "Description",
+          "type": "string",
+          "description": "Short explanation of what the data category includes.",
+          "example": "Profile and billing contact details"
+        }
+      ]
+    },
+    {
+      "key": "dataHandling.storesPii",
+      "label": "Stores PII",
+      "type": "boolean",
+      "category": "Data Handling",
+      "description": "Whether the organization stores personally identifiable information.",
+      "example": true
+    },
+    {
+      "key": "dataHandling.storesHealthcareData",
+      "label": "Stores healthcare data",
+      "type": "boolean",
+      "category": "Data Handling",
+      "description": "Whether the organization stores healthcare or health-related data.",
+      "example": false
+    },
+    {
+      "key": "dataHandling.encryptionAtRest",
+      "label": "Encryption at rest",
+      "type": "boolean",
+      "category": "Data Handling",
+      "description": "Whether stored data is encrypted at rest.",
+      "example": true
+    },
+    {
+      "key": "dataHandling.encryptionInTransit",
+      "label": "Encryption in transit",
+      "type": "boolean",
+      "category": "Data Handling",
+      "description": "Whether data is encrypted while transmitted between systems.",
+      "example": true
+    },
+    {
+      "key": "dataHandling.productionDataInDevelopment",
+      "label": "Production data in development",
+      "type": "boolean",
+      "category": "Data Handling",
+      "description": "Whether production data is used in development or test environments.",
+      "example": false
+    },
+    {
+      "key": "dataHandling.retentionPolicyExists",
+      "label": "Retention policy exists",
+      "type": "boolean",
+      "category": "Data Handling",
+      "description": "Whether the organization has a documented data retention policy.",
+      "example": true
+    },
+    {
+      "key": "access.mfaRequired",
+      "label": "MFA required",
+      "type": "boolean",
+      "category": "Access",
+      "description": "Whether users are required to use multi-factor authentication.",
+      "example": true
+    },
+    {
+      "key": "access.ssoEnabled",
+      "label": "SSO enabled",
+      "type": "boolean",
+      "category": "Access",
+      "description": "Whether single sign-on is enabled for workforce access.",
+      "example": true
+    },
+    {
+      "key": "access.sharedAccountsExist",
+      "label": "Shared accounts exist",
+      "type": "boolean",
+      "category": "Access",
+      "description": "Whether shared user accounts exist in organization systems.",
+      "example": false
+    },
+    {
+      "key": "access.offboardingProcessExists",
+      "label": "Offboarding process exists",
+      "type": "boolean",
+      "category": "Access",
+      "description": "Whether the organization has a defined process to remove access for departing personnel.",
+      "example": true
+    },
+    {
+      "key": "access.accessReviewsPerformed",
+      "label": "Access reviews performed",
+      "type": "boolean",
+      "category": "Access",
+      "description": "Whether access reviews are performed for critical systems.",
+      "example": true
+    },
+    {
+      "key": "access.privilegedAccessRestricted",
+      "label": "Privileged access restricted",
+      "type": "boolean",
+      "category": "Access",
+      "description": "Whether administrative or privileged access is limited to authorized users.",
+      "example": true
+    },
+    {
+      "key": "vendors.all",
+      "label": "All vendors",
+      "type": "collection",
+      "category": "Vendors",
+      "description": "All vendors recorded in the organization vendor inventory.",
+      "example": [
+        {
+          "name": "GitHub",
+          "category": "Source control",
+          "purpose": "Code hosting and pull requests",
+          "hasSubprocessors": true,
+          "dataProcessingLevel": "limited",
+          "dataProcessed": [
+            "customer account data"
+          ],
+          "dpaStatus": "signed",
+          "dataRegions": [
+            "US"
+          ],
+          "criticality": "high",
+          "owner": "Engineering",
+          "notes": "Critical engineering system"
+        }
+      ],
+      "itemFields": [
+        {
+          "key": "name",
+          "label": "Name",
+          "type": "string",
+          "description": "Vendor name.",
+          "example": "GitHub"
+        },
+        {
+          "key": "category",
+          "label": "Category",
+          "type": "string",
+          "description": "Vendor category or business function.",
+          "example": "Source control"
+        },
+        {
+          "key": "purpose",
+          "label": "Purpose",
+          "type": "string",
+          "description": "Why the organization uses the vendor.",
+          "example": "Code hosting and pull requests"
+        },
+        {
+          "key": "hasSubprocessors",
+          "label": "Has subprocessors",
+          "type": "boolean",
+          "description": "Whether the vendor uses subprocessors.",
+          "example": true
+        },
+        {
+          "key": "dataProcessingLevel",
+          "label": "Data processing level",
+          "type": "string",
+          "description": "Whether the vendor processes no data, limited data, or acts as a subprocessor.",
+          "example": "limited"
+        },
+        {
+          "key": "dataProcessed",
+          "label": "Data processed",
+          "type": "string[]",
+          "description": "Organization data categories processed by the vendor.",
+          "example": [
+            "customer account data"
+          ]
+        },
+        {
+          "key": "dpaStatus",
+          "label": "DPA status",
+          "type": "string",
+          "description": "Status of the vendor data processing agreement.",
+          "example": "signed"
+        },
+        {
+          "key": "dataRegions",
+          "label": "Data regions",
+          "type": "string[]",
+          "description": "Regions where the vendor processes or stores data.",
+          "example": [
+            "US"
+          ]
+        },
+        {
+          "key": "criticality",
+          "label": "Criticality",
+          "type": "string",
+          "description": "Operational criticality of the vendor.",
+          "example": "high"
+        },
+        {
+          "key": "owner",
+          "label": "Owner",
+          "type": "string",
+          "description": "Internal owner responsible for the vendor relationship.",
+          "example": "Engineering"
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "type": "string",
+          "description": "Additional notes about the vendor.",
+          "example": "Critical engineering system"
+        }
+      ]
+    },
+    {
+      "key": "vendors.dataProcessors",
+      "label": "Data processors",
+      "type": "collection",
+      "category": "Vendors",
+      "description": "Vendors whose data processing level is limited or subprocessor.",
+      "example": [
+        {
+          "name": "GitHub",
+          "dataProcessingLevel": "limited",
+          "dataProcessed": [
+            "customer account data"
+          ],
+          "dpaStatus": "signed",
+          "dataRegions": [
+            "US"
+          ]
+        }
+      ],
+      "itemFields": [
+        {
+          "key": "name",
+          "label": "Name",
+          "type": "string",
+          "description": "Vendor name.",
+          "example": "GitHub"
+        },
+        {
+          "key": "category",
+          "label": "Category",
+          "type": "string",
+          "description": "Vendor category or business function.",
+          "example": "Source control"
+        },
+        {
+          "key": "purpose",
+          "label": "Purpose",
+          "type": "string",
+          "description": "Why the organization uses the vendor.",
+          "example": "Code hosting and pull requests"
+        },
+        {
+          "key": "hasSubprocessors",
+          "label": "Has subprocessors",
+          "type": "boolean",
+          "description": "Whether the vendor uses subprocessors.",
+          "example": true
+        },
+        {
+          "key": "dataProcessingLevel",
+          "label": "Data processing level",
+          "type": "string",
+          "description": "Whether the vendor processes no data, limited data, or acts as a subprocessor.",
+          "example": "limited"
+        },
+        {
+          "key": "dataProcessed",
+          "label": "Data processed",
+          "type": "string[]",
+          "description": "Organization data categories processed by the vendor.",
+          "example": [
+            "customer account data"
+          ]
+        },
+        {
+          "key": "dpaStatus",
+          "label": "DPA status",
+          "type": "string",
+          "description": "Status of the vendor data processing agreement.",
+          "example": "signed"
+        },
+        {
+          "key": "dataRegions",
+          "label": "Data regions",
+          "type": "string[]",
+          "description": "Regions where the vendor processes or stores data.",
+          "example": [
+            "US"
+          ]
+        },
+        {
+          "key": "criticality",
+          "label": "Criticality",
+          "type": "string",
+          "description": "Operational criticality of the vendor.",
+          "example": "high"
+        },
+        {
+          "key": "owner",
+          "label": "Owner",
+          "type": "string",
+          "description": "Internal owner responsible for the vendor relationship.",
+          "example": "Engineering"
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "type": "string",
+          "description": "Additional notes about the vendor.",
+          "example": "Critical engineering system"
+        }
+      ]
+    },
+    {
+      "key": "vendors.subprocessors",
+      "label": "Subprocessors",
+      "type": "collection",
+      "category": "Vendors",
+      "description": "Vendors whose data processing level is subprocessor.",
+      "example": [
+        {
+          "name": "Stripe",
+          "purpose": "Payment processing",
+          "dataRegions": [
+            "US",
+            "EU"
+          ],
+          "dpaStatus": "signed"
+        }
+      ],
+      "itemFields": [
+        {
+          "key": "name",
+          "label": "Name",
+          "type": "string",
+          "description": "Vendor name.",
+          "example": "GitHub"
+        },
+        {
+          "key": "category",
+          "label": "Category",
+          "type": "string",
+          "description": "Vendor category or business function.",
+          "example": "Source control"
+        },
+        {
+          "key": "purpose",
+          "label": "Purpose",
+          "type": "string",
+          "description": "Why the organization uses the vendor.",
+          "example": "Code hosting and pull requests"
+        },
+        {
+          "key": "hasSubprocessors",
+          "label": "Has subprocessors",
+          "type": "boolean",
+          "description": "Whether the vendor uses subprocessors.",
+          "example": true
+        },
+        {
+          "key": "dataProcessingLevel",
+          "label": "Data processing level",
+          "type": "string",
+          "description": "Whether the vendor processes no data, limited data, or acts as a subprocessor.",
+          "example": "limited"
+        },
+        {
+          "key": "dataProcessed",
+          "label": "Data processed",
+          "type": "string[]",
+          "description": "Organization data categories processed by the vendor.",
+          "example": [
+            "customer account data"
+          ]
+        },
+        {
+          "key": "dpaStatus",
+          "label": "DPA status",
+          "type": "string",
+          "description": "Status of the vendor data processing agreement.",
+          "example": "signed"
+        },
+        {
+          "key": "dataRegions",
+          "label": "Data regions",
+          "type": "string[]",
+          "description": "Regions where the vendor processes or stores data.",
+          "example": [
+            "US"
+          ]
+        },
+        {
+          "key": "criticality",
+          "label": "Criticality",
+          "type": "string",
+          "description": "Operational criticality of the vendor.",
+          "example": "high"
+        },
+        {
+          "key": "owner",
+          "label": "Owner",
+          "type": "string",
+          "description": "Internal owner responsible for the vendor relationship.",
+          "example": "Engineering"
+        },
+        {
+          "key": "notes",
+          "label": "Notes",
+          "type": "string",
+          "description": "Additional notes about the vendor.",
+          "example": "Critical engineering system"
+        }
+      ]
+    }
+  ]
+}
