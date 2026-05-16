@@ -7,6 +7,11 @@ import Fastify, {
 import { registerAuth } from "./auth.js"
 import { sendError } from "./errors.js"
 import { apiConfig, type AuthConfig } from "./config.js"
+import {
+  GcsDocumentPdfStorage,
+  NullDocumentPdfStorage,
+  type DocumentPdfStorage,
+} from "./document-pdfs.js"
 import { InMemoryAccountRepository } from "./features/accounts/in-memory-repository.js"
 import { PrismaAccountRepository } from "./features/accounts/prisma-repository.js"
 import { type AccountRepository } from "./features/accounts/repository.js"
@@ -40,6 +45,7 @@ export type CreateAppOptions = {
   organizationRepository?: OrganizationRepository
   vendorRepository?: VendorRepository
   documentRepository?: DocumentRepository
+  documentPdfStorage?: DocumentPdfStorage
   providerSource?: ProviderSource
   systemTemplateSource?: SystemTemplateSource
   logger?: FastifyServerOptions["logger"]
@@ -51,6 +57,7 @@ export async function createApp({
   organizationRepository,
   vendorRepository,
   documentRepository,
+  documentPdfStorage,
   providerSource = apiConfig.airtableBase && apiConfig.airtableApiKey
     ? new AirtableProviderSource(
         apiConfig.airtableBase,
@@ -113,6 +120,11 @@ export async function createApp({
   await registerDocumentRoutes(app, {
     accountRepository: repositories.accountRepository,
     documentRepository: repositories.documentRepository,
+    documentPdfStorage:
+      documentPdfStorage ??
+      (!documentRepository && process.env.DATABASE_URL
+        ? new GcsDocumentPdfStorage(apiConfig.documentPdfBucket)
+        : new NullDocumentPdfStorage()),
     organizationRepository: repositories.organizationRepository,
     systemTemplateSource,
     vendorRepository: repositories.vendorRepository,
@@ -133,6 +145,7 @@ export function createTestApp() {
     auth: false,
     accountRepository,
     documentRepository,
+    documentPdfStorage: new NullDocumentPdfStorage(),
     organizationRepository,
     vendorRepository,
     providerSource: new StaticProviderSource([

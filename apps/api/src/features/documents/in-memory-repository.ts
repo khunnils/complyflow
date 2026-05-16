@@ -21,6 +21,7 @@ function newId(prefix: string) {
 export class InMemoryDocumentRepository implements DocumentRepository {
   private templates = new Map<string, Template>()
   private documents = new Map<string, Document>()
+  private documentPdfObjectPaths = new Map<string, string>()
 
   constructor(
     private readonly organizationRepository: OrganizationRepository,
@@ -117,6 +118,7 @@ export class InMemoryDocumentRepository implements DocumentRepository {
       for (const [documentId, document] of this.documents) {
         if (document.templateId === id) {
           this.documents.delete(documentId)
+          this.documentPdfObjectPaths.delete(documentId)
         }
       }
     }
@@ -152,6 +154,7 @@ export class InMemoryDocumentRepository implements DocumentRepository {
     template: Template
     title: string
     renderedContent: string
+    pdfObjectPath: string | null
     sourceHash: string
   }): Promise<Document> {
     const existingDocument = Array.from(this.documents.values()).find(
@@ -173,11 +176,17 @@ export class InMemoryDocumentRepository implements DocumentRepository {
       templateId: input.template.id,
       title: input.title,
       renderedContent: input.renderedContent,
+      hasPdf: Boolean(input.pdfObjectPath),
       sourceHash: input.sourceHash,
       generatedAt: now(),
     }
 
     this.documents.set(document.id, document)
+
+    if (input.pdfObjectPath) {
+      this.documentPdfObjectPaths.set(document.id, input.pdfObjectPath)
+    }
+
     return document
   }
 
@@ -188,5 +197,28 @@ export class InMemoryDocumentRepository implements DocumentRepository {
     const document = this.documents.get(id) ?? null
 
     return document?.organizationId === organizationId ? document : null
+  }
+
+  async getDocumentPdfObjectPath(
+    organizationId: string,
+    id: string,
+  ): Promise<string | null> {
+    const document = await this.getDocument(organizationId, id)
+
+    return document ? (this.documentPdfObjectPaths.get(id) ?? null) : null
+  }
+
+  async getDocumentForTemplate(
+    organizationId: string,
+    templateId: string,
+  ): Promise<Document | null> {
+    const document =
+      Array.from(this.documents.values()).find(
+        (currentDocument) =>
+          currentDocument.organizationId === organizationId &&
+          currentDocument.templateId === templateId,
+      ) ?? null
+
+    return document
   }
 }

@@ -169,6 +169,7 @@ export const documentSchema = z.object({
   templateId: z.string().min(1),
   title: z.string().trim().min(1),
   renderedContent: z.string(),
+  hasPdf: z.boolean(),
   sourceHash: z.string().min(1),
   generatedAt: z.string().datetime(),
 })

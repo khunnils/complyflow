@@ -175,6 +175,7 @@ model Document {
   template        Template     @relation(fields: [templateId], references: [id], onDelete: Cascade, map: "documents_template_id_fkey")
   title           String
   renderedContent String       @map("rendered_content")
+  pdfObjectPath   String?      @map("pdf_object_path")
   sourceHash      String       @map("source_hash")
   generatedAt     DateTime     @default(now()) @map("generated_at")
 

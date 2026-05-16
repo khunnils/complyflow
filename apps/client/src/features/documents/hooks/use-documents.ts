@@ -6,6 +6,7 @@ import { useSelectedOrganization } from "@/features/organizations/hooks/use-sele
 import { useAuthState } from "@/features/auth/hooks/use-auth"
 import {
   createDocument,
+  downloadDocumentPdf,
   getDocument,
   getOrganizationDocuments,
 } from "@/lib/api"
@@ -64,6 +65,23 @@ export const useCreateDocument = () => {
     },
     onError: (err: Error) => {
       toast.error(err.message ?? "Could not generate document")
+    },
+  })
+}
+
+export const useDownloadDocumentPdf = () => {
+  const { selectedOrganizationId } = useSelectedOrganization()
+  const organizationId = selectedOrganizationId ?? ""
+
+  return useMutation({
+    mutationFn: (input: { id: string; title: string }) =>
+      downloadDocumentPdf({
+        organizationId,
+        id: input.id,
+        title: input.title,
+      }),
+    onError: (err: Error) => {
+      toast.error(err.message ?? "Could not download PDF")
     },
   })
 }

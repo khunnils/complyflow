@@ -13,6 +13,7 @@ import {
 import { ApiError } from "../../errors.js"
 import { requireOrganizationMembership } from "../../organization-context.js"
 import { type SystemTemplateSource } from "../../system-templates.js"
+import { type DocumentPdfStorage } from "../../document-pdfs.js"
 import { type AccountRepository } from "../accounts/repository.js"
 import { type OrganizationRepository } from "../organizations/repository.js"
 import { type VendorRepository } from "../vendors/repository.js"
@@ -22,6 +23,7 @@ export async function registerDocumentRoutes(
   app: FastifyInstance,
   {
     documentRepository,
+    documentPdfStorage,
     organizationRepository,
     systemTemplateSource,
     vendorRepository,
@@ -29,6 +31,7 @@ export async function registerDocumentRoutes(
   }: {
     accountRepository: AccountRepository
     documentRepository: DocumentRepository
+    documentPdfStorage: DocumentPdfStorage
     organizationRepository: OrganizationRepository
     systemTemplateSource: SystemTemplateSource
     vendorRepository: VendorRepository
@@ -178,6 +181,20 @@ export async function registerDocumentRoutes(
         throw new ApiError("TEMPLATE_NOT_FOUND", "Template was not found.", 404)
       }
 
+      const existingDocument = await documentRepository.getDocumentForTemplate(
+        request.params.organizationId,
+        template.id,
+      )
+
+      if (existingDocument) {
+        throw new ApiError(
+          "DOCUMENT_ALREADY_EXISTS",
+          "A document has already been generated for this template.",
+          409,
+          { templateId: template.id },
+        )
+      }
+
       const context = contextBuilder.build({
         organization: await organizationRepository.getOrganization(
           request.params.organizationId,
@@ -186,10 +203,18 @@ export async function registerDocumentRoutes(
           request.params.organizationId,
         ),
       })
+      const renderedContent = renderer.render(template, context)
+      const pdf = await documentPdfStorage.generateAndUpload({
+        organizationId: request.params.organizationId,
+        template,
+        title: template.name,
+        renderedContent,
+      })
       const document = await documentRepository.createDocument({
         template,
         title: template.name,
-        renderedContent: renderer.render(template, context),
+        renderedContent,
+        pdfObjectPath: pdf?.objectPath ?? null,
         sourceHash: templateSourceHash(template, context),
       })
 
@@ -217,4 +242,59 @@ export async function registerDocumentRoutes(
       return reply.send(document)
     },
   )
+
+  app.get<{ Params: { organizationId: string; id: string } }>(
+    "/organizations/:organizationId/documents/:id/pdf",
+    async (request, reply) => {
+      await requireOrganizationMembership(
+        request,
+        accountRepository,
+        request.params.organizationId,
+      )
+      const document = await documentRepository.getDocument(
+        request.params.organizationId,
+        request.params.id,
+      )
+
+      if (!document) {
+        throw new ApiError("DOCUMENT_NOT_FOUND", "Document was not found.", 404)
+      }
+
+      const objectPath = await documentRepository.getDocumentPdfObjectPath(
+        request.params.organizationId,
+        request.params.id,
+      )
+
+      if (!objectPath) {
+        throw new ApiError(
+          "DOCUMENT_PDF_NOT_FOUND",
+          "Document PDF was not found.",
+          404,
+        )
+      }
+
+      const pdf = await documentPdfStorage.regenerateAndUpload({
+        objectPath,
+        title: document.title,
+        renderedContent: document.renderedContent,
+      })
+
+      return reply
+        .header("Content-Type", "application/pdf")
+        .header(
+          "Content-Disposition",
+          `attachment; filename="${safePdfFilename(document.title)}"`,
+        )
+        .send(pdf)
+    },
+  )
+}
+
+function safePdfFilename(title: string) {
+  const filename = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+
+  return `${filename || "document"}.pdf`
 }

@@ -125,6 +125,7 @@ export class PrismaDocumentRepository implements DocumentRepository {
     template: Template
     title: string
     renderedContent: string
+    pdfObjectPath: string | null
     sourceHash: string
   }): Promise<Document> {
     try {
@@ -134,6 +135,7 @@ export class PrismaDocumentRepository implements DocumentRepository {
           templateId: input.template.id,
           title: input.title,
           renderedContent: input.renderedContent,
+          pdfObjectPath: input.pdfObjectPath,
           sourceHash: input.sourceHash,
         },
       })
@@ -150,6 +152,29 @@ export class PrismaDocumentRepository implements DocumentRepository {
   ): Promise<Document | null> {
     const document = await this.client.document.findFirst({
       where: { id, organizationId },
+    })
+
+    return document ? mapDocumentRecord(document) : null
+  }
+
+  async getDocumentPdfObjectPath(
+    organizationId: string,
+    id: string,
+  ): Promise<string | null> {
+    const document = await this.client.document.findFirst({
+      where: { id, organizationId },
+      select: { pdfObjectPath: true },
+    })
+
+    return document?.pdfObjectPath ?? null
+  }
+
+  async getDocumentForTemplate(
+    organizationId: string,
+    templateId: string,
+  ): Promise<Document | null> {
+    const document = await this.client.document.findFirst({
+      where: { organizationId, templateId },
     })
 
     return document ? mapDocumentRecord(document) : null

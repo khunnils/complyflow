@@ -177,6 +177,38 @@ export const getDocument = (
 ): Promise<Document> =>
   apiRequest(`/organizations/${organizationId}/documents/${id}`, documentSchema)
 
+export const downloadDocumentPdf = async ({
+  organizationId,
+  id,
+  title,
+}: {
+  organizationId: string
+  id: string
+  title: string
+}): Promise<void> => {
+  const response = await fetch(
+    `${API_URL}/organizations/${organizationId}/documents/${id}/pdf`,
+    {
+      credentials: "include",
+    }
+  )
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null)
+    const parsedError = structuredErrorSchema.safeParse(body)
+    throw new Error(
+      parsedError.success ? parsedError.data.error.message : "Request failed"
+    )
+  }
+
+  const blobUrl = URL.createObjectURL(await response.blob())
+  const link = document.createElement("a")
+  link.href = blobUrl
+  link.download = `${safePdfFilename(title)}.pdf`
+  link.click()
+  URL.revokeObjectURL(blobUrl)
+}
+
 export const updateVendor = ({
   organizationId,
   id,
@@ -240,3 +272,9 @@ export const createOrganization = (
     method: "POST",
     body: JSON.stringify(createOrganizationSchema.parse(input)),
   })
+
+const safePdfFilename = (title: string) =>
+  title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") || "document"

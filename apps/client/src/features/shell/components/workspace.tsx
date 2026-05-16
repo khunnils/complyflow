@@ -1,5 +1,6 @@
 import {
   Building2,
+  Download,
   Eye,
   FileText,
   LayoutDashboard,
@@ -50,7 +51,7 @@ import {
   type ProfileFormReturn,
   ProfileInfrastructureFields,
 } from "@/features/security-profile/components/profile-form"
-import { useCreateDocument, useDocument, useDocuments } from "@/features/documents/hooks/use-documents"
+import { useCreateDocument, useDocument, useDocuments, useDownloadDocumentPdf } from "@/features/documents/hooks/use-documents"
 import { useLogout } from "@/features/auth/hooks/use-auth"
 import { OrganizationSwitcher } from "@/features/organizations/components/organization-switcher"
 import {
@@ -292,6 +293,7 @@ export const Workspace = ({ user }: { user: AuthUser }) => {
   const updateTemplate = useUpdateTemplate()
   const deleteTemplate = useDeleteTemplate()
   const createDocument = useCreateDocument()
+  const downloadDocumentPdf = useDownloadDocumentPdf()
 
   const snapshot = securityProfile.data
   const defaultValues = profileFromOrganization(
@@ -752,6 +754,23 @@ export const Workspace = ({ user }: { user: AuthUser }) => {
                     <X />
                     Close
                   </Button>
+                  {documentRecord?.hasPdf ? (
+                    <Button
+                      className="w-fit"
+                      disabled={downloadDocumentPdf.isPending}
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        downloadDocumentPdf.mutate({
+                          id: documentRecord.id,
+                          title: documentRecord.title,
+                        })
+                      }
+                    >
+                      <Download />
+                      Download PDF
+                    </Button>
+                  ) : null}
                   {document.isLoading ? (
                     <p className="text-sm text-slate-500">
                       Loading document...
@@ -814,18 +833,38 @@ export const Workspace = ({ user }: { user: AuthUser }) => {
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {summary.document ? (
-                              <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() =>
-                                  setViewingDocument(
-                                    summary.document?.id ?? null
-                                  )
-                                }
-                              >
-                                <Eye />
-                                View
-                              </Button>
+                              <>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() =>
+                                    setViewingDocument(
+                                      summary.document?.id ?? null
+                                    )
+                                  }
+                                >
+                                  <Eye />
+                                  View
+                                </Button>
+                                {summary.document.hasPdf ? (
+                                  <Button
+                                    disabled={downloadDocumentPdf.isPending}
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() =>
+                                      summary.document
+                                        ? downloadDocumentPdf.mutate({
+                                            id: summary.document.id,
+                                            title: summary.document.title,
+                                          })
+                                        : undefined
+                                    }
+                                  >
+                                    <Download />
+                                    Download
+                                  </Button>
+                                ) : null}
+                              </>
                             ) : (
                               <Button
                                 disabled={createDocument.isPending}

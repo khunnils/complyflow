@@ -535,6 +535,7 @@ describe("security profile API", () => {
       templateId: template.id,
       title: "Security Policy",
       renderedContent: "# Acme AI Security Policy\n",
+      hasPdf: false,
     })
     expect(generateResponse.json().sourceHash).toHaveLength(64)
 

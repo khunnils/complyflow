@@ -68,5 +68,6 @@ export const apiConfig = {
   port: readPort(process.env.PORT),
   airtableBase: process.env.AIRTABLE_BASE,
   airtableApiKey: process.env.AIRTABLE_API_KEY,
+  documentPdfBucket: process.env.DOCUMENT_PDF_BUCKET ?? "comply-flow-public",
   auth: () => readAuthConfig(),
 }

@@ -244,7 +244,7 @@ Report Context Builder
 → Generated Document
 ```
 
-Generated documents retain a source hash so the app can show when a document is outdated after template or profile changes.
+Generated documents retain a source hash so the app can show when a document is outdated after template or profile changes. Each generated document also has a private PDF export that can be downloaded through the authenticated app.
 
 ## UX
 
@@ -254,6 +254,7 @@ The Documents screen shows one row per organization template:
 
 - templates with no document use an outline ghost style and show Generate
 - generated documents show View
+- generated documents with a PDF export show Download
 - outdated generated documents show an Outdated badge and View
 
 Generated documents are read-only in this version.

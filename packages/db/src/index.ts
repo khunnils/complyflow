@@ -199,6 +199,7 @@ export function mapDocumentRecord(record: {
   templateId: string
   title: string
   renderedContent: string
+  pdfObjectPath: string | null
   sourceHash: string
   generatedAt: Date
 }): Document {
@@ -208,6 +209,7 @@ export function mapDocumentRecord(record: {
     templateId: record.templateId,
     title: record.title,
     renderedContent: record.renderedContent,
+    hasPdf: Boolean(record.pdfObjectPath),
     sourceHash: record.sourceHash,
     generatedAt: toIsoString(record.generatedAt),
   })

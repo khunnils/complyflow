@@ -26,7 +26,16 @@ export interface DocumentRepository {
     template: Template
     title: string
     renderedContent: string
+    pdfObjectPath: string | null
     sourceHash: string
   }): Promise<Document>
+  getDocumentPdfObjectPath(
+    organizationId: string,
+    id: string,
+  ): Promise<string | null>
+  getDocumentForTemplate(
+    organizationId: string,
+    templateId: string,
+  ): Promise<Document | null>
   getDocument(organizationId: string, id: string): Promise<Document | null>
 }
