@@ -13,6 +13,7 @@ export const requiredCodeSetIds = [
   "vendor_criticality",
   "vendor_category",
   "data_processing_level",
+  "provider_system_type",
 ] as const
 
 export const countries: Country[] = [
@@ -140,5 +141,11 @@ export const defaultVocabularyCodeSets: VocabularyCodeSet[] = [
     ["none", "None"],
     ["limited", "Limited"],
     ["subprocessor", "Subprocessor"],
+  ]),
+  codeSet("provider_system_type", "Provider system type", true, [
+    ["auth", "Auth"],
+    ["source-control", "Source control"],
+    ["cloud", "Cloud"],
+    ["password-manager", "Password manager"],
   ]),
 ]

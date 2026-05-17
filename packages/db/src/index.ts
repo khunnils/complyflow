@@ -43,7 +43,7 @@ export function mapOrganizationRecord(record: {
   } | null
   vendors: Array<{
     providerId: string | null
-    category: string | null
+    systemType: string | null
   }>
   dataHandlingProfile: {
     storesPii: boolean
@@ -95,11 +95,11 @@ export function mapOrganizationRecord(record: {
   })
   const infrastructure = infrastructureProfileSchema.parse({
     organizationProviders: record.vendors.flatMap((provider) =>
-      provider.providerId && provider.category
+      provider.providerId && provider.systemType
         ? [
             {
               providerId: provider.providerId,
-              category: provider.category,
+              systemType: provider.systemType,
             },
           ]
         : [],

@@ -1,6 +1,7 @@
 import {
   type OrganizationProvider,
   type Provider,
+  type ProviderSystemType,
 } from "@complyflow/shared"
 import { type UseFormReturn } from "react-hook-form"
 
@@ -19,34 +20,34 @@ import { type ProfileDraft } from "@/features/security-profile/types/security-pr
 const comboboxInputClassName =
   "h-10 w-full rounded-md border-slate-200 bg-white text-sm font-normal text-slate-900 shadow-none focus-within:border-blue-600 focus-within:ring-3 focus-within:ring-blue-100"
 
-const systemLabels: Record<string, string> = {
+const systemLabels: Record<ProviderSystemType, string> = {
   auth: "Auth provider",
-  source_control: "Source control provider",
+  "source-control": "Source control provider",
   cloud: "Cloud provider",
-  password_manager: "Password manager",
+  "password-manager": "Password manager",
 }
 
-const infrastructureCategories: string[] = [
+const infrastructureSystemTypes: ProviderSystemType[] = [
   "cloud",
-  "source_control",
+  "source-control",
   "auth",
-  "password_manager",
+  "password-manager",
 ]
 
 const selectedProviderIds = (
   organizationProviders: OrganizationProvider[],
-  category: string
+  systemType: ProviderSystemType
 ) =>
   organizationProviders
-    .filter((provider) => provider.category === category)
+    .filter((provider) => provider.systemType === systemType)
     .map((provider) => provider.providerId)
 
 const providerOptions = (
   providers: Provider[],
-  category: string
+  systemType: ProviderSystemType
 ) =>
   providers
-    .filter((provider) => provider.category === category)
+    .filter((provider) => provider.systemTypes.includes(systemType))
     .map((provider) => ({ value: provider.id, label: provider.name }))
 
 const CloudProviderPicker = ({
@@ -72,7 +73,7 @@ const CloudProviderPicker = ({
       value={selectedIds}
       onValueChange={(providerIds) => {
         const otherProviders = organizationProviders.filter(
-          (provider) => provider.category !== "cloud"
+          (provider) => provider.systemType !== "cloud"
         )
 
         form.setValue(
@@ -80,7 +81,7 @@ const CloudProviderPicker = ({
           [
             ...otherProviders,
             ...providerIds.map((providerId) => ({
-              category: "cloud" as const,
+              systemType: "cloud" as const,
               providerId,
             })),
           ],
@@ -94,33 +95,33 @@ const CloudProviderPicker = ({
 const ProviderPicker = ({
   form,
   providers,
-  category,
+  systemType,
 }: {
   form: UseFormReturn<ProfileDraft>
   providers: Provider[]
-  category: string
+  systemType: ProviderSystemType
 }) => {
   const organizationProviders = form.watch(
     "infrastructure.organizationProviders"
   )
-  const selectedIds = selectedProviderIds(organizationProviders, category)
+  const selectedIds = selectedProviderIds(organizationProviders, systemType)
   const options = [
     { value: "", label: "Not set" },
-    ...providerOptions(providers, category),
+    ...providerOptions(providers, systemType),
   ]
   const optionLabelByValue = new Map(
     options.map((option) => [option.value, option.label])
   )
-  const fieldId = `provider-${category}`
+  const fieldId = `provider-${systemType}`
 
   const setSystemProvider = (providerId: string) => {
     const otherProviders = organizationProviders.filter(
-      (provider) => provider.category !== category
+      (provider) => provider.systemType !== systemType
     )
 
     form.setValue(
       "infrastructure.organizationProviders",
-      [...otherProviders, ...(providerId ? [{ category, providerId }] : [])],
+      [...otherProviders, ...(providerId ? [{ systemType, providerId }] : [])],
       { shouldDirty: true, shouldValidate: true }
     )
   }
@@ -130,7 +131,7 @@ const ProviderPicker = ({
       className="grid gap-2 text-sm font-medium text-slate-800"
       htmlFor={fieldId}
     >
-      {systemLabels[category as keyof typeof systemLabels] ?? category}
+      {systemLabels[systemType]}
       <Combobox
         items={options.map((option) => option.value)}
         value={selectedIds[0] ?? ""}
@@ -167,14 +168,14 @@ export const InfrastructureProfileFields = ({
 }) => (
   <div className="grid gap-4 md:grid-cols-2">
     <CloudProviderPicker form={form} providers={providers} />
-    {infrastructureCategories
-      .filter((category) => category !== "cloud")
-      .map((category) => (
+    {infrastructureSystemTypes
+      .filter((systemType) => systemType !== "cloud")
+      .map((systemType) => (
         <ProviderPicker
           form={form}
-          key={category}
+          key={systemType}
           providers={providers}
-          category={category}
+          systemType={systemType}
         />
       ))}
     <ToggleField

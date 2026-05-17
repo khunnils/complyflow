@@ -79,7 +79,7 @@ export const vocabularyCodeInputSchema = z.object({
 })
 
 export const organizationProviderSchema = z.object({
-  category: codeIdSchema,
+  systemType: providerSystemTypeSchema,
   providerId: z.string().trim().min(1),
 })
 
@@ -190,7 +190,8 @@ export const providerSchema = z.object({
   name: z.string().trim().min(1),
   logoUrl: z.string().url().optional(),
   url: z.string().url().optional(),
-  category: codeIdSchema.optional(),
+  category: z.string().trim().min(1).optional(),
+  systemTypes: z.array(providerSystemTypeSchema).default([]),
   securityCriticality: z.string().trim().min(1).optional(),
   handlesCustomerData: z.boolean(),
 })

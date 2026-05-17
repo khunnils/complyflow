@@ -145,9 +145,9 @@ export const validateInfrastructureProfileCodes = async (
       assertCode(
         vocabularyRepository,
         organizationId,
-        "vendor_category",
-        provider.category,
-        "infrastructure.organizationProviders.category",
+        "provider_system_type",
+        provider.systemType,
+        "infrastructure.organizationProviders.systemType",
       ),
     ),
   )
