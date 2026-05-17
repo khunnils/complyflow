@@ -5,7 +5,7 @@ import {
   type SecurityProgramSnapshot,
   type Template,
   type Vendor,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 
 export type NormalizedTemplateContext = {
   organization: Record<string, unknown>

@@ -1,4 +1,4 @@
-import { prisma, type PrismaClient } from "@complyflow/db"
+import { prisma, type PrismaClient } from "@plyco/db"
 import {
   authUserSchema,
   organizationMembershipRoleSchema,
@@ -7,7 +7,7 @@ import {
   type CreateOrganization,
   type OrganizationMembershipRole,
   type OrganizationSummary,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 
 import {
   type AccountRepository,

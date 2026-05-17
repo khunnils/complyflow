@@ -1,4 +1,4 @@
-import { type Template, type TemplateInput } from "@complyflow/shared"
+import { type Template, type TemplateInput } from "@plyco/shared"
 import { Loader2, Save } from "lucide-react"
 import { useState, type FormEvent } from "react"
 

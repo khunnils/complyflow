@@ -23,14 +23,12 @@ const getErrorMessage = (error: unknown): string | undefined => {
 
 export const DataHandlingProfileFields = ({
   collectionMethodOptions,
-  dataCategoryOptions,
   form,
   legalBasisOptions,
   purposeOptions,
   subjectTypeOptions,
 }: {
   collectionMethodOptions: Option[]
-  dataCategoryOptions: Option[]
   form: UseFormReturn<ProfileDraft>
   legalBasisOptions: Option[]
   purposeOptions: Option[]
@@ -46,7 +44,6 @@ export const DataHandlingProfileFields = ({
       label="Data types stored"
       name="dataHandling.dataTypesStored"
       collectionMethodOptions={collectionMethodOptions}
-      dataCategoryOptions={dataCategoryOptions}
       legalBasisOptions={legalBasisOptions}
       purposeOptions={purposeOptions}
       subjectTypeOptions={subjectTypeOptions}

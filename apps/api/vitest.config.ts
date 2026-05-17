@@ -8,11 +8,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@complyflow/shared": path.resolve(
+      "@plyco/shared": path.resolve(
         __dirname,
         "../../packages/shared/src/index.ts"
       ),
-      "@complyflow/db": path.resolve(
+      "@plyco/db": path.resolve(
         __dirname,
         "../../packages/db/src/index.ts"
       ),

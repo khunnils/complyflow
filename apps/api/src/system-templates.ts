@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import {
   systemTemplateSchema,
   type SystemTemplate,
-} from "@complyflow/shared";
+} from "@plyco/shared";
 
 import { ApiError } from "./errors.js";
 

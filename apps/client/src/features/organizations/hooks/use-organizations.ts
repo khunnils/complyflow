@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { type CreateOrganization } from "@complyflow/shared"
+import { type CreateOrganization } from "@plyco/shared"
 import { toast } from "sonner"
 
 import { createOrganization } from "@/lib/api"

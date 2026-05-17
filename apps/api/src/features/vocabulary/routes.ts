@@ -1,4 +1,4 @@
-import { vocabularyCodeInputSchema } from "@complyflow/shared"
+import { vocabularyCodeInputSchema } from "@plyco/shared"
 import { type FastifyInstance } from "fastify"
 
 import { ApiError } from "../../errors.js"

@@ -5,7 +5,7 @@ import {
   type VocabularyCode,
   type VocabularyCodeSet,
   type VocabularyCodeInput,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 
 import {
   countries,

@@ -17,10 +17,10 @@ importers:
 
   apps/api:
     dependencies:
-      '@complyflow/db':
+      '@plyco/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@complyflow/shared':
+      '@plyco/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@fastify/cors':
@@ -69,7 +69,7 @@ importers:
       '@base-ui/react':
         specifier: ^1.4.1
         version: 1.4.1(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
-      '@complyflow/shared':
+      '@plyco/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@fontsource-variable/inter':
@@ -184,7 +184,7 @@ importers:
 
   packages/db:
     dependencies:
-      '@complyflow/shared':
+      '@plyco/shared':
         specifier: workspace:*
         version: link:../shared
       '@prisma/client':

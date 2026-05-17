@@ -1,5 +1,5 @@
 import { ExternalLink } from "lucide-react"
-import { type Provider } from "@complyflow/shared"
+import { type Provider } from "@plyco/shared"
 import { useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"

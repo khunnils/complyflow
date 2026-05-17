@@ -1,4 +1,4 @@
-import { mapOrganizationRecord, prisma, type PrismaClient } from "@complyflow/db"
+import { mapOrganizationRecord, prisma, type PrismaClient } from "@plyco/db"
 import {
   type AccessProfile,
   type CompanyProfile,
@@ -7,7 +7,7 @@ import {
   type OrganizationSecurityProfile,
   type Provider,
   type ProviderSystemType,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 
 import {
   type OrganizationRepository,
@@ -149,7 +149,7 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
       where: {
         organizationId,
         systemType: {
-          in: ["auth", "source-control", "cloud", "password-manager"],
+          in: ["auth", "source_control", "cloud", "password_manager"],
         },
         ...(selectedProviders.length > 0
           ? {

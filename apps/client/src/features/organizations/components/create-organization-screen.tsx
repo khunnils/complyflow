@@ -1,5 +1,5 @@
 import { Building2, Loader2, LogOut, Plus } from "lucide-react"
-import { type AuthUser } from "@complyflow/shared"
+import { type AuthUser } from "@plyco/shared"
 import { useState, type FormEvent, type ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -35,7 +35,7 @@ export const CreateOrganizationPanel = ({
           <div className="mb-4 flex size-10 items-center justify-center rounded-md bg-blue-50 text-blue-700">
             <Building2 className="size-5" />
           </div>
-          <p className="text-sm font-semibold text-blue-700">ComplyFlow</p>
+          <p className="text-sm font-semibold text-blue-700">plyco</p>
           <h1 className="mt-2 text-2xl font-semibold text-slate-950">
             Create an organization
           </h1>

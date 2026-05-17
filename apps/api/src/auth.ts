@@ -1,6 +1,6 @@
 import oauthPlugin, { type OAuth2Namespace } from "@fastify/oauth2"
 import secureSession from "@fastify/secure-session"
-import { type AuthUser } from "@complyflow/shared"
+import { type AuthUser } from "@plyco/shared"
 import { type FastifyInstance, type FastifyRequest } from "fastify"
 import { z } from "zod"
 
@@ -85,7 +85,7 @@ export async function registerAuth(
 
   await app.register(secureSession, {
     secret: authConfig.sessionKey,
-    salt: "complyflow-auth!",
+    salt: "plyco-auth-salt!",
     cookieName: "cf_session",
     cookie: cookieOptions,
   })

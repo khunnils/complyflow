@@ -1,5 +1,5 @@
 import { Building2, Check, ChevronDown, Plus, X } from "lucide-react"
-import { type AuthUser } from "@complyflow/shared"
+import { type AuthUser } from "@plyco/shared"
 import { useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"

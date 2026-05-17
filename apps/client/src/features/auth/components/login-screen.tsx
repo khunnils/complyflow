@@ -16,7 +16,7 @@ export const LoginScreen = ({
           <ShieldCheck className="size-5" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-blue-700">ComplyFlow</p>
+          <p className="text-sm font-semibold text-blue-700">plyco</p>
           <h1 className="text-xl font-semibold text-slate-950">Sign in</h1>
         </div>
       </div>

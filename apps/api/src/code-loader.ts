@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto"
 
-import { prisma, type PrismaClient } from "@complyflow/db"
+import { prisma, type PrismaClient } from "@plyco/db"
 import { z } from "zod"
 
 import { ApiError } from "./errors.js"
@@ -133,6 +133,7 @@ export async function loadCodesFromAirtable({
   )
 
   if (missingCodeSetIds.length > 0) {
+    console.error(`Missing required code sets: ${missingCodeSetIds.join(", ")}`)
     throw new ApiError(
       "AIRTABLE_CODE_SETS_MISSING",
       "Required Airtable code sets are missing.",

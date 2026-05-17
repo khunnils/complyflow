@@ -3,7 +3,7 @@ import {
   companyProfileSchema,
   dataHandlingProfileSchema,
   infrastructureProfileSchema,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 import { type FastifyInstance } from "fastify"
 import { z } from "zod"
 

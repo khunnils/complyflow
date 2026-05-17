@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, Loader2, LogOut, Save } from "lucide-react"
-import { type AuthUser } from "@complyflow/shared"
+import { type AuthUser } from "@plyco/shared"
 import { useState } from "react"
 import { type FieldErrors } from "react-hook-form"
 
@@ -134,7 +134,7 @@ export const Onboarding = ({
       <div className="mx-auto max-w-4xl">
         <div className="mb-6 flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-blue-700">ComplyFlow</p>
+            <p className="text-sm font-semibold text-blue-700">plyco</p>
             <h1 className="mt-1 text-2xl font-semibold text-slate-950">
               Security snapshot
             </h1>
@@ -221,10 +221,6 @@ export const Onboarding = ({
                       collectionMethodOptions={codeOptions(
                         vocabulary.data,
                         "collection_methods",
-                      )}
-                      dataCategoryOptions={codeOptions(
-                        vocabulary.data,
-                        "data_categories",
                       )}
                       form={form}
                       legalBasisOptions={codeOptions(vocabulary.data, "legal_basis")}

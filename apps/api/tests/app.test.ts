@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 
-import { type SecurityProgramSnapshot } from "@complyflow/shared"
+import { type SecurityProgramSnapshot } from "@plyco/shared"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { createApp, createTestApp } from "../src/app.js"
@@ -37,7 +37,7 @@ const profileBody = {
   infrastructure: {
     organizationProviders: [
       {
-        systemType: "source-control",
+        systemType: "source_control",
         providerId: "prov-github",
       },
     ],
@@ -756,7 +756,7 @@ describe("security profile API", () => {
         name: "GitHub",
         url: "https://github.com",
         category: "Source Control",
-        systemTypes: ["source-control"],
+        systemTypes: ["source_control"],
         securityCriticality: "Critical",
         handlesCustomerData: false,
       },

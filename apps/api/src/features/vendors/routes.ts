@@ -1,4 +1,4 @@
-import { vendorInputSchema } from "@complyflow/shared"
+import { vendorInputSchema } from "@plyco/shared"
 import { type FastifyInstance } from "fastify"
 
 import { ApiError } from "../../errors.js"

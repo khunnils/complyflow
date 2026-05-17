@@ -1,4 +1,4 @@
-# ComplyFlow — High-Level Architecture
+# plyco — High-Level Architecture
 
 ## Purpose
 
@@ -9,7 +9,7 @@ A lightweight security compliance readiness workspace for early-stage startups m
 Single TypeScript monorepo.
 
 ```text
-complyflow/
+plyco/
   apps/
     client/              # React + Vite PWA
       docs/

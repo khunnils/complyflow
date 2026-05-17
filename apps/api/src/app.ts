@@ -170,7 +170,7 @@ export function createTestApp() {
         name: "GitHub",
         url: "https://github.com",
         category: "Source Control",
-        systemTypes: ["source-control"],
+        systemTypes: ["source_control"],
         securityCriticality: "Critical",
         handlesCustomerData: false,
       },

@@ -3,7 +3,7 @@ import {
   type DataHandlingProfile,
   type InfrastructureProfile,
   type VendorInput,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 
 import { ApiError } from "../../errors.js"
 import { type VocabularyRepository } from "./repository.js"
@@ -164,13 +164,15 @@ export const validateVendorCodes = async (
       "vendor.countryOfRegistration",
       vendor.countryOfRegistration,
     ),
-    assertCode(
-      vocabularyRepository,
-      organizationId,
-      "vendor_category",
-      vendor.category,
-      "vendor.category",
-    ),
+    vendor.category
+      ? assertCode(
+          vocabularyRepository,
+          organizationId,
+          "vendor_category",
+          vendor.category,
+          "vendor.category",
+        )
+      : Promise.resolve(),
     assertCode(
       vocabularyRepository,
       organizationId,

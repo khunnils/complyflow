@@ -3,7 +3,7 @@ import {
   type Vocabulary,
   type VocabularyCode,
   type VocabularyCodeInput,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 
 export type CodeSetScope = "system" | "organization"
 

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { type Vendor, type VendorInput } from "@complyflow/shared"
+import { type Vendor, type VendorInput } from "@plyco/shared"
 import { toast } from "sonner"
 
 import { useSelectedOrganization } from "@/features/organizations/hooks/use-selected-organization"

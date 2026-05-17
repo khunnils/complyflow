@@ -1,6 +1,7 @@
 import { config as loadDotenv } from "dotenv"
 
 import { apiConfig } from "../config.js"
+import { ApiError } from "../errors.js"
 import { loadCodesFromAirtable } from "../code-loader.js"
 
 loadDotenv({ path: ".env", override: false })
@@ -28,6 +29,10 @@ try {
     `Loaded ${result.codeSetCount} code sets, ${result.codeCount} codes, and ${result.countryCount} countries.`,
   )
 } catch (error) {
-  console.error(error instanceof Error ? error.message : error)
+  if (error instanceof ApiError && error.details) {
+    console.error(error.message, error.details)
+  } else {
+    console.error(error instanceof Error ? error.message : error)
+  }
   process.exit(1)
 }

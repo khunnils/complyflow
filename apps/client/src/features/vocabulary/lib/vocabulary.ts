@@ -1,4 +1,4 @@
-import { type Country, type Vocabulary } from "@complyflow/shared"
+import { type Country, type Vocabulary } from "@plyco/shared"
 
 export type Option = { value: string; label: string }
 

@@ -26,7 +26,7 @@ import {
   type TemplateCatalog,
   type Vocabulary,
   type Country,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -265,7 +265,6 @@ const CompanySectionFields = ({
     return (
       <ProfileDataHandlingFields
         collectionMethodOptions={codeOptions(vocabulary, "collection_methods")}
-        dataCategoryOptions={codeOptions(vocabulary, "data_categories")}
         form={form}
         legalBasisOptions={codeOptions(vocabulary, "legal_basis")}
         purposeOptions={codeOptions(vocabulary, "data_purposes")}
@@ -334,12 +333,12 @@ const CompanyReadOnlySection = ({
       ["Cloud providers", providerNamesForSystem(profile, providers, "cloud")],
       [
         "Source control",
-        providerNamesForSystem(profile, providers, "source-control"),
+        providerNamesForSystem(profile, providers, "source_control"),
       ],
       ["Auth provider", providerNamesForSystem(profile, providers, "auth")],
       [
         "Password manager",
-        providerNamesForSystem(profile, providers, "password-manager"),
+        providerNamesForSystem(profile, providers, "password_manager"),
       ],
       ["MFA enabled", boolText(profile.infrastructure.mfaEnabled)],
       [
@@ -496,7 +495,7 @@ export const Workspace = ({ user }: { user: AuthUser }) => {
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
-          <p className="text-sm font-semibold text-blue-700">ComplyFlow</p>
+          <p className="text-sm font-semibold text-blue-700">plyco</p>
           <div className="mt-3">
             <OrganizationSwitcher user={user} />
           </div>

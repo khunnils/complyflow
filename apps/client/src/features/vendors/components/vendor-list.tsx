@@ -1,5 +1,5 @@
 import { Pencil, Trash2 } from "lucide-react"
-import { type Country, type Vendor, type Vocabulary } from "@complyflow/shared"
+import { type Country, type Vendor, type Vocabulary } from "@plyco/shared"
 
 import { Button } from "@/components/ui/button"
 import { codeLabel, countryLabel } from "@/features/vocabulary/lib/vocabulary"

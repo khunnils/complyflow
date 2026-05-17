@@ -4,7 +4,7 @@ import {
   type SystemTemplate,
   type Template,
   type TemplateInput,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 
 export interface DocumentRepository {
   listTemplates(organizationId: string): Promise<Template[]>

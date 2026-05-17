@@ -6,8 +6,8 @@ import {
   type Vocabulary,
   type VocabularyCode,
   type VocabularyCodeInput,
-} from "@complyflow/shared"
-import { prisma, type PrismaClient } from "@complyflow/db"
+} from "@plyco/shared"
+import { prisma, type PrismaClient } from "@plyco/db"
 
 import { countries } from "./reference-data.js"
 import { type VocabularyRepository } from "./repository.js"

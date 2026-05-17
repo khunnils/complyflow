@@ -33,7 +33,7 @@ import {
   type Vendor,
   type VendorInput,
   type OrganizationSummary,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 import { z } from "zod"
 
 import { type ProfileDraft } from "@/features/security-profile/types/security-profile"

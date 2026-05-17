@@ -3,7 +3,7 @@ import {
   providerSystemTypeSchema,
   type Provider,
   type ProviderSystemType,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 import { z } from "zod"
 
 import { ApiError } from "./errors.js"
@@ -89,13 +89,13 @@ const systemTypeAliases: Record<string, ProviderSystemType> = {
   auth: "auth",
   authentication: "auth",
   "identity provider": "auth",
-  "source control": "source-control",
-  "source-control": "source-control",
-  scm: "source-control",
+  "source control": "source_control",
+  "source_control": "source_control",
+  scm: "source_control",
   cloud: "cloud",
-  "cloud provider": "cloud",
-  "password manager": "password-manager",
-  "password-manager": "password-manager",
+  hosting: "cloud",
+  "password manager": "password_manager",
+  "password_manager": "password_manager",
 }
 
 const systemTypesField = (
@@ -125,7 +125,9 @@ const mapAirtableProvider = (
     name: stringField(fields, "Name") ?? "Unnamed provider",
     logoUrl: logoUrlField(fields),
     url: stringField(fields, "Url", "URL"),
-    category: stringField(fields, "Category"),
+    category:
+      stringField(fields, "Category Name", "Category") ??
+      rawStringValues(fields, "Category Name", "Category")[0],
     systemTypes: systemTypesField(fields),
     securityCriticality: stringField(
       fields,

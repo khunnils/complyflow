@@ -3,7 +3,7 @@ import {
   type CompanyProfile,
   type DataHandlingProfile,
   type InfrastructureProfile,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 
 export type ProfileDraft = {
   company: CompanyProfile

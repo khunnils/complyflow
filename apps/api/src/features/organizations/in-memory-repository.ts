@@ -1,7 +1,7 @@
 import {
   type OrganizationSecurityProfile,
   type Provider,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 
 import {
   type OrganizationRepository,

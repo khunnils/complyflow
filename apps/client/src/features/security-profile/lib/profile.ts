@@ -7,7 +7,7 @@ import {
   type Provider,
   type Vendor,
   type VendorInput,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 
 import { type ProfileDraft } from "@/features/security-profile/types/security-profile"
 
@@ -120,7 +120,7 @@ const providerCategory = (provider: Provider): VendorInput["category"] => {
     return "project_management"
   }
 
-  return "provider"
+  return ""
 }
 
 export const vendorInputFromProvider = (provider: Provider): VendorInput => ({

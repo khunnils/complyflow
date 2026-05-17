@@ -1,5 +1,5 @@
 {
-  "name": "@complyflow/db",
+  "name": "@plyco/db",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -15,12 +15,12 @@
     "build": "prisma generate && tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "tsc -p tsconfig.json --noEmit",
-    "test": "echo \"@complyflow/db has no test suite yet\"",
+    "test": "echo \"@plyco/db has no test suite yet\"",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev"
   },
   "dependencies": {
-    "@complyflow/shared": "workspace:*",
+    "@plyco/shared": "workspace:*",
     "@prisma/client": "6.19.0"
   },
   "devDependencies": {

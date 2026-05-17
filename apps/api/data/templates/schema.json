@@ -138,9 +138,9 @@
         {
           "key": "systemType",
           "label": "System type",
-          "type": "string",
-          "description": "The infrastructure system category, such as cloud, source-control, auth, or password-manager.",
-          "example": "source-control"
+          "systemType": "source_control",
+          "description": "The infrastructure system category, such as cloud, source_control, auth, or password_manager.",
+          "example": "source_control"
         },
         {
           "key": "providerId",

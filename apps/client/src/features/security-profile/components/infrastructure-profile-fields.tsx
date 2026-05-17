@@ -2,7 +2,7 @@ import {
   type OrganizationProvider,
   type Provider,
   type ProviderSystemType,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 import { type UseFormReturn } from "react-hook-form"
 
 import { MultiSelectField } from "@/components/form/multi-select-field"
@@ -22,16 +22,16 @@ const comboboxInputClassName =
 
 const systemLabels: Record<ProviderSystemType, string> = {
   auth: "Auth provider",
-  "source-control": "Source control provider",
+  source_control: "Source control provider",
   cloud: "Cloud provider",
-  "password-manager": "Password manager",
+  password_manager: "Password manager",
 }
 
 const infrastructureSystemTypes: ProviderSystemType[] = [
   "cloud",
-  "source-control",
+  "source_control",
   "auth",
-  "password-manager",
+  "password_manager",
 ]
 
 const selectedProviderIds = (

@@ -4,7 +4,7 @@ import {
   type SystemTemplate,
   type Template,
   type TemplateInput,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 
 import { ApiError } from "../../errors.js"
 import { type OrganizationRepository } from "../organizations/repository.js"

@@ -3,7 +3,7 @@ import {
   type CreateOrganization,
   type OrganizationMembershipRole,
   type OrganizationSummary,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 
 export type AccountUserInput = {
   googleSubject: string

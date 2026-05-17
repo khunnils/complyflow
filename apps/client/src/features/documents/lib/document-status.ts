@@ -1,4 +1,4 @@
-import { type DocumentSummary } from "@complyflow/shared"
+import { type DocumentSummary } from "@plyco/shared"
 
 export const documentStatusLabel = (status: DocumentSummary["status"]) => {
   if (status === "stale") {

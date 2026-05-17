@@ -1,4 +1,4 @@
-import { Pencil, Plus, Trash2 } from "lucide-react"
+import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react"
 import { useState } from "react"
 import {
   Controller,
@@ -10,6 +10,18 @@ import {
 } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
+import {
+  Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxTrigger,
+  useComboboxAnchor,
+} from "@/components/ui/combobox"
 import { type Option } from "@/features/vocabulary/lib/vocabulary"
 
 type StoredDataType = {
@@ -29,7 +41,6 @@ type StoredDataType = {
 type DataTypesFieldProps<T extends FieldValues> = {
   collectionMethodOptions: Option[]
   control: Control<T>
-  dataCategoryOptions: Option[]
   error?: FieldError
   errorMessage?: string
   label: string
@@ -52,45 +63,6 @@ const emptyDataType = (): StoredDataType => ({
   sharedWithThirdParties: false,
   thirdParties: [],
 })
-
-const listFields: Array<{
-  key: keyof Pick<
-    StoredDataType,
-    | "subjectTypes"
-    | "purposes"
-    | "collectionMethods"
-    | "legalBasis"
-    | "thirdParties"
-  >
-  label: string
-  placeholder: string
-}> = [
-  {
-    key: "subjectTypes",
-    label: "Subject types",
-    placeholder: "Customers",
-  },
-  {
-    key: "purposes",
-    label: "Purposes",
-    placeholder: "Account notifications",
-  },
-  {
-    key: "collectionMethods",
-    label: "Collection methods",
-    placeholder: "Signup form",
-  },
-  {
-    key: "legalBasis",
-    label: "Legal basis",
-    placeholder: "Contract",
-  },
-  {
-    key: "thirdParties",
-    label: "Third parties",
-    placeholder: "Email delivery provider",
-  },
-]
 
 const normalizeDataType = (value: Partial<StoredDataType>): StoredDataType => ({
   ...emptyDataType(),
@@ -116,7 +88,6 @@ const dataTypeBadges = (item: StoredDataType) =>
     item.isSensitive ? "Sensitive" : null,
     item.isRequired ? "Required" : null,
     item.retentionDays > 0 ? `${item.retentionDays} days` : null,
-    item.sharedWithThirdParties ? "Third-party sharing" : null,
   ].filter(Boolean)
 
 const FieldInput = ({
@@ -155,7 +126,8 @@ const FieldInput = ({
   </label>
 )
 
-const SelectInput = ({
+
+const MultiSelectDropdown = ({
   label,
   onBlur,
   onChange,
@@ -165,63 +137,64 @@ const SelectInput = ({
 }: {
   label: string
   onBlur: () => void
-  onChange: (value: string) => void
-  options: Option[]
-  placeholder?: string
-  value: string
-}) => (
-  <label className="grid gap-2">
-    {label}
-    <select
-      className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-normal text-slate-900 transition outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-100"
-      value={value}
-      onBlur={onBlur}
-      onChange={(event) => onChange(event.target.value)}
-    >
-      <option value="">{placeholder ?? "Select an option"}</option>
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-  </label>
-)
-
-const MultiSelectInput = ({
-  label,
-  onBlur,
-  onChange,
-  options,
-  value,
-}: {
-  label: string
-  onBlur: () => void
   onChange: (value: string[]) => void
   options: Option[]
+  placeholder?: string
   value: string[]
-}) => (
-  <label className="grid gap-2">
-    {label}
-    <select
-      className="min-h-24 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-normal text-slate-900 transition outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-100"
-      multiple
-      value={value}
-      onBlur={onBlur}
-      onChange={(event) =>
-        onChange(
-          Array.from(event.target.selectedOptions).map((option) => option.value),
-        )
-      }
-    >
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-  </label>
-)
+}) => {
+  const anchorRef = useComboboxAnchor()
+  const optionLabelByValue = new Map(options.map((o) => [o.value, o.label]))
+
+  return (
+    <div className="grid gap-2">
+      <span>{label}</span>
+      <Combobox<string, true>
+        multiple
+        items={options.map((o) => o.value)}
+        value={value}
+        itemToStringLabel={(v) => optionLabelByValue.get(v) ?? v}
+        onValueChange={(v) => onChange([...v])}
+      >
+        <ComboboxChips
+          ref={anchorRef}
+          className="min-h-10 rounded-md border-slate-200 bg-white px-3 py-2 shadow-none focus-within:border-blue-600 focus-within:ring-3 focus-within:ring-blue-100 has-data-[slot=combobox-chip]:px-3"
+        >
+          {value.map((v) => (
+            <ComboboxChip
+              key={v}
+              className="h-6 rounded-sm bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700"
+            >
+              {optionLabelByValue.get(v) ?? v}
+            </ComboboxChip>
+          ))}
+          <ComboboxChipsInput
+            placeholder={value.length === 0 ? (placeholder ?? "Select options") : undefined}
+            className="text-sm font-normal text-slate-900 placeholder:text-slate-400"
+            onBlur={onBlur}
+          />
+          <ComboboxTrigger className="ml-auto rounded-sm p-1 text-slate-500 transition hover:bg-slate-50 hover:text-slate-700" />
+        </ComboboxChips>
+        <ComboboxContent
+          anchor={anchorRef}
+          className="rounded-md border border-slate-200 bg-white shadow-lg ring-0"
+        >
+          <ComboboxEmpty>No options available</ComboboxEmpty>
+          <ComboboxList>
+            {options.map((option) => (
+              <ComboboxItem
+                key={option.value}
+                className="rounded-sm text-slate-800 data-highlighted:bg-slate-50 data-highlighted:text-slate-900"
+                value={option.value}
+              >
+                {option.label}
+              </ComboboxItem>
+            ))}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+    </div>
+  )
+}
 
 const ToggleInput = ({
   checked,
@@ -246,69 +219,8 @@ const ToggleInput = ({
   </label>
 )
 
-const ListEditor = ({
-  item,
-  listField,
-  onBlur,
-  onListItemAdd,
-  onListItemRemove,
-  onListItemUpdate,
-}: {
-  item: StoredDataType
-  listField: (typeof listFields)[number]
-  onBlur: () => void
-  onListItemAdd: (key: (typeof listFields)[number]["key"]) => void
-  onListItemRemove: (
-    key: (typeof listFields)[number]["key"],
-    itemIndex: number,
-  ) => void
-  onListItemUpdate: (
-    key: (typeof listFields)[number]["key"],
-    itemIndex: number,
-    value: string,
-  ) => void
-}) => (
-  <div className="grid gap-2">
-    <span>{listField.label}</span>
-    <div className="grid gap-2">
-      {item[listField.key].map((listItem, itemIndex) => (
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2" key={itemIndex}>
-          <input
-            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-normal text-slate-900 transition outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-100"
-            placeholder={listField.placeholder}
-            type="text"
-            value={listItem}
-            onBlur={onBlur}
-            onChange={(event) =>
-              onListItemUpdate(listField.key, itemIndex, event.target.value)
-            }
-          />
-          <Button
-            aria-label={`Remove ${listField.label}`}
-            type="button"
-            variant="outline"
-            onClick={() => onListItemRemove(listField.key, itemIndex)}
-          >
-            <Trash2 />
-          </Button>
-        </div>
-      ))}
-      <Button
-        className="w-fit"
-        type="button"
-        variant="outline"
-        onClick={() => onListItemAdd(listField.key)}
-      >
-        <Plus />
-        Add {listField.label.toLowerCase()}
-      </Button>
-    </div>
-  </div>
-)
-
 const DataTypesEditor = <T extends FieldValues>({
   collectionMethodOptions,
-  dataCategoryOptions,
   error,
   errorMessage,
   field,
@@ -318,7 +230,6 @@ const DataTypesEditor = <T extends FieldValues>({
   subjectTypeOptions,
 }: {
   collectionMethodOptions: Option[]
-  dataCategoryOptions: Option[]
   error?: FieldError
   errorMessage?: string
   field: ControllerRenderProps<T, FieldPath<T>>
@@ -327,12 +238,10 @@ const DataTypesEditor = <T extends FieldValues>({
   purposeOptions: Option[]
   subjectTypeOptions: Option[]
 }) => {
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null)
   const values: StoredDataType[] = Array.isArray(field.value)
     ? field.value.map(normalizeDataType)
     : []
-  const selectedItem =
-    selectedIndex === null ? null : values[selectedIndex] ?? null
 
   const changeValues = (nextValues: StoredDataType[]) => {
     field.onChange(nextValues)
@@ -352,67 +261,20 @@ const DataTypesEditor = <T extends FieldValues>({
     const nextValues = [...values, emptyDataType()]
 
     changeValues(nextValues)
-    setSelectedIndex(nextValues.length - 1)
+    setExpandedIndex(nextValues.length - 1)
   }
   const removeValue = (index: number) => {
     const nextValues = values.filter((_, currentIndex) => currentIndex !== index)
 
     changeValues(nextValues)
-    setSelectedIndex((currentSelectedIndex) => {
-      if (currentSelectedIndex === null) {
-        return null
-      }
-
-      if (nextValues.length === 0) {
-        return null
-      }
-
-      if (currentSelectedIndex === index) {
-        return Math.min(index, nextValues.length - 1)
-      }
-
-      return currentSelectedIndex > index
-        ? currentSelectedIndex - 1
-        : currentSelectedIndex
+    setExpandedIndex((current) => {
+      if (current === null || nextValues.length === 0) return null
+      if (current === index) return null
+      return current > index ? current - 1 : current
     })
   }
-  const updateListItem = (
-    key: (typeof listFields)[number]["key"],
-    itemIndex: number,
-    value: string,
-  ) => {
-    if (selectedIndex === null || !selectedItem) {
-      return
-    }
-
-    updateValue(
-      selectedIndex,
-      key,
-      selectedItem[key].map((item, currentIndex) =>
-        currentIndex === itemIndex ? value : item,
-      ),
-    )
-  }
-  const addListItem = (key: (typeof listFields)[number]["key"]) => {
-    if (selectedIndex === null || !selectedItem) {
-      return
-    }
-
-    updateValue(selectedIndex, key, [...selectedItem[key], ""])
-  }
-  const removeListItem = (
-    key: (typeof listFields)[number]["key"],
-    itemIndex: number,
-  ) => {
-    if (selectedIndex === null || !selectedItem) {
-      return
-    }
-
-    updateValue(
-      selectedIndex,
-      key,
-      selectedItem[key].filter((_, currentIndex) => currentIndex !== itemIndex),
-    )
+  const toggleExpanded = (index: number) => {
+    setExpandedIndex((current) => (current === index ? null : index))
   }
 
   return (
@@ -432,177 +294,155 @@ const DataTypesEditor = <T extends FieldValues>({
         <div className="grid gap-2">
           {values.map((item, index) => {
             const badges = dataTypeBadges(item)
-            const selected = selectedIndex === index
+            const expanded = expandedIndex === index
 
             return (
               <div
                 className={[
-                  "grid gap-3 rounded-md border bg-white p-3 sm:grid-cols-[minmax(0,1fr)_auto]",
-                  selected ? "border-blue-300 ring-2 ring-blue-100" : "border-slate-200",
+                  "rounded-md border bg-white",
+                  expanded ? "border-blue-300 ring-2 ring-blue-100" : "border-slate-200",
                 ].join(" ")}
                 key={index}
               >
-                <button
-                  className="min-w-0 text-left"
-                  type="button"
-                  onClick={() => setSelectedIndex(index)}
-                >
-                  <p className="truncate text-sm font-semibold text-slate-950">
-                    {dataTypeTitle(item, index)}
-                  </p>
-                  {item.description ? (
-                    <p className="mt-1 line-clamp-2 text-xs font-normal leading-5 text-slate-500">
-                      {item.description}
+                <div className="flex items-start gap-2 p-3">
+                  <button
+                    className="min-w-0 flex-1 text-left"
+                    type="button"
+                    onClick={() => toggleExpanded(index)}
+                  >
+                    <p className="truncate text-sm font-semibold text-slate-950">
+                      {dataTypeTitle(item, index)}
                     </p>
-                  ) : null}
-                  {badges.length > 0 ? (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {badges.map((badge) => (
-                        <span
-                          className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600"
-                          key={badge}
-                        >
-                          {badge}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-                </button>
-                <div className="flex gap-2 sm:self-start">
-                  <Button
-                    type="button"
-                    variant={selected ? "default" : "outline"}
-                    onClick={() => setSelectedIndex(index)}
-                  >
-                    <Pencil />
-                    Edit
-                  </Button>
-                  <Button
-                    aria-label="Remove data type"
-                    type="button"
-                    variant="outline"
-                    onClick={() => removeValue(index)}
-                  >
-                    <Trash2 />
-                  </Button>
+                    {!expanded && item.description ? (
+                      <p className="mt-1 line-clamp-2 text-xs font-normal leading-5 text-slate-500">
+                        {item.description}
+                      </p>
+                    ) : null}
+                    {!expanded && badges.length > 0 ? (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {badges.map((badge) => (
+                          <span
+                            className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600"
+                            key={badge}
+                          >
+                            {badge}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </button>
+                  <div className="flex shrink-0 gap-2">
+                    <Button
+                      aria-label={expanded ? "Collapse" : "Expand"}
+                      type="button"
+                      variant="outline"
+                      onClick={() => toggleExpanded(index)}
+                    >
+                      {expanded ? <ChevronUp /> : <ChevronDown />}
+                    </Button>
+                    <Button
+                      aria-label="Remove data type"
+                      type="button"
+                      variant="outline"
+                      onClick={() => removeValue(index)}
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
                 </div>
+                {expanded ? (
+                  <div className="grid gap-4 border-t border-slate-100 bg-slate-50 p-4">
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <FieldInput
+                        label="Name"
+                        placeholder="e.g. Customer billing details"
+                        value={item.name}
+                        onBlur={field.onBlur}
+                        onChange={(value) =>
+                          updateValue(index, "name", value)
+                        }
+                      />
+                      <FieldInput
+                        label="Retention days"
+                        placeholder="0"
+                        type="number"
+                        value={item.retentionDays}
+                        onBlur={field.onBlur}
+                        onChange={(value) =>
+                          updateValue(index, "retentionDays", value)
+                        }
+                      />
+                      <div className="md:col-span-2">
+                        <FieldInput
+                          label="Description"
+                          placeholder="Additional details about how this data is used"
+                          value={item.description}
+                          onBlur={field.onBlur}
+                          onChange={(value) =>
+                            updateValue(index, "description", value)
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <MultiSelectDropdown
+                        label="Subject types"
+                        placeholder="Select subject types"
+                        options={subjectTypeOptions}
+                        value={item.subjectTypes}
+                        onBlur={field.onBlur}
+                        onChange={(value) =>
+                          updateValue(index, "subjectTypes", value)
+                        }
+                      />
+                      <MultiSelectDropdown
+                        label="Purposes"
+                        placeholder="Select purposes"
+                        options={purposeOptions}
+                        value={item.purposes}
+                        onBlur={field.onBlur}
+                        onChange={(value) => updateValue(index, "purposes", value)}
+                      />
+                      <MultiSelectDropdown
+                        label="Collection methods"
+                        placeholder="Select collection methods"
+                        options={collectionMethodOptions}
+                        value={item.collectionMethods}
+                        onBlur={field.onBlur}
+                        onChange={(value) =>
+                          updateValue(index, "collectionMethods", value)
+                        }
+                      />
+                      <MultiSelectDropdown
+                        label="Legal basis"
+                        placeholder="Select legal basis"
+                        options={legalBasisOptions}
+                        value={item.legalBasis}
+                        onBlur={field.onBlur}
+                        onChange={(value) => updateValue(index, "legalBasis", value)}
+                      />
+                    </div>
+                    <div className="grid gap-2 md:grid-cols-2">
+                      <ToggleInput
+                        checked={item.isSensitive}
+                        label="Sensitive"
+                        onBlur={field.onBlur}
+                        onChange={(value) => updateValue(index, "isSensitive", value)}
+                      />
+                      <ToggleInput
+                        checked={item.isRequired}
+                        label="Product required"
+                        onBlur={field.onBlur}
+                        onChange={(value) => updateValue(index, "isRequired", value)}
+                      />
+                    </div>
+                  </div>
+                ) : null}
               </div>
             )
           })}
         </div>
       )}
-      {selectedItem && selectedIndex !== null ? (
-        <div className="grid gap-4 rounded-md border border-slate-200 bg-slate-50 p-4">
-          <div>
-            <p className="text-sm font-semibold text-slate-950">
-              Edit {dataTypeTitle(selectedItem, selectedIndex)}
-            </p>
-            <p className="mt-1 text-xs font-normal text-slate-500">
-              Changes stay in this form until you save the Data section.
-            </p>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            <FieldInput
-              label="Retention days"
-              placeholder="0"
-              type="number"
-              value={selectedItem.retentionDays}
-              onBlur={field.onBlur}
-              onChange={(value) =>
-                updateValue(selectedIndex, "retentionDays", value)
-              }
-            />
-            <SelectInput
-              label="Category"
-              placeholder="Select data category"
-              options={dataCategoryOptions}
-              value={selectedItem.name}
-              onBlur={field.onBlur}
-              onChange={(value) => updateValue(selectedIndex, "name", value)}
-            />
-            <div className="md:col-span-2">
-              <FieldInput
-                label="Description"
-                placeholder="Account contact details used for billing"
-                value={selectedItem.description}
-                onBlur={field.onBlur}
-                onChange={(value) =>
-                  updateValue(selectedIndex, "description", value)
-                }
-              />
-            </div>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            <MultiSelectInput
-              label="Subject types"
-              options={subjectTypeOptions}
-              value={selectedItem.subjectTypes}
-              onBlur={field.onBlur}
-              onChange={(value) =>
-                updateValue(selectedIndex, "subjectTypes", value)
-              }
-            />
-            <MultiSelectInput
-              label="Purposes"
-              options={purposeOptions}
-              value={selectedItem.purposes}
-              onBlur={field.onBlur}
-              onChange={(value) => updateValue(selectedIndex, "purposes", value)}
-            />
-            <MultiSelectInput
-              label="Collection methods"
-              options={collectionMethodOptions}
-              value={selectedItem.collectionMethods}
-              onBlur={field.onBlur}
-              onChange={(value) =>
-                updateValue(selectedIndex, "collectionMethods", value)
-              }
-            />
-            <MultiSelectInput
-              label="Legal basis"
-              options={legalBasisOptions}
-              value={selectedItem.legalBasis}
-              onBlur={field.onBlur}
-              onChange={(value) => updateValue(selectedIndex, "legalBasis", value)}
-            />
-          </div>
-          <div className="grid gap-2 md:grid-cols-3">
-            <ToggleInput
-              checked={selectedItem.isSensitive}
-              label="Sensitive"
-              onBlur={field.onBlur}
-              onChange={(value) => updateValue(selectedIndex, "isSensitive", value)}
-            />
-            <ToggleInput
-              checked={selectedItem.isRequired}
-              label="Product required"
-              onBlur={field.onBlur}
-              onChange={(value) => updateValue(selectedIndex, "isRequired", value)}
-            />
-            <ToggleInput
-              checked={selectedItem.sharedWithThirdParties}
-              label="Shared with third parties"
-              onBlur={field.onBlur}
-              onChange={(value) =>
-                updateValue(selectedIndex, "sharedWithThirdParties", value)
-              }
-            />
-          </div>
-          <div className="grid gap-3">
-            {listFields.filter((listField) => listField.key === "thirdParties").map((listField) => (
-              <ListEditor
-                item={selectedItem}
-                key={listField.key}
-                listField={listField}
-                onBlur={field.onBlur}
-                onListItemAdd={addListItem}
-                onListItemRemove={removeListItem}
-                onListItemUpdate={updateListItem}
-              />
-            ))}
-          </div>
-        </div>
-      ) : null}
       {(errorMessage || error?.message) && (
         <span className="text-xs text-red-700">
           {errorMessage ?? error?.message}
@@ -615,7 +455,6 @@ const DataTypesEditor = <T extends FieldValues>({
 export const DataTypesField = <T extends FieldValues>({
   collectionMethodOptions,
   control,
-  dataCategoryOptions,
   error,
   errorMessage,
   label,
@@ -630,7 +469,6 @@ export const DataTypesField = <T extends FieldValues>({
     render={({ field }) => (
       <DataTypesEditor
         collectionMethodOptions={collectionMethodOptions}
-        dataCategoryOptions={dataCategoryOptions}
         error={error}
         errorMessage={errorMessage}
         field={field}

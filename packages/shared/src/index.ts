@@ -25,9 +25,9 @@ export const vendorDataProcessingLevelSchema = z.enum([
 
 export const providerSystemTypeSchema = z.enum([
   "auth",
-  "source-control",
+  "source_control",
   "cloud",
-  "password-manager",
+  "password_manager",
 ])
 
 export const codeIdSchema = z
@@ -84,7 +84,7 @@ export const organizationProviderSchema = z.object({
 })
 
 export const storedDataTypeSchema = z.object({
-  name: codeIdSchema,
+  name: z.string().trim().default(""),
   description: z.string().trim().default(""),
   subjectTypes: z.array(codeIdSchema).default([]),
   purposes: z.array(codeIdSchema).default([]),
@@ -143,7 +143,7 @@ export const accessProfileSchema = z.object({
 
 const vendorInputBaseSchema = z.object({
   name: z.string().trim().min(1, "Vendor name is required"),
-  category: codeIdSchema,
+  category: codeIdSchema.or(z.literal("")).default(""),
   purpose: z.string().trim().min(1, "Purpose is required"),
   countryOfRegistration: countryCodeSchema.or(z.literal("")).default(""),
   hasSubprocessors: z.boolean(),

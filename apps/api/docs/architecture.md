@@ -1,6 +1,6 @@
 # API Architecture
 
-Google OAuth authentication is required for workspace access. Signed-in Google profiles are persisted as users, and organization access is enforced through memberships with `owner` and `member` roles. Workspace routes include the organization id in the path, and each organization-scoped route verifies that the session user belongs to that organization before reading or mutating data. External inputs are validated with `@complyflow/shared` Zod schemas, and route handlers return structured JSON errors.
+Google OAuth authentication is required for workspace access. Signed-in Google profiles are persisted as users, and organization access is enforced through memberships with `owner` and `member` roles. Workspace routes include the organization id in the path, and each organization-scoped route verifies that the session user belongs to that organization before reading or mutating data. External inputs are validated with `@plyco/shared` Zod schemas, and route handlers return structured JSON errors.
 
 API code is organized by feature area under `src/features`:
 

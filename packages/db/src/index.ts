@@ -11,7 +11,7 @@ import {
   type Vendor,
   templateSchema,
   vendorSchema,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 
 export const prisma = new PrismaClient()
 

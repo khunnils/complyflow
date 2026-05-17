@@ -3,7 +3,7 @@ import { Plus, Save, X } from "lucide-react"
 import {
   vendorInputSchema,
   type VendorInput,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 import { useEffect } from "react"
 import { type Resolver, useForm, useWatch } from "react-hook-form"
 
@@ -88,7 +88,7 @@ export const VendorForm = ({
           control={form.control}
           label="Category"
           name="category"
-          options={vendorCategoryOptions}
+          options={[{ value: "", label: "Not set" }, ...vendorCategoryOptions]}
         />
         <TextField
           error={form.formState.errors.purpose}

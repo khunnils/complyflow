@@ -5,7 +5,7 @@ import {
   type CreateOrganization,
   type OrganizationMembershipRole,
   type OrganizationSummary,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 
 import {
   type AccountRepository,

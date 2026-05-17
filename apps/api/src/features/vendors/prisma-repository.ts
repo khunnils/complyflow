@@ -1,5 +1,5 @@
-import { mapVendorRecord, prisma, type PrismaClient } from "@complyflow/db"
-import { type Vendor, type VendorInput } from "@complyflow/shared"
+import { mapVendorRecord, prisma, type PrismaClient } from "@plyco/db"
+import { type Vendor, type VendorInput } from "@plyco/shared"
 
 import { ApiError } from "../../errors.js"
 import { type OrganizationRepository } from "../organizations/repository.js"

@@ -1,4 +1,4 @@
-import { type Vendor, type VendorInput } from "@complyflow/shared"
+import { type Vendor, type VendorInput } from "@plyco/shared"
 
 export interface VendorRepository {
   listVendors(organizationId: string): Promise<Vendor[]>

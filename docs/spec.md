@@ -1,8 +1,8 @@
-# ComplyFlow MVP PRD
+# plyco MVP PRD
 
 ## Product Overview
 
-ComplyFlow is a lightweight security readiness workspace for early-stage startups preparing for enterprise customers, security reviews, and future compliance initiatives.
+plyco is a lightweight security readiness workspace for early-stage startups preparing for enterprise customers, security reviews, and future compliance initiatives.
 
 The product helps startups avoid “compliance debt” by organizing operational security controls, evidence, vendors, policies, and security documentation before enterprise security requirements become blockers.
 

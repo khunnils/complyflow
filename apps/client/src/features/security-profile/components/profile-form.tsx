@@ -4,7 +4,7 @@ import {
   companyProfileSchema,
   dataHandlingProfileSchema,
   infrastructureProfileSchema,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 import { type ReactNode } from "react"
 import {
   type FieldErrors,

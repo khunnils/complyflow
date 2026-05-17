@@ -1,5 +1,5 @@
 {
-  "name": "@complyflow/api",
+  "name": "@plyco/api",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -13,8 +13,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@complyflow/db": "workspace:*",
-    "@complyflow/shared": "workspace:*",
+    "@plyco/db": "workspace:*",
+    "@plyco/shared": "workspace:*",
     "@fastify/cors": "^11.2.0",
     "@fastify/oauth2": "^8.2.0",
     "@fastify/secure-session": "^8.3.0",

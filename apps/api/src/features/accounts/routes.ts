@@ -1,4 +1,4 @@
-import { createOrganizationSchema } from "@complyflow/shared"
+import { createOrganizationSchema } from "@plyco/shared"
 import { type FastifyInstance } from "fastify"
 
 import { getPersistedSessionUser } from "../../auth.js"

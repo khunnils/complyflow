@@ -3,7 +3,7 @@ import {
   type CreateTemplateFromSystem,
   type Template,
   type TemplateInput,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 import { toast } from "sonner"
 
 import { useSelectedOrganization } from "@/features/organizations/hooks/use-selected-organization"

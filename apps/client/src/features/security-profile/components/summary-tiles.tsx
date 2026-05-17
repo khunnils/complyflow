@@ -1,4 +1,4 @@
-import { type Vendor } from "@complyflow/shared"
+import { type Vendor } from "@plyco/shared"
 
 import { type ProfileDraft } from "@/features/security-profile/types/security-profile"
 

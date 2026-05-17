@@ -2,7 +2,7 @@ import {
   createDocumentSchema,
   createTemplateFromSystemSchema,
   templateInputSchema,
-} from "@complyflow/shared"
+} from "@plyco/shared"
 import { type FastifyInstance } from "fastify"
 
 import {
