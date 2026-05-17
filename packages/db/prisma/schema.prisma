@@ -219,7 +219,6 @@ model OrganizationProvider {
   organizationId   String       @map("organization_id")
   organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "vendors_organization_id_fkey")
   providerId       String?      @map("provider_id")
-  systemType       String?      @map("system_type")
   name             String
   category         String
   purpose          String
@@ -237,8 +236,6 @@ model OrganizationProvider {
 
   @@index([organizationId], map: "idx_organization_providers_organization_id")
   @@index([providerId], map: "idx_organization_providers_provider_id")
-  @@index([systemType], map: "idx_organization_providers_system_type")
-  @@unique([organizationId, systemType, providerId], map: "organization_providers_org_system_provider_key")
   @@map("organization_providers")
 }
 

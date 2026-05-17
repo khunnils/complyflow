@@ -23,7 +23,7 @@ export const ORGANIZATION_INCLUDE = {
   vendors: {
     select: {
       providerId: true,
-      systemType: true,
+      category: true,
     },
   },
 } as const
@@ -140,7 +140,7 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
       selectedProvider,
       provider: this.catalogProvider(
         providerCatalog,
-        selectedProvider.systemType,
+        selectedProvider.category,
         selectedProvider.providerId,
       ),
     }))
@@ -148,13 +148,13 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
     await this.client.organizationProvider.deleteMany({
       where: {
         organizationId,
-        systemType: {
-          in: ["auth", "source-control", "cloud", "password-manager"],
+        category: {
+          in: ["auth", "source_control", "cloud", "password_manager"],
         },
         ...(selectedProviders.length > 0
           ? {
               NOT: selectedProviders.map((provider) => ({
-                systemType: provider.systemType,
+                category: provider.category,
                 providerId: provider.providerId,
               })),
             }
@@ -164,21 +164,12 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
 
     await Promise.all(
       catalogProviders.map(({ provider, selectedProvider }) =>
-        this.client.organizationProvider.upsert({
-          where: {
-            organizationId_systemType_providerId: {
-              organizationId,
-              systemType: selectedProvider.systemType,
-              providerId: selectedProvider.providerId,
-            },
-          },
-          create: {
+        this.client.organizationProvider.create({
+          data: {
             organizationId,
             providerId: provider.id,
-            systemType: selectedProvider.systemType,
             ...this.organizationProviderData(provider),
           },
-          update: this.organizationProviderData(provider),
         })
       ),
     )
@@ -186,13 +177,13 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
 
   private catalogProvider(
     providerCatalog: Provider[],
-    systemType: ProviderSystemType,
+    category: string,
     providerId: string,
   ) {
     const provider = providerCatalog.find(
       (catalogProvider) =>
         catalogProvider.id === providerId &&
-        catalogProvider.systemTypes.includes(systemType),
+        catalogProvider.category === category,
     )
 
     if (!provider) {
@@ -200,7 +191,7 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
         "PROVIDER_NOT_AVAILABLE_FOR_SYSTEM",
         "Selected provider is not available for the requested system type.",
         400,
-        { providerId, systemType },
+        { providerId, category },
       )
     }
 

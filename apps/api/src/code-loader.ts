@@ -135,7 +135,7 @@ export async function loadCodesFromAirtable({
   if (missingCodeSetIds.length > 0) {
     throw new ApiError(
       "AIRTABLE_CODE_SETS_MISSING",
-      "Required Airtable code sets are missing.",
+      `Required Airtable code sets are missing: ${missingCodeSetIds.join(", ")}`,
       400,
       { codeSetIds: missingCodeSetIds },
     )

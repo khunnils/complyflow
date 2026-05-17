@@ -22,7 +22,6 @@ import {
   type DocumentSummary,
   type AuthUser,
   type Provider,
-  type ProviderSystemType,
   type TemplateCatalog,
   type Vocabulary,
   type Country,
@@ -177,10 +176,10 @@ const codeValueList = (
 const providerNamesForSystem = (
   profile: ProfileDraft,
   providers: Provider[],
-  systemType: ProviderSystemType
+  category: string
 ) => {
   const names = profile.infrastructure.organizationProviders
-    .filter((provider) => provider.systemType === systemType)
+    .filter((provider) => provider.category === category)
     .map((provider) => {
       const catalogProvider = providers.find(
         (catalogProvider) => catalogProvider.id === provider.providerId
