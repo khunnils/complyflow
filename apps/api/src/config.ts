@@ -68,6 +68,7 @@ export const apiConfig = {
   port: readPort(process.env.PORT),
   airtableBase: process.env.AIRTABLE_BASE,
   airtableApiKey: process.env.AIRTABLE_API_KEY,
-  documentPdfBucket: process.env.DOCUMENT_PDF_BUCKET ?? "comply-flow-public",
+  documentPdfBucket: process.env.DOCUMENT_PDF_BUCKET ?? "plyco-public",
+  gcpProjectId: process.env.GCP_PROJECT_ID ?? "plyco-prod",
   auth: () => readAuthConfig(),
 }

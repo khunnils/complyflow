@@ -52,7 +52,7 @@ const profileBody = {
         name: "account_data",
         description: "Profile and billing contact details",
         subjectTypes: ["customer", "administrator"],
-        purposes: ["account_management", "billing_payments"],
+        purposes: "account_management, billing_payments",
         collectionMethods: ["account_signup"],
         legalBasis: ["contract"],
         retentionDays: 365,
@@ -65,7 +65,7 @@ const profileBody = {
         name: "usage_data",
         description: "Usage events for product improvement",
         subjectTypes: ["end_user"],
-        purposes: ["analytics"],
+        purposes: "analytics",
         collectionMethods: ["product_usage"],
         legalBasis: ["legitimate_interests"],
         retentionDays: 180,
@@ -448,7 +448,7 @@ describe("security profile API", () => {
     expect(countriesResponse.statusCode).toBe(200)
     expect(countriesResponse.json()).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ code: "US", name: "United States" }),
+        expect.objectContaining({ code: "US", name: "United States of America" }),
       ]),
     )
 

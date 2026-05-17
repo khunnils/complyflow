@@ -95,13 +95,6 @@ export const validateDataHandlingProfileCodes = async (
   dataHandling: DataHandlingProfile,
 ) => {
   for (const dataType of dataHandling.dataTypesStored) {
-    await assertCode(
-      vocabularyRepository,
-      organizationId,
-      "data_categories",
-      dataType.name,
-      "dataHandling.dataTypesStored.name",
-    )
     await Promise.all([
       assertCodes(
         vocabularyRepository,
@@ -109,13 +102,6 @@ export const validateDataHandlingProfileCodes = async (
         "subject_types",
         dataType.subjectTypes,
         "dataHandling.dataTypesStored.subjectTypes",
-      ),
-      assertCodes(
-        vocabularyRepository,
-        organizationId,
-        "data_purposes",
-        dataType.purposes,
-        "dataHandling.dataTypesStored.purposes",
       ),
       assertCodes(
         vocabularyRepository,

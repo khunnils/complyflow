@@ -267,7 +267,6 @@ const CompanySectionFields = ({
         collectionMethodOptions={codeOptions(vocabulary, "collection_methods")}
         form={form}
         legalBasisOptions={codeOptions(vocabulary, "legal_basis")}
-        purposeOptions={codeOptions(vocabulary, "data_purposes")}
         subjectTypeOptions={codeOptions(vocabulary, "subject_types")}
       />
     )

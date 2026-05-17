@@ -87,7 +87,7 @@ export const storedDataTypeSchema = z.object({
   name: z.string().trim().default(""),
   description: z.string().trim().default(""),
   subjectTypes: z.array(codeIdSchema).default([]),
-  purposes: z.array(codeIdSchema).default([]),
+  purposes: z.string().trim().default(""),
   collectionMethods: z.array(codeIdSchema).default([]),
   legalBasis: z.array(codeIdSchema).default([]),
   retentionDays: z.number().int().min(0).default(0),

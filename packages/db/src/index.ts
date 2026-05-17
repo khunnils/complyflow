@@ -57,7 +57,7 @@ export function mapOrganizationRecord(record: {
     name: string
     description: string
     subjectTypes: string[]
-    purposes: string[]
+    purposes: string
     collectionMethods: string[]
     legalBasis: string[]
     retentionDays: number

@@ -104,7 +104,7 @@ describe("shared security profile schemas", () => {
           name: "account_data",
           description: "Account contact and notification data",
           subjectTypes: ["customer"],
-          purposes: ["account_management"],
+          purposes: "account_management",
           collectionMethods: ["account_signup"],
           legalBasis: ["contract"],
           retentionDays: 365,

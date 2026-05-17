@@ -28,7 +28,7 @@ type StoredDataType = {
   name: string
   description: string
   subjectTypes: string[]
-  purposes: string[]
+  purposes: string
   collectionMethods: string[]
   legalBasis: string[]
   retentionDays: number
@@ -46,7 +46,6 @@ type DataTypesFieldProps<T extends FieldValues> = {
   label: string
   legalBasisOptions: Option[]
   name: FieldPath<T>
-  purposeOptions: Option[]
   subjectTypeOptions: Option[]
 }
 
@@ -54,7 +53,7 @@ const emptyDataType = (): StoredDataType => ({
   name: "",
   description: "",
   subjectTypes: [],
-  purposes: [],
+  purposes: "",
   collectionMethods: [],
   legalBasis: [],
   retentionDays: 0,
@@ -68,7 +67,7 @@ const normalizeDataType = (value: Partial<StoredDataType>): StoredDataType => ({
   ...emptyDataType(),
   ...value,
   subjectTypes: Array.isArray(value.subjectTypes) ? value.subjectTypes : [],
-  purposes: Array.isArray(value.purposes) ? value.purposes : [],
+  purposes: typeof value.purposes === "string" ? value.purposes : "",
   collectionMethods: Array.isArray(value.collectionMethods)
     ? value.collectionMethods
     : [],
@@ -226,7 +225,6 @@ const DataTypesEditor = <T extends FieldValues>({
   field,
   label,
   legalBasisOptions,
-  purposeOptions,
   subjectTypeOptions,
 }: {
   collectionMethodOptions: Option[]
@@ -235,7 +233,6 @@ const DataTypesEditor = <T extends FieldValues>({
   field: ControllerRenderProps<T, FieldPath<T>>
   label: string
   legalBasisOptions: Option[]
-  purposeOptions: Option[]
   subjectTypeOptions: Option[]
 }) => {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null)
@@ -395,10 +392,9 @@ const DataTypesEditor = <T extends FieldValues>({
                           updateValue(index, "subjectTypes", value)
                         }
                       />
-                      <MultiSelectDropdown
-                        label="Purposes"
-                        placeholder="Select purposes"
-                        options={purposeOptions}
+                      <FieldInput
+                        label="Purpose"
+                        placeholder="Why is this data collected?"
                         value={item.purposes}
                         onBlur={field.onBlur}
                         onChange={(value) => updateValue(index, "purposes", value)}
@@ -460,7 +456,6 @@ export const DataTypesField = <T extends FieldValues>({
   label,
   legalBasisOptions,
   name,
-  purposeOptions,
   subjectTypeOptions,
 }: DataTypesFieldProps<T>) => (
   <Controller
@@ -474,7 +469,6 @@ export const DataTypesField = <T extends FieldValues>({
         field={field}
         label={label}
         legalBasisOptions={legalBasisOptions}
-        purposeOptions={purposeOptions}
         subjectTypeOptions={subjectTypeOptions}
       />
     )}

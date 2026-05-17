@@ -16,7 +16,7 @@ import { z } from "zod"
 
 import { AccessProfileFields } from "@/features/security-profile/components/access-profile-fields"
 import { CompanyProfileFields } from "@/features/security-profile/components/company-profile-fields"
-import { DataHandlingProfileFields } from "@/features/security-profile/components/data-handling-profile-fields"
+import { ProfileDataHandlingFields } from "@/features/security-profile/components/data-handling-profile-fields"
 import { InfrastructureProfileFields } from "@/features/security-profile/components/infrastructure-profile-fields"
 import { type ProfileDraft } from "@/features/security-profile/types/security-profile"
 
@@ -59,5 +59,5 @@ export const ProfileForm = ({
 
 export const ProfileCompanyFields = CompanyProfileFields
 export const ProfileInfrastructureFields = InfrastructureProfileFields
-export const ProfileDataHandlingFields = DataHandlingProfileFields
+export { ProfileDataHandlingFields }
 export const ProfileAccessFields = AccessProfileFields

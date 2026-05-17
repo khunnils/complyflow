@@ -397,7 +397,7 @@ function throwDocumentPdfUploadError(error: unknown, bucketName: string): never 
     )
   }
 
-  if (googleError.status === 403) {
+  if (googleError.status === 403 || googleError.code === 403 || googleError.message?.includes("does not have storage.objects.create access") || googleError.message?.includes("Permission 'storage.objects.create' denied")) {
     throw new ApiError(
       "DOCUMENT_PDF_GCP_FORBIDDEN",
       `Google Cloud credentials do not have permission to upload to ${bucketName}.`,
@@ -420,6 +420,7 @@ function parseGoogleStorageError(error: unknown) {
   }
 
   const record = error as {
+    code?: unknown
     message?: unknown
     status?: unknown
     response?: {
@@ -433,6 +434,7 @@ function parseGoogleStorageError(error: unknown) {
   }
 
   return {
+    code: typeof record.code === "number" ? record.code : typeof record.code === "string" ? record.code : undefined,
     error:
       typeof record.response?.data?.error === "string"
         ? record.response.data.error

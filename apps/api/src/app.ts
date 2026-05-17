@@ -1,4 +1,5 @@
 import cors from "@fastify/cors"
+import { Storage } from "@google-cloud/storage"
 import Fastify, {
   type FastifyInstance,
   type FastifyServerOptions,
@@ -137,7 +138,10 @@ export async function createApp({
     documentPdfStorage:
       documentPdfStorage ??
       (!documentRepository && process.env.DATABASE_URL
-        ? new GcsDocumentPdfStorage(apiConfig.documentPdfBucket)
+        ? new GcsDocumentPdfStorage(
+            apiConfig.documentPdfBucket,
+            new Storage({ projectId: apiConfig.gcpProjectId })
+          )
         : new NullDocumentPdfStorage()),
     organizationRepository: repositories.organizationRepository,
     systemTemplateSource,

@@ -21,17 +21,15 @@ const getErrorMessage = (error: unknown): string | undefined => {
   return Object.values(error).map(getErrorMessage).find(Boolean)
 }
 
-export const DataHandlingProfileFields = ({
+export const ProfileDataHandlingFields = ({
   collectionMethodOptions,
   form,
   legalBasisOptions,
-  purposeOptions,
   subjectTypeOptions,
 }: {
   collectionMethodOptions: Option[]
   form: UseFormReturn<ProfileDraft>
   legalBasisOptions: Option[]
-  purposeOptions: Option[]
   subjectTypeOptions: Option[]
 }) => (
   <div className="grid gap-4 md:grid-cols-2">
@@ -45,7 +43,6 @@ export const DataHandlingProfileFields = ({
       name="dataHandling.dataTypesStored"
       collectionMethodOptions={collectionMethodOptions}
       legalBasisOptions={legalBasisOptions}
-      purposeOptions={purposeOptions}
       subjectTypeOptions={subjectTypeOptions}
     />
     <ToggleField

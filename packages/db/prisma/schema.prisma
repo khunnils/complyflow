@@ -181,7 +181,7 @@ model OrganizationDataType {
   name            String
   description     String
   subjectTypes    String[]         @default([]) @map("subject_types")
-  purposes        String[]         @default([])
+  purposes        String           @default("")
   collectionMethods String[]       @default([]) @map("collection_methods")
   legalBasis      String[]         @default([]) @map("legal_basis")
   retentionDays   Int              @default(0) @map("retention_days")

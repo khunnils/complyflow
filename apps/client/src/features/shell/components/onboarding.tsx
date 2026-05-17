@@ -224,7 +224,6 @@ export const Onboarding = ({
                       )}
                       form={form}
                       legalBasisOptions={codeOptions(vocabulary.data, "legal_basis")}
-                      purposeOptions={codeOptions(vocabulary.data, "data_purposes")}
                       subjectTypeOptions={codeOptions(
                         vocabulary.data,
                         "subject_types",
