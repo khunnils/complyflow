@@ -6,7 +6,9 @@ import {
   companyProfileSchema,
   createOrganizationSchema,
   dataHandlingProfileSchema,
+  emptyPrivacyProfile,
   emptyServiceProfile,
+  privacyProfileSchema,
   serviceProfileSchema,
   templateInputSchema,
   templateSchema,
@@ -192,6 +194,53 @@ describe("shared security profile schemas", () => {
     const result = serviceProfileSchema.safeParse({
       ...emptyServiceProfile,
       minimumUserAge: -1,
+    })
+
+    expect(result.success).toBe(false)
+  })
+
+  it("accepts the empty privacy profile defaults", () => {
+    const result = privacyProfileSchema.safeParse(emptyPrivacyProfile)
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data).toEqual({
+        supportedRights: [],
+        requestMethods: [],
+        responseTimelineDays: 0,
+        identityVerificationRequired: false,
+        authorizedAgentSupported: false,
+        appealProcessExists: false,
+      })
+    }
+  })
+
+  it("accepts a populated privacy profile with code-array fields", () => {
+    const result = privacyProfileSchema.safeParse({
+      supportedRights: ["access", "deletion", "opt_out"],
+      requestMethods: ["email", "web_form"],
+      responseTimelineDays: 30,
+      identityVerificationRequired: true,
+      authorizedAgentSupported: true,
+      appealProcessExists: false,
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it("rejects privacy profile code array values that violate the code id format", () => {
+    const result = privacyProfileSchema.safeParse({
+      ...emptyPrivacyProfile,
+      supportedRights: ["Opt Out"],
+    })
+
+    expect(result.success).toBe(false)
+  })
+
+  it("rejects negative privacy response timeline values", () => {
+    const result = privacyProfileSchema.safeParse({
+      ...emptyPrivacyProfile,
+      responseTimelineDays: -1,
     })
 
     expect(result.success).toBe(false)

@@ -5,6 +5,7 @@ import {
   type DataHandlingProfile,
   type InfrastructureProfile,
   type OrganizationSecurityProfile,
+  type PrivacyProfile,
   type Provider,
   type ProviderSystemType,
   type ServiceProfile,
@@ -21,6 +22,7 @@ export const ORGANIZATION_INCLUDE = {
   dataHandlingProfile: true,
   dataTypes: { orderBy: { createdAt: "asc" } },
   infrastructureProfile: true,
+  privacyProfile: true,
   serviceProfile: true,
   vendors: {
     select: {
@@ -52,6 +54,7 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
     const organizationData = this.organizationData(input.company)
     const infrastructureData = this.infrastructureData(input.infrastructure)
     const dataHandlingData = this.dataHandlingData(input.dataHandling)
+    const privacyData = this.privacyData(input.privacy)
     const serviceData = this.serviceData(input.service)
     const accessData = this.accessData(input.access)
 
@@ -75,6 +78,12 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
           upsert: {
             create: serviceData,
             update: serviceData,
+          },
+        },
+        privacyProfile: {
+          upsert: {
+            create: privacyData,
+            update: privacyData,
           },
         },
         infrastructureProfile: {
@@ -150,6 +159,17 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
       availabilityRegions: input.availabilityRegions,
       childrenDirected: input.childrenDirected,
       minimumUserAge: input.minimumUserAge,
+    }
+  }
+
+  private privacyData(input: PrivacyProfile) {
+    return {
+      supportedRights: input.supportedRights,
+      requestMethods: input.requestMethods,
+      responseTimelineDays: input.responseTimelineDays,
+      identityVerificationRequired: input.identityVerificationRequired,
+      authorizedAgentSupported: input.authorizedAgentSupported,
+      appealProcessExists: input.appealProcessExists,
     }
   }
 

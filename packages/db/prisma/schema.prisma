@@ -24,6 +24,7 @@ model Organization {
   handlesSensitiveData  Boolean                  @map("handles_sensitive_data")
   complianceGoals       String[]                 @map("compliance_goals")
   serviceProfile        ServiceProfile?
+  privacyProfile        PrivacyProfile?
   infrastructureProfile InfrastructureProfile?
   dataHandlingProfile   DataHandlingProfile?
   accessProfile         AccessProfile?
@@ -164,6 +165,22 @@ model ServiceProfile {
   updatedAt           DateTime     @updatedAt @map("updated_at")
 
   @@map("service_profiles")
+}
+
+model PrivacyProfile {
+  id                           String       @id(map: "privacy_profiles_pkey") @default(cuid())
+  organizationId               String       @unique(map: "privacy_profiles_organization_id_key") @map("organization_id")
+  organization                 Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "privacy_profiles_organization_id_fkey")
+  supportedRights              String[]     @default([]) @map("supported_rights")
+  requestMethods               String[]     @default([]) @map("request_methods")
+  responseTimelineDays         Int          @default(0) @map("response_timeline_days")
+  identityVerificationRequired Boolean      @default(false) @map("identity_verification_required")
+  authorizedAgentSupported     Boolean      @default(false) @map("authorized_agent_supported")
+  appealProcessExists          Boolean      @default(false) @map("appeal_process_exists")
+  createdAt                    DateTime     @default(now()) @map("created_at")
+  updatedAt                    DateTime     @updatedAt @map("updated_at")
+
+  @@map("privacy_profiles")
 }
 
 model InfrastructureProfile {

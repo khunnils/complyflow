@@ -14,6 +14,7 @@ import {
   Save,
   ScrollText,
   Server,
+  ShieldCheck,
   Trash2,
   Tags,
   Users,
@@ -57,6 +58,7 @@ import {
   ProfileForm,
   type ProfileFormReturn,
   ProfileInfrastructureFields,
+  ProfilePrivacyFields,
   ProfileServiceFields,
 } from "@/features/security-profile/components/profile-form"
 import { DataHandlingReadOnlySection } from "@/features/security-profile/components/data-handling-read-only-section"
@@ -108,6 +110,7 @@ import { VocabularyManager } from "@/features/vocabulary/components/vocabulary-m
 type CompanySectionId =
   | "profile"
   | "service"
+  | "privacy"
   | "infrastructure"
   | "dataHandling"
   | "access"
@@ -115,6 +118,7 @@ type WorkspaceView =
   | "dashboard"
   | "companyProfile"
   | "companyService"
+  | "companyPrivacy"
   | "companyInfrastructure"
   | "companyData"
   | "companyAccess"
@@ -143,6 +147,13 @@ const companySections: Array<{
     title: "Service",
     description: "The primary product or service the organization offers.",
     icon: Box,
+  },
+  {
+    id: "privacy",
+    view: "companyPrivacy",
+    title: "Privacy",
+    description: "Rights and request handling for privacy documents.",
+    icon: ShieldCheck,
   },
   {
     id: "infrastructure",
@@ -176,6 +187,7 @@ const isCompanyView = (
 ): view is
   | "companyProfile"
   | "companyService"
+  | "companyPrivacy"
   | "companyInfrastructure"
   | "companyData"
   | "companyAccess" => companySectionByView.has(view)
@@ -259,6 +271,22 @@ const CompanySectionFields = ({
         form={form}
         regionOptions={codeOptions(vocabulary, "regions")}
         userTypeOptions={codeOptions(vocabulary, "service_user_types")}
+      />
+    )
+  }
+
+  if (section === "privacy") {
+    return (
+      <ProfilePrivacyFields
+        form={form}
+        requestMethodOptions={codeOptions(
+          vocabulary,
+          "privacy_request_methods",
+        )}
+        supportedRightOptions={codeOptions(
+          vocabulary,
+          "privacy_supported_rights",
+        )}
       />
     )
   }
@@ -393,6 +421,39 @@ const CompanyReadOnlySection = ({
           ? "Not set"
           : profile.service.minimumUserAge,
       ],
+    ],
+    privacy: [
+      [
+        "Supported rights",
+        codeValueList(
+          vocabulary,
+          "privacy_supported_rights",
+          profile.privacy.supportedRights,
+        ),
+      ],
+      [
+        "Request methods",
+        codeValueList(
+          vocabulary,
+          "privacy_request_methods",
+          profile.privacy.requestMethods,
+        ),
+      ],
+      [
+        "Response timeline",
+        profile.privacy.responseTimelineDays === 0
+          ? "Not set"
+          : profile.privacy.responseTimelineDays,
+      ],
+      [
+        "Identity verification",
+        boolText(profile.privacy.identityVerificationRequired),
+      ],
+      [
+        "Authorized agent",
+        boolText(profile.privacy.authorizedAgentSupported),
+      ],
+      ["Appeal process", boolText(profile.privacy.appealProcessExists)],
     ],
     infrastructure: [
       ["Cloud providers", providerNamesForSystem(profile, providers, "cloud")],

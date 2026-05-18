@@ -46,6 +46,14 @@ const profileBody = {
     childrenDirected: false,
     minimumUserAge: 13,
   },
+  privacy: {
+    supportedRights: ["access", "deletion", "correction", "opt_out"],
+    requestMethods: ["email", "web_form"],
+    responseTimelineDays: 30,
+    identityVerificationRequired: true,
+    authorizedAgentSupported: true,
+    appealProcessExists: false,
+  },
   infrastructure: {
     organizationProviders: [
       {
@@ -262,6 +270,7 @@ describe("security profile API", () => {
       saveResponse.json().organization.dataHandling.dataTypesStored,
     ).toEqual(profileBody.dataHandling.dataTypesStored)
     expect(saveResponse.json().organization.service).toEqual(profileBody.service)
+    expect(saveResponse.json().organization.privacy).toEqual(profileBody.privacy)
 
     const getResponse = await app.inject({
       method: "GET",
@@ -274,6 +283,7 @@ describe("security profile API", () => {
       getResponse.json().organization.dataHandling.dataTypesStored,
     ).toEqual(profileBody.dataHandling.dataTypesStored)
     expect(getResponse.json().organization.service).toEqual(profileBody.service)
+    expect(getResponse.json().organization.privacy).toEqual(profileBody.privacy)
   })
 
   it("rejects service profile codes that are not in organization vocabulary", async () => {
@@ -298,6 +308,33 @@ describe("security profile API", () => {
           codeSetId: "service_audiences",
           field: "service.audiences",
           value: "not_a_real_audience",
+        },
+      },
+    })
+  })
+
+  it("rejects privacy profile codes that are not in organization vocabulary", async () => {
+    const app = await createTestApp()
+    const response = await app.inject({
+      method: "PUT",
+      url: "/organizations/org-test/security-profile",
+      payload: {
+        ...profileBody,
+        privacy: {
+          ...profileBody.privacy,
+          supportedRights: ["not_a_real_right"],
+        },
+      },
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(response.json()).toMatchObject({
+      error: {
+        code: "CODE_NOT_FOUND",
+        details: {
+          codeSetId: "privacy_supported_rights",
+          field: "privacy.supportedRights",
+          value: "not_a_real_right",
         },
       },
     })
@@ -376,6 +413,16 @@ describe("security profile API", () => {
         expect.objectContaining({ key: "service.availabilityRegionLabels" }),
         expect.objectContaining({ key: "service.childrenDirected" }),
         expect.objectContaining({ key: "service.minimumUserAge" }),
+        expect.objectContaining({ key: "privacy.supportedRights" }),
+        expect.objectContaining({ key: "privacy.supportedRightLabels" }),
+        expect.objectContaining({ key: "privacy.requestMethods" }),
+        expect.objectContaining({ key: "privacy.requestMethodLabels" }),
+        expect.objectContaining({ key: "privacy.responseTimelineDays" }),
+        expect.objectContaining({
+          key: "privacy.identityVerificationRequired",
+        }),
+        expect.objectContaining({ key: "privacy.authorizedAgentSupported" }),
+        expect.objectContaining({ key: "privacy.appealProcessExists" }),
         expect.objectContaining({ key: "vendors.all" }),
         expect.objectContaining({ key: "vendors.dataProcessors" }),
         expect.objectContaining({ key: "vendors.subprocessors" }),
@@ -383,7 +430,7 @@ describe("security profile API", () => {
     )
   })
 
-  it("exposes service profile values and resolved labels in the document context", async () => {
+  it("exposes profile values and resolved labels in the document context", async () => {
     const vocabularyRepository = new InMemoryVocabularyRepository()
     const vocabulary = await vocabularyRepository.listVocabulary("org-test")
     const snapshot: SecurityProgramSnapshot = {
@@ -417,6 +464,16 @@ describe("security profile API", () => {
       availabilityRegionLabels: ["United States", "European Union"],
       childrenDirected: false,
       minimumUserAge: 13,
+    })
+    expect(context.privacy).toMatchObject({
+      supportedRights: ["access", "deletion", "correction", "opt_out"],
+      supportedRightLabels: ["Access", "Deletion", "Correction", "Opt-out"],
+      requestMethods: ["email", "web_form"],
+      requestMethodLabels: ["Email", "Web form"],
+      responseTimelineDays: 30,
+      identityVerificationRequired: true,
+      authorizedAgentSupported: true,
+      appealProcessExists: false,
     })
   })
 
@@ -753,7 +810,7 @@ describe("security profile API", () => {
         name: "Security Policy",
         slug: "security-policy",
         content:
-          "# {{ company.name }} Security Policy\n\nService {{ service.name }} for {{ service.audienceLabels | join(\", \") }}\nVersion {{ policy.version }} effective {{ policy.effectiveDate }}\n",
+          "# {{ company.name }} Security Policy\n\nService {{ service.name }} for {{ service.audienceLabels | join(\", \") }}\nPrivacy rights: {{ privacy.supportedRightLabels | join(\", \") }}\nVersion {{ policy.version }} effective {{ policy.effectiveDate }}\n",
         policyEffectiveDate: "2026-05-18",
         policyLastReviewedDate: "2026-05-18",
         policyVersion: "1.0",
@@ -787,7 +844,7 @@ describe("security profile API", () => {
       templateId: template.id,
       title: "Security Policy",
       renderedContent:
-        "# Acme AI Security Policy\n\nService Acme AI Platform for Businesses, Developers\nVersion 1.0 effective 2026-05-18\n",
+        "# Acme AI Security Policy\n\nService Acme AI Platform for Businesses, Developers\nPrivacy rights: Access, Deletion, Correction, Opt-out\nVersion 1.0 effective 2026-05-18\n",
       hasPdf: false,
     })
     expect(generateResponse.json().sourceHash).toHaveLength(64)
@@ -797,6 +854,44 @@ describe("security profile API", () => {
       url: "/organizations/org-test/documents",
     })
     expect(currentDocumentsResponse.json()).toMatchObject([
+      {
+        document: { id: generateResponse.json().id },
+        status: "current",
+      },
+    ])
+
+    await app.inject({
+      method: "PUT",
+      url: "/organizations/org-test/security-profile",
+      payload: {
+        ...profileBody,
+        privacy: {
+          ...profileBody.privacy,
+          supportedRights: ["access", "deletion"],
+        },
+      },
+    })
+    const privacyStaleDocumentsResponse = await app.inject({
+      method: "GET",
+      url: "/organizations/org-test/documents",
+    })
+    expect(privacyStaleDocumentsResponse.json()).toMatchObject([
+      {
+        document: { id: generateResponse.json().id },
+        status: "stale",
+      },
+    ])
+
+    await app.inject({
+      method: "PUT",
+      url: "/organizations/org-test/security-profile",
+      payload: profileBody,
+    })
+    const restoredDocumentsResponse = await app.inject({
+      method: "GET",
+      url: "/organizations/org-test/documents",
+    })
+    expect(restoredDocumentsResponse.json()).toMatchObject([
       {
         document: { id: generateResponse.json().id },
         status: "current",
@@ -817,7 +912,7 @@ describe("security profile API", () => {
     })
     expect(documentResponse.statusCode).toBe(200)
     expect(documentResponse.json().renderedContent).toBe(
-      "# Acme AI Security Policy\n\nService Acme AI Platform for Businesses, Developers\nVersion 1.0 effective 2026-05-18\n",
+      "# Acme AI Security Policy\n\nService Acme AI Platform for Businesses, Developers\nPrivacy rights: Access, Deletion, Correction, Opt-out\nVersion 1.0 effective 2026-05-18\n",
     )
 
     await app.inject({
@@ -827,7 +922,7 @@ describe("security profile API", () => {
         name: "Security Policy",
         slug: "security-policy",
         content:
-          "# {{ company.name }} Security Policy\n\nService {{ service.name }} for {{ service.audienceLabels | join(\", \") }}\nVersion {{ policy.version }} effective {{ policy.effectiveDate }}\n",
+          "# {{ company.name }} Security Policy\n\nService {{ service.name }} for {{ service.audienceLabels | join(\", \") }}\nPrivacy rights: {{ privacy.supportedRightLabels | join(\", \") }}\nVersion {{ policy.version }} effective {{ policy.effectiveDate }}\n",
         policyEffectiveDate: "2026-05-18",
         policyLastReviewedDate: "2026-05-18",
         policyVersion: "1.1",

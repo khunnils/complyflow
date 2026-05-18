@@ -3,6 +3,7 @@ import {
   companyProfileSchema,
   dataHandlingProfileSchema,
   infrastructureProfileSchema,
+  privacyProfileSchema,
   serviceProfileSchema,
 } from "@plyco/shared"
 import { type FastifyInstance } from "fastify"
@@ -15,6 +16,7 @@ import {
   validateCompanyProfileCodes,
   validateDataHandlingProfileCodes,
   validateInfrastructureProfileCodes,
+  validatePrivacyProfileCodes,
   validateServiceProfileCodes,
 } from "../vocabulary/validation.js"
 import { type VocabularyRepository } from "../vocabulary/repository.js"
@@ -24,6 +26,7 @@ import { type OrganizationRepository } from "./repository.js"
 const securityProfileBodySchema = z.object({
   company: companyProfileSchema,
   service: serviceProfileSchema,
+  privacy: privacyProfileSchema,
   infrastructure: infrastructureProfileSchema,
   dataHandling: dataHandlingProfileSchema,
   access: accessProfileSchema,
@@ -88,6 +91,11 @@ export async function registerOrganizationRoutes(
         vocabularyRepository,
         request.params.organizationId,
         body.service,
+      )
+      await validatePrivacyProfileCodes(
+        vocabularyRepository,
+        request.params.organizationId,
+        body.privacy,
       )
       await validateInfrastructureProfileCodes(
         vocabularyRepository,

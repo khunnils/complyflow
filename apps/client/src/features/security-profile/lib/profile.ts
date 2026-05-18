@@ -3,6 +3,7 @@ import {
   emptyCompanyProfile,
   emptyDataHandlingProfile,
   emptyInfrastructureProfile,
+  emptyPrivacyProfile,
   emptyServiceProfile,
   type OrganizationSecurityProfile,
   type Provider,
@@ -15,6 +16,7 @@ import { type ProfileDraft } from "@/features/security-profile/types/security-pr
 export const emptyProfileDraft: ProfileDraft = {
   company: emptyCompanyProfile,
   service: emptyServiceProfile,
+  privacy: emptyPrivacyProfile,
   infrastructure: emptyInfrastructureProfile,
   dataHandling: emptyDataHandlingProfile,
   access: emptyAccessProfile,
@@ -45,6 +47,7 @@ export const profileFromOrganization = (
   return {
     company: organization.company,
     service: organization.service,
+    privacy: organization.privacy,
     infrastructure: organization.infrastructure,
     dataHandling: organization.dataHandling,
     access: organization.access,

@@ -2,6 +2,7 @@ import { createHash } from "node:crypto"
 
 import nunjucks from "nunjucks"
 import {
+  type PrivacyProfile,
   type ServiceProfile,
   type SecurityProgramSnapshot,
   type OrganizationMember,
@@ -15,6 +16,7 @@ export type NormalizedTemplateContext = {
   company: Record<string, unknown>
   policy: Record<string, unknown>
   service: Record<string, unknown>
+  privacy: Record<string, unknown>
   infrastructure: Record<string, unknown>
   dataHandling: Record<string, unknown>
   access: Record<string, unknown>
@@ -47,6 +49,9 @@ export class ReportContextBuilder {
       policy: template ? this.policyContext(template, members) : {},
       service: organization
         ? this.serviceContext(organization.service, vocabulary)
+        : {},
+      privacy: organization
+        ? this.privacyContext(organization.privacy, vocabulary)
         : {},
       infrastructure: organization?.infrastructure ?? {},
       dataHandling: organization?.dataHandling ?? {},
@@ -118,6 +123,27 @@ export class ReportContextBuilder {
       ),
       childrenDirected: service.childrenDirected,
       minimumUserAge: service.minimumUserAge,
+    }
+  }
+
+  private privacyContext(privacy: PrivacyProfile, vocabulary?: Vocabulary) {
+    return {
+      supportedRights: privacy.supportedRights,
+      supportedRightLabels: this.codeLabels(
+        vocabulary,
+        "privacy_supported_rights",
+        privacy.supportedRights,
+      ),
+      requestMethods: privacy.requestMethods,
+      requestMethodLabels: this.codeLabels(
+        vocabulary,
+        "privacy_request_methods",
+        privacy.requestMethods,
+      ),
+      responseTimelineDays: privacy.responseTimelineDays,
+      identityVerificationRequired: privacy.identityVerificationRequired,
+      authorizedAgentSupported: privacy.authorizedAgentSupported,
+      appealProcessExists: privacy.appealProcessExists,
     }
   }
 

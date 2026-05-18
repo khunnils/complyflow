@@ -126,6 +126,15 @@ export const serviceProfileSchema = z.object({
   minimumUserAge: z.number().int().min(0).max(120).default(0),
 })
 
+export const privacyProfileSchema = z.object({
+  supportedRights: z.array(codeIdSchema).default([]),
+  requestMethods: z.array(codeIdSchema).default([]),
+  responseTimelineDays: z.number().int().min(0).default(0),
+  identityVerificationRequired: z.boolean(),
+  authorizedAgentSupported: z.boolean(),
+  appealProcessExists: z.boolean(),
+})
+
 export const infrastructureProfileSchema = z.object({
   organizationProviders: z.array(organizationProviderSchema).default([]),
   mfaEnabled: z.boolean(),
@@ -326,6 +335,7 @@ export const organizationSecurityProfileSchema = z.object({
   id: z.string().min(1),
   company: companyProfileSchema,
   service: serviceProfileSchema,
+  privacy: privacyProfileSchema,
   infrastructure: infrastructureProfileSchema,
   dataHandling: dataHandlingProfileSchema,
   access: accessProfileSchema,
@@ -363,6 +373,7 @@ export type OrganizationProvider = z.infer<typeof organizationProviderSchema>
 export type StoredDataType = z.infer<typeof storedDataTypeSchema>
 export type CompanyProfile = z.infer<typeof companyProfileSchema>
 export type ServiceProfile = z.infer<typeof serviceProfileSchema>
+export type PrivacyProfile = z.infer<typeof privacyProfileSchema>
 export type InfrastructureProfile = z.infer<typeof infrastructureProfileSchema>
 export type DataHandlingProfile = z.infer<typeof dataHandlingProfileSchema>
 export type AccessProfile = z.infer<typeof accessProfileSchema>
@@ -423,6 +434,15 @@ export const emptyServiceProfile: ServiceProfile = {
   availabilityRegions: [],
   childrenDirected: false,
   minimumUserAge: 0,
+}
+
+export const emptyPrivacyProfile: PrivacyProfile = {
+  supportedRights: [],
+  requestMethods: [],
+  responseTimelineDays: 0,
+  identityVerificationRequired: false,
+  authorizedAgentSupported: false,
+  appealProcessExists: false,
 }
 
 export const emptyInfrastructureProfile: InfrastructureProfile = {

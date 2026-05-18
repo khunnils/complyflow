@@ -4,6 +4,7 @@ import {
   companyProfileSchema,
   dataHandlingProfileSchema,
   infrastructureProfileSchema,
+  privacyProfileSchema,
   serviceProfileSchema,
   documentSchema,
   type OrganizationSecurityProfile,
@@ -46,6 +47,14 @@ export function mapOrganizationRecord(record: {
     availabilityRegions: string[]
     childrenDirected: boolean
     minimumUserAge: number
+  } | null
+  privacyProfile: {
+    supportedRights: string[]
+    requestMethods: string[]
+    responseTimelineDays: number
+    identityVerificationRequired: boolean
+    authorizedAgentSupported: boolean
+    appealProcessExists: boolean
   } | null
   infrastructureProfile: {
     mfaEnabled: boolean
@@ -134,6 +143,16 @@ export function mapOrganizationRecord(record: {
     childrenDirected: record.serviceProfile?.childrenDirected ?? false,
     minimumUserAge: record.serviceProfile?.minimumUserAge ?? 0,
   })
+  const privacy = privacyProfileSchema.parse({
+    supportedRights: record.privacyProfile?.supportedRights ?? [],
+    requestMethods: record.privacyProfile?.requestMethods ?? [],
+    responseTimelineDays: record.privacyProfile?.responseTimelineDays ?? 0,
+    identityVerificationRequired:
+      record.privacyProfile?.identityVerificationRequired ?? false,
+    authorizedAgentSupported:
+      record.privacyProfile?.authorizedAgentSupported ?? false,
+    appealProcessExists: record.privacyProfile?.appealProcessExists ?? false,
+  })
   const dataHandling = dataHandlingProfileSchema.parse({
     dataTypesStored: record.dataTypes.map((dataType) => ({
       name: dataType.name,
@@ -175,6 +194,7 @@ export function mapOrganizationRecord(record: {
     id: record.id,
     company,
     service,
+    privacy,
     infrastructure,
     dataHandling,
     access,

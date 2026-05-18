@@ -251,6 +251,84 @@
       "example": 13
     },
     {
+      "key": "privacy.supportedRights",
+      "label": "Privacy supported rights",
+      "type": "string[]",
+      "category": "Privacy",
+      "description": "Privacy right codes supported by the organization.",
+      "example": [
+        "access",
+        "deletion",
+        "correction"
+      ]
+    },
+    {
+      "key": "privacy.supportedRightLabels",
+      "label": "Privacy supported right labels",
+      "type": "string[]",
+      "category": "Privacy",
+      "description": "Human-readable labels for supported privacy right codes.",
+      "example": [
+        "Access",
+        "Deletion",
+        "Correction"
+      ]
+    },
+    {
+      "key": "privacy.requestMethods",
+      "label": "Privacy request methods",
+      "type": "string[]",
+      "category": "Privacy",
+      "description": "Request method codes accepted for privacy rights requests.",
+      "example": [
+        "email",
+        "web_form"
+      ]
+    },
+    {
+      "key": "privacy.requestMethodLabels",
+      "label": "Privacy request method labels",
+      "type": "string[]",
+      "category": "Privacy",
+      "description": "Human-readable labels for privacy request method codes.",
+      "example": [
+        "Email",
+        "Web form"
+      ]
+    },
+    {
+      "key": "privacy.responseTimelineDays",
+      "label": "Privacy response timeline days",
+      "type": "number",
+      "category": "Privacy",
+      "description": "Number of days the organization targets for privacy request responses. A value of 0 means not set.",
+      "example": 30
+    },
+    {
+      "key": "privacy.identityVerificationRequired",
+      "label": "Identity verification required",
+      "type": "boolean",
+      "category": "Privacy",
+      "description": "Whether identity verification is required before fulfilling privacy requests.",
+      "example": true
+    },
+    {
+      "key": "privacy.authorizedAgentSupported",
+      "label": "Authorized agent supported",
+      "type": "boolean",
+      "category": "Privacy",
+      "description": "Whether authorized agents can submit privacy requests.",
+      "example": true
+    },
+    {
+      "key": "privacy.appealProcessExists",
+      "label": "Appeal process exists",
+      "type": "boolean",
+      "category": "Privacy",
+      "description": "Whether the organization has an appeal process for denied privacy requests.",
+      "example": false
+    },
+    {
       "key": "policy.effectiveDate",
       "label": "Policy effective date",
       "type": "string",
