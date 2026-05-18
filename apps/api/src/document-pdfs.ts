@@ -397,10 +397,19 @@ function throwDocumentPdfUploadError(error: unknown, bucketName: string): never 
     )
   }
 
-  if (googleError.status === 403 || googleError.code === 403 || googleError.message?.includes("does not have storage.objects.create access") || googleError.message?.includes("Permission 'storage.objects.create' denied")) {
+  if (googleError.status === 403 || googleError.code === 403 || googleError.code === "403" || googleError.message?.includes("does not have storage.objects.create access") || googleError.message?.includes("Permission 'storage.objects.create' denied")) {
     throw new ApiError(
       "DOCUMENT_PDF_GCP_FORBIDDEN",
-      `Google Cloud credentials do not have permission to upload to ${bucketName}.`,
+      `Google Cloud credentials do not have permission to upload to the bucket "${bucketName}".`,
+      503,
+      googleError,
+    )
+  }
+
+  if (googleError.status === 404 || googleError.code === 404 || googleError.code === "404") {
+    throw new ApiError(
+      "DOCUMENT_PDF_BUCKET_NOT_FOUND",
+      `The Google Cloud Storage bucket "${bucketName}" was not found. Please check your DOCUMENT_PDF_BUCKET configuration.`,
       503,
       googleError,
     )
@@ -408,7 +417,7 @@ function throwDocumentPdfUploadError(error: unknown, bucketName: string): never 
 
   throw new ApiError(
     "DOCUMENT_PDF_UPLOAD_FAILED",
-    "Generated document PDF could not be uploaded.",
+    `Generated document PDF could not be uploaded to bucket "${bucketName}".`,
     503,
     googleError,
   )

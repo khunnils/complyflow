@@ -4,6 +4,7 @@ type SecurityUiState = {
   activeWorkspaceView:
     | "dashboard"
     | "companyProfile"
+    | "companyService"
     | "companyInfrastructure"
     | "companyData"
     | "companyAccess"
@@ -17,6 +18,7 @@ type SecurityUiState = {
   viewingDocumentId: string | null
   editingCompanySection:
     | "profile"
+    | "service"
     | "infrastructure"
     | "dataHandling"
     | "access"

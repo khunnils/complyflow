@@ -7,6 +7,7 @@ import {
   type OrganizationSecurityProfile,
   type Provider,
   type ProviderSystemType,
+  type ServiceProfile,
 } from "@plyco/shared"
 
 import {
@@ -20,6 +21,7 @@ export const ORGANIZATION_INCLUDE = {
   dataHandlingProfile: true,
   dataTypes: { orderBy: { createdAt: "asc" } },
   infrastructureProfile: true,
+  serviceProfile: true,
   vendors: {
     select: {
       providerId: true,
@@ -50,6 +52,7 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
     const organizationData = this.organizationData(input.company)
     const infrastructureData = this.infrastructureData(input.infrastructure)
     const dataHandlingData = this.dataHandlingData(input.dataHandling)
+    const serviceData = this.serviceData(input.service)
     const accessData = this.accessData(input.access)
 
     const organization = await this.client.organization.update({
@@ -66,6 +69,12 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
           upsert: {
             create: dataHandlingData,
             update: dataHandlingData,
+          },
+        },
+        serviceProfile: {
+          upsert: {
+            create: serviceData,
+            update: serviceData,
           },
         },
         infrastructureProfile: {
@@ -127,6 +136,20 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
       encryptedDevicesRequired: input.encryptedDevicesRequired,
       backupsEnabled: input.backupsEnabled,
       centralizedLoggingEnabled: input.centralizedLoggingEnabled,
+    }
+  }
+
+  private serviceData(input: ServiceProfile) {
+    return {
+      serviceName: input.serviceName,
+      serviceDescription: input.serviceDescription,
+      serviceUrl: input.serviceUrl,
+      audiences: input.audiences,
+      userTypes: input.userTypes,
+      customerTypes: input.customerTypes,
+      availabilityRegions: input.availabilityRegions,
+      childrenDirected: input.childrenDirected,
+      minimumUserAge: input.minimumUserAge,
     }
   }
 

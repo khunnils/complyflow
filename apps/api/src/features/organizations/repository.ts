@@ -5,7 +5,7 @@ import {
 
 export type SecurityProfileInput = Pick<
   OrganizationSecurityProfile,
-  "company" | "infrastructure" | "dataHandling" | "access"
+  "company" | "service" | "infrastructure" | "dataHandling" | "access"
 >
 
 export interface OrganizationRepository {

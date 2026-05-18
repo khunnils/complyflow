@@ -123,6 +123,134 @@
       ]
     },
     {
+      "key": "service.name",
+      "label": "Service name",
+      "type": "string",
+      "category": "Service",
+      "description": "Name of the primary product or service offered by the organization.",
+      "example": "Acme AI Platform"
+    },
+    {
+      "key": "service.description",
+      "label": "Service description",
+      "type": "string",
+      "category": "Service",
+      "description": "Short description of the primary product or service.",
+      "example": "Cloud software for managing customer security reviews."
+    },
+    {
+      "key": "service.url",
+      "label": "Service URL",
+      "type": "string",
+      "category": "Service",
+      "description": "Public URL where the service is delivered.",
+      "example": "https://app.acme.example"
+    },
+    {
+      "key": "service.audiences",
+      "label": "Service audiences",
+      "type": "string[]",
+      "category": "Service",
+      "description": "Audience codes for the primary service.",
+      "example": [
+        "businesses",
+        "developers"
+      ]
+    },
+    {
+      "key": "service.audienceLabels",
+      "label": "Service audience labels",
+      "type": "string[]",
+      "category": "Service",
+      "description": "Human-readable labels for service audience codes.",
+      "example": [
+        "Businesses",
+        "Developers"
+      ]
+    },
+    {
+      "key": "service.userTypes",
+      "label": "Service user types",
+      "type": "string[]",
+      "category": "Service",
+      "description": "User type codes for the primary service.",
+      "example": [
+        "workspace_admins",
+        "end_users"
+      ]
+    },
+    {
+      "key": "service.userTypeLabels",
+      "label": "Service user type labels",
+      "type": "string[]",
+      "category": "Service",
+      "description": "Human-readable labels for service user type codes.",
+      "example": [
+        "Workspace admins",
+        "End users"
+      ]
+    },
+    {
+      "key": "service.customerTypes",
+      "label": "Service customer types",
+      "type": "string[]",
+      "category": "Service",
+      "description": "Customer type codes for the primary service.",
+      "example": [
+        "smb",
+        "mid_market"
+      ]
+    },
+    {
+      "key": "service.customerTypeLabels",
+      "label": "Service customer type labels",
+      "type": "string[]",
+      "category": "Service",
+      "description": "Human-readable labels for service customer type codes.",
+      "example": [
+        "SMB",
+        "Mid-market"
+      ]
+    },
+    {
+      "key": "service.availabilityRegions",
+      "label": "Service availability regions",
+      "type": "string[]",
+      "category": "Service",
+      "description": "Region codes where the primary service is available.",
+      "example": [
+        "us",
+        "eu"
+      ]
+    },
+    {
+      "key": "service.availabilityRegionLabels",
+      "label": "Service availability region labels",
+      "type": "string[]",
+      "category": "Service",
+      "description": "Human-readable labels for service availability region codes.",
+      "example": [
+        "United States",
+        "European Union"
+      ]
+    },
+    {
+      "key": "service.childrenDirected",
+      "label": "Children directed",
+      "type": "boolean",
+      "category": "Service",
+      "description": "Whether the primary service is directed to children.",
+      "example": false
+    },
+    {
+      "key": "service.minimumUserAge",
+      "label": "Minimum user age",
+      "type": "number",
+      "category": "Service",
+      "description": "Minimum age required for end users of the service. A value of 0 means not set.",
+      "example": 13
+    },
+    {
       "key": "policy.effectiveDate",
       "label": "Policy effective date",
       "type": "string",

@@ -17,6 +17,7 @@ import { type DocumentPdfStorage } from "../../document-pdfs.js"
 import { type AccountRepository } from "../accounts/repository.js"
 import { type OrganizationRepository } from "../organizations/repository.js"
 import { type VendorRepository } from "../vendors/repository.js"
+import { type VocabularyRepository } from "../vocabulary/repository.js"
 import { type DocumentRepository } from "./repository.js"
 
 export async function registerDocumentRoutes(
@@ -27,6 +28,7 @@ export async function registerDocumentRoutes(
     organizationRepository,
     systemTemplateSource,
     vendorRepository,
+    vocabularyRepository,
     accountRepository,
   }: {
     accountRepository: AccountRepository
@@ -35,6 +37,7 @@ export async function registerDocumentRoutes(
     organizationRepository: OrganizationRepository
     systemTemplateSource: SystemTemplateSource
     vendorRepository: VendorRepository
+    vocabularyRepository: VocabularyRepository
   },
 ) {
   const contextBuilder = new ReportContextBuilder()
@@ -77,13 +80,16 @@ export async function registerDocumentRoutes(
       const members = await accountRepository.listOrganizationMembers(
         request.params.organizationId,
       )
+      const vocabulary = await vocabularyRepository.listVocabulary(
+        request.params.organizationId,
+      )
 
       return documentRepository.listDocumentSummaries(
         request.params.organizationId,
         (template) =>
           templateSourceHash(
             template,
-            contextBuilder.build(snapshot, template, members),
+            contextBuilder.build(snapshot, template, members, vocabulary),
           ),
       )
     },
@@ -221,6 +227,7 @@ export async function registerDocumentRoutes(
         await accountRepository.listOrganizationMembers(
           request.params.organizationId,
         ),
+        await vocabularyRepository.listVocabulary(request.params.organizationId),
       )
       const renderedContent = renderer.render(template, context)
       const pdf = await documentPdfStorage.generateAndUpload({

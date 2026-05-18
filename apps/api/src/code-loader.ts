@@ -49,6 +49,11 @@ const linkedRecordIds = (
         (item): item is string => typeof item === "string" && item.length > 0,
       )
     }
+
+    // Airtable single-record links are returned as a string id, not a one-item array.
+    if (typeof value === "string" && value.length > 0) {
+      return [value]
+    }
   }
 
   return []
@@ -126,7 +131,9 @@ export async function loadCodesFromAirtable({
     codeSetRecords.map((record) => [record.id, record]),
   )
   const codeSetIds = new Set(
-    codeSetRecords.map((record) => stringField(record.fields, "Id")),
+    codeSetRecords.map((record) =>
+      stringField(record.fields, "Id", "Key"),
+    ),
   )
   const missingCodeSetIds = requiredCodeSetIds.filter(
     (codeSetId) => !codeSetIds.has(codeSetId),
@@ -153,12 +160,12 @@ export async function loadCodesFromAirtable({
   )
 
   for (const record of codeSetRecords) {
-    const id = stringField(record.fields, "Id")
+    const id = stringField(record.fields, "Id", "Key")
 
     if (!id) {
       throw new ApiError(
         "AIRTABLE_CODE_SET_INVALID",
-        "Airtable code set is missing Id.",
+        "Airtable code set is missing Id (or Key) stable id.",
         400,
         { recordId: record.id },
       )
@@ -186,12 +193,20 @@ export async function loadCodesFromAirtable({
   let sortOrder = 0
 
   for (const record of codeRecords) {
-    const linkedCodeSetId = linkedRecordIds(record.fields, "Code Set")[0]
+    const linkedCodeSetId = linkedRecordIds(
+      record.fields,
+      "Code Set",
+      "Code Sets",
+      "Code set",
+      "code_set",
+    )[0]
     const codeSet = linkedCodeSetId
       ? codeSetByAirtableRecordId.get(linkedCodeSetId)
       : undefined
-    const codeSetId = codeSet ? stringField(codeSet.fields, "Id") : ""
-    const codeId = stringField(record.fields, "Id")
+    const codeSetId = codeSet
+      ? stringField(codeSet.fields, "Id", "Key")
+      : ""
+    const codeId = stringField(record.fields, "Id", "Key")
 
     if (!codeSetId || !codeId) {
       throw new ApiError(

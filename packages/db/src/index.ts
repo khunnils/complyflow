@@ -4,6 +4,7 @@ import {
   companyProfileSchema,
   dataHandlingProfileSchema,
   infrastructureProfileSchema,
+  serviceProfileSchema,
   documentSchema,
   type OrganizationSecurityProfile,
   type Document,
@@ -35,6 +36,17 @@ export function mapOrganizationRecord(record: {
   handlesPii: boolean
   handlesSensitiveData: boolean
   complianceGoals: string[]
+  serviceProfile: {
+    serviceName: string
+    serviceDescription: string
+    serviceUrl: string
+    audiences: string[]
+    userTypes: string[]
+    customerTypes: string[]
+    availabilityRegions: string[]
+    childrenDirected: boolean
+    minimumUserAge: number
+  } | null
   infrastructureProfile: {
     mfaEnabled: boolean
     encryptedDevicesRequired: boolean
@@ -111,6 +123,17 @@ export function mapOrganizationRecord(record: {
     centralizedLoggingEnabled:
       record.infrastructureProfile?.centralizedLoggingEnabled ?? false,
   })
+  const service = serviceProfileSchema.parse({
+    serviceName: record.serviceProfile?.serviceName ?? "",
+    serviceDescription: record.serviceProfile?.serviceDescription ?? "",
+    serviceUrl: record.serviceProfile?.serviceUrl ?? "",
+    audiences: record.serviceProfile?.audiences ?? [],
+    userTypes: record.serviceProfile?.userTypes ?? [],
+    customerTypes: record.serviceProfile?.customerTypes ?? [],
+    availabilityRegions: record.serviceProfile?.availabilityRegions ?? [],
+    childrenDirected: record.serviceProfile?.childrenDirected ?? false,
+    minimumUserAge: record.serviceProfile?.minimumUserAge ?? 0,
+  })
   const dataHandling = dataHandlingProfileSchema.parse({
     dataTypesStored: record.dataTypes.map((dataType) => ({
       name: dataType.name,
@@ -151,6 +174,7 @@ export function mapOrganizationRecord(record: {
   return {
     id: record.id,
     company,
+    service,
     infrastructure,
     dataHandling,
     access,

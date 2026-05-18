@@ -1,4 +1,5 @@
 import {
+  Box,
   Building2,
   Database,
   Download,
@@ -56,6 +57,7 @@ import {
   ProfileForm,
   type ProfileFormReturn,
   ProfileInfrastructureFields,
+  ProfileServiceFields,
 } from "@/features/security-profile/components/profile-form"
 import { DataHandlingReadOnlySection } from "@/features/security-profile/components/data-handling-read-only-section"
 import { useCreateDocument, useDocument, useDocuments, useDownloadDocumentPdf } from "@/features/documents/hooks/use-documents"
@@ -103,10 +105,16 @@ import {
 } from "@/features/vocabulary/lib/vocabulary"
 import { VocabularyManager } from "@/features/vocabulary/components/vocabulary-manager"
 
-type CompanySectionId = "profile" | "infrastructure" | "dataHandling" | "access"
+type CompanySectionId =
+  | "profile"
+  | "service"
+  | "infrastructure"
+  | "dataHandling"
+  | "access"
 type WorkspaceView =
   | "dashboard"
   | "companyProfile"
+  | "companyService"
   | "companyInfrastructure"
   | "companyData"
   | "companyAccess"
@@ -128,6 +136,13 @@ const companySections: Array<{
     title: "Profile",
     description: "Operational context customers ask for early.",
     icon: Building2,
+  },
+  {
+    id: "service",
+    view: "companyService",
+    title: "Service",
+    description: "The primary product or service the organization offers.",
+    icon: Box,
   },
   {
     id: "infrastructure",
@@ -160,6 +175,7 @@ const isCompanyView = (
   view: WorkspaceView
 ): view is
   | "companyProfile"
+  | "companyService"
   | "companyInfrastructure"
   | "companyData"
   | "companyAccess" => companySectionByView.has(view)
@@ -231,6 +247,18 @@ const CompanySectionFields = ({
         form={form}
         industryOptions={codeOptions(vocabulary, "industries")}
         regionOptions={codeOptions(vocabulary, "regions")}
+      />
+    )
+  }
+
+  if (section === "service") {
+    return (
+      <ProfileServiceFields
+        audienceOptions={codeOptions(vocabulary, "service_audiences")}
+        customerTypeOptions={codeOptions(vocabulary, "service_customer_types")}
+        form={form}
+        regionOptions={codeOptions(vocabulary, "regions")}
+        userTypeOptions={codeOptions(vocabulary, "service_user_types")}
       />
     )
   }
@@ -315,6 +343,56 @@ const CompanyReadOnlySection = ({
       ],
       ["Handles PII", boolText(profile.company.handlesPii)],
       ["Sensitive data", boolText(profile.company.handlesSensitiveData)],
+    ],
+    service: [
+      ["Service name", profile.service.serviceName || "Not set"],
+      ["Service URL", profile.service.serviceUrl || "Not set"],
+      [
+        "Description",
+        profile.service.serviceDescription || "Not set",
+      ],
+      [
+        "Audiences",
+        codeValueList(
+          vocabulary,
+          "service_audiences",
+          profile.service.audiences,
+        ),
+      ],
+      [
+        "User types",
+        codeValueList(
+          vocabulary,
+          "service_user_types",
+          profile.service.userTypes,
+        ),
+      ],
+      [
+        "Customer types",
+        codeValueList(
+          vocabulary,
+          "service_customer_types",
+          profile.service.customerTypes,
+        ),
+      ],
+      [
+        "Availability regions",
+        codeValueList(
+          vocabulary,
+          "regions",
+          profile.service.availabilityRegions,
+        ),
+      ],
+      [
+        "Directed to children",
+        boolText(profile.service.childrenDirected),
+      ],
+      [
+        "Minimum user age",
+        profile.service.minimumUserAge === 0
+          ? "Not set"
+          : profile.service.minimumUserAge,
+      ],
     ],
     infrastructure: [
       ["Cloud providers", providerNamesForSystem(profile, providers, "cloud")],

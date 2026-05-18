@@ -93,7 +93,7 @@ Avoid giant forms or audit-style questionnaires.
 
 Users sign in with Google and can belong to multiple organizations. The client lets users choose the current organization from the workspace sidebar, and all workspace data is loaded through organization-scoped API routes. Organization membership controls access; v1 stores `owner` and `member` roles, with both roles able to edit the security snapshot and related workspace data.
 
-Controlled choices such as industries, regions, compliance goals, data categories, data purposes, collection methods, legal basis, DPA status, data processing level, vendor category, vendor criticality, and provider system type are stored as stable code IDs. System code sets are loaded from Airtable with `pnpm plyco codes load`; organization-editable code sets are cloned during onboarding and managed from the Vocabulary screen. Countries use app-owned ISO alpha-2 country codes from a separate countries reference table.
+Controlled choices such as industries, regions, compliance goals, service audiences, service user types, service customer types, data categories, data purposes, collection methods, legal basis, DPA status, data processing level, vendor category, vendor criticality, and provider system type are stored as stable code IDs. System code sets are loaded from Airtable with `pnpm plyco codes load` using tables named **Code Sets** and **Codes**: each code set row must expose a stable machine id in **`Id`** or **`Key`**, and each option must be its own row in **Codes** with a link back to that code set (multi-select tags on the code-set row are not imported). Organization-editable code sets are cloned for each organization when first needed and managed from the Vocabulary screen; missing sets or codes introduced after the initial clone are added automatically when vocabulary is loaded again. Countries use app-owned ISO alpha-2 country codes from a separate countries reference table.
 
 ## Sections
 
@@ -109,6 +109,22 @@ Fields:
 - handles PII
 - handles sensitive data
 - compliance goals
+
+### Service Profile
+
+The workspace includes one primary product or service profile per organization. It is edited from the Company workspace navigation and is not part of onboarding.
+
+Fields:
+
+- service name
+- service description
+- service URL
+- audiences
+- user types
+- customer types
+- availability regions
+- children-directed indicator
+- minimum user age, where `0` means unset
 
 ### Infrastructure Profile
 
@@ -253,7 +269,7 @@ Report Context Builder
 → Generated Document
 ```
 
-Generated documents retain a source hash so the app can show when a document is outdated after template, policy metadata, or profile changes. Each generated document also has a private PDF export that can be downloaded through the authenticated app.
+Generated documents retain a source hash so the app can show when a document is outdated after template, policy metadata, service context, or profile changes. Each generated document also has a private PDF export that can be downloaded through the authenticated app.
 
 ## UX
 

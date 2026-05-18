@@ -2,16 +2,19 @@ import { createHash } from "node:crypto"
 
 import nunjucks from "nunjucks"
 import {
+  type ServiceProfile,
   type SecurityProgramSnapshot,
   type OrganizationMember,
   type Template,
   type Vendor,
+  type Vocabulary,
 } from "@plyco/shared"
 
 export type NormalizedTemplateContext = {
   organization: Record<string, unknown>
   company: Record<string, unknown>
   policy: Record<string, unknown>
+  service: Record<string, unknown>
   infrastructure: Record<string, unknown>
   dataHandling: Record<string, unknown>
   access: Record<string, unknown>
@@ -27,6 +30,7 @@ export class ReportContextBuilder {
     snapshot: SecurityProgramSnapshot,
     template?: Template,
     members: OrganizationMember[] = [],
+    vocabulary?: Vocabulary,
   ): NormalizedTemplateContext {
     const organization = snapshot.organization
     const organizationContext = organization
@@ -41,6 +45,9 @@ export class ReportContextBuilder {
       organization: organizationContext,
       company: organizationContext,
       policy: template ? this.policyContext(template, members) : {},
+      service: organization
+        ? this.serviceContext(organization.service, vocabulary)
+        : {},
       infrastructure: organization?.infrastructure ?? {},
       dataHandling: organization?.dataHandling ?? {},
       access: organization?.access ?? {},
@@ -78,6 +85,55 @@ export class ReportContextBuilder {
       approverEmail: approver?.email ?? "",
       reviewCadence: template.policyReviewCadence,
     }
+  }
+
+  private serviceContext(service: ServiceProfile, vocabulary?: Vocabulary) {
+    return {
+      name: service.serviceName,
+      description: service.serviceDescription,
+      url: service.serviceUrl,
+      audiences: service.audiences,
+      audienceLabels: this.codeLabels(
+        vocabulary,
+        "service_audiences",
+        service.audiences,
+      ),
+      userTypes: service.userTypes,
+      userTypeLabels: this.codeLabels(
+        vocabulary,
+        "service_user_types",
+        service.userTypes,
+      ),
+      customerTypes: service.customerTypes,
+      customerTypeLabels: this.codeLabels(
+        vocabulary,
+        "service_customer_types",
+        service.customerTypes,
+      ),
+      availabilityRegions: service.availabilityRegions,
+      availabilityRegionLabels: this.codeLabels(
+        vocabulary,
+        "regions",
+        service.availabilityRegions,
+      ),
+      childrenDirected: service.childrenDirected,
+      minimumUserAge: service.minimumUserAge,
+    }
+  }
+
+  private codeLabels(
+    vocabulary: Vocabulary | undefined,
+    codeSetId: string,
+    values: string[],
+  ) {
+    const codeSet = vocabulary?.codeSets.find(
+      (currentCodeSet) => currentCodeSet.codeSetId === codeSetId,
+    )
+
+    return values.map(
+      (value) =>
+        codeSet?.codes.find((code) => code.codeId === value)?.name ?? value,
+    )
   }
 
   private vendorContext(vendor: Vendor) {

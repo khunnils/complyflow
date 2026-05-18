@@ -23,6 +23,7 @@ model Organization {
   handlesPii            Boolean                  @map("handles_pii")
   handlesSensitiveData  Boolean                  @map("handles_sensitive_data")
   complianceGoals       String[]                 @map("compliance_goals")
+  serviceProfile        ServiceProfile?
   infrastructureProfile InfrastructureProfile?
   dataHandlingProfile   DataHandlingProfile?
   accessProfile         AccessProfile?
@@ -144,6 +145,25 @@ model OrganizationMembership {
   @@index([userId], map: "idx_organization_memberships_user_id")
   @@index([organizationId], map: "idx_organization_memberships_organization_id")
   @@map("organization_memberships")
+}
+
+model ServiceProfile {
+  id                  String       @id(map: "service_profiles_pkey") @default(cuid())
+  organizationId      String       @unique(map: "service_profiles_organization_id_key") @map("organization_id")
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "service_profiles_organization_id_fkey")
+  serviceName         String       @default("") @map("service_name")
+  serviceDescription  String       @default("") @map("service_description")
+  serviceUrl          String       @default("") @map("service_url")
+  audiences           String[]     @default([])
+  userTypes           String[]     @default([]) @map("user_types")
+  customerTypes       String[]     @default([]) @map("customer_types")
+  availabilityRegions String[]     @default([]) @map("availability_regions")
+  childrenDirected    Boolean      @default(false) @map("children_directed")
+  minimumUserAge      Int          @default(0) @map("minimum_user_age")
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
+
+  @@map("service_profiles")
 }
 
 model InfrastructureProfile {

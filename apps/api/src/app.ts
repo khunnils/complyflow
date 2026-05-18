@@ -146,6 +146,7 @@ export async function createApp({
     organizationRepository: repositories.organizationRepository,
     systemTemplateSource,
     vendorRepository: repositories.vendorRepository,
+    vocabularyRepository: repositories.vocabularyRepository,
   })
 
   return app

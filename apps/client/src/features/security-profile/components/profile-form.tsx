@@ -4,6 +4,7 @@ import {
   companyProfileSchema,
   dataHandlingProfileSchema,
   infrastructureProfileSchema,
+  serviceProfileSchema,
 } from "@plyco/shared"
 import { type ReactNode } from "react"
 import {
@@ -18,10 +19,12 @@ import { AccessProfileFields } from "@/features/security-profile/components/acce
 import { CompanyProfileFields } from "@/features/security-profile/components/company-profile-fields"
 import { ProfileDataHandlingFields } from "@/features/security-profile/components/data-handling-profile-fields"
 import { InfrastructureProfileFields } from "@/features/security-profile/components/infrastructure-profile-fields"
+import { ServiceProfileFields } from "@/features/security-profile/components/service-profile-fields"
 import { type ProfileDraft } from "@/features/security-profile/types/security-profile"
 
 const profileDraftSchema = z.object({
   company: companyProfileSchema,
+  service: serviceProfileSchema,
   infrastructure: infrastructureProfileSchema,
   dataHandling: dataHandlingProfileSchema,
   access: accessProfileSchema,
@@ -58,6 +61,7 @@ export const ProfileForm = ({
 }
 
 export const ProfileCompanyFields = CompanyProfileFields
+export const ProfileServiceFields = ServiceProfileFields
 export const ProfileInfrastructureFields = InfrastructureProfileFields
 export { ProfileDataHandlingFields }
 export const ProfileAccessFields = AccessProfileFields

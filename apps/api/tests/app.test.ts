@@ -14,6 +14,7 @@ import { InMemoryAccountRepository } from "../src/features/accounts/in-memory-re
 import { InMemoryDocumentRepository } from "../src/features/documents/in-memory-repository.js"
 import { InMemoryOrganizationRepository } from "../src/features/organizations/in-memory-repository.js"
 import { InMemoryVendorRepository } from "../src/features/vendors/in-memory-repository.js"
+import { InMemoryVocabularyRepository } from "../src/features/vocabulary/in-memory-repository.js"
 import { AirtableProviderSource } from "../src/providers.js"
 import { parseSystemTemplate } from "../src/system-templates.js"
 
@@ -33,6 +34,17 @@ const profileBody = {
     handlesPii: true,
     handlesSensitiveData: true,
     complianceGoals: ["soc_2", "gdpr"],
+  },
+  service: {
+    serviceName: "Acme AI Platform",
+    serviceDescription: "Cloud software for managing customer security reviews",
+    serviceUrl: "https://app.acme.example",
+    audiences: ["businesses", "developers"],
+    userTypes: ["workspace_admins", "end_users"],
+    customerTypes: ["smb", "mid_market"],
+    availabilityRegions: ["us", "eu"],
+    childrenDirected: false,
+    minimumUserAge: 13,
   },
   infrastructure: {
     organizationProviders: [
@@ -249,6 +261,7 @@ describe("security profile API", () => {
     expect(
       saveResponse.json().organization.dataHandling.dataTypesStored,
     ).toEqual(profileBody.dataHandling.dataTypesStored)
+    expect(saveResponse.json().organization.service).toEqual(profileBody.service)
 
     const getResponse = await app.inject({
       method: "GET",
@@ -260,6 +273,34 @@ describe("security profile API", () => {
     expect(
       getResponse.json().organization.dataHandling.dataTypesStored,
     ).toEqual(profileBody.dataHandling.dataTypesStored)
+    expect(getResponse.json().organization.service).toEqual(profileBody.service)
+  })
+
+  it("rejects service profile codes that are not in organization vocabulary", async () => {
+    const app = await createTestApp()
+    const response = await app.inject({
+      method: "PUT",
+      url: "/organizations/org-test/security-profile",
+      payload: {
+        ...profileBody,
+        service: {
+          ...profileBody.service,
+          audiences: ["not_a_real_audience"],
+        },
+      },
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(response.json()).toMatchObject({
+      error: {
+        code: "CODE_NOT_FOUND",
+        details: {
+          codeSetId: "service_audiences",
+          field: "service.audiences",
+          value: "not_a_real_audience",
+        },
+      },
+    })
   })
 
   it("builds report context with organization aliases and vendor collections", () => {
@@ -322,11 +363,61 @@ describe("security profile API", () => {
         expect.objectContaining({ key: "organization.name" }),
         expect.objectContaining({ key: "policy.version" }),
         expect.objectContaining({ key: "policy.effectiveDate" }),
+        expect.objectContaining({ key: "service.name" }),
+        expect.objectContaining({ key: "service.description" }),
+        expect.objectContaining({ key: "service.url" }),
+        expect.objectContaining({ key: "service.audiences" }),
+        expect.objectContaining({ key: "service.audienceLabels" }),
+        expect.objectContaining({ key: "service.userTypes" }),
+        expect.objectContaining({ key: "service.userTypeLabels" }),
+        expect.objectContaining({ key: "service.customerTypes" }),
+        expect.objectContaining({ key: "service.customerTypeLabels" }),
+        expect.objectContaining({ key: "service.availabilityRegions" }),
+        expect.objectContaining({ key: "service.availabilityRegionLabels" }),
+        expect.objectContaining({ key: "service.childrenDirected" }),
+        expect.objectContaining({ key: "service.minimumUserAge" }),
         expect.objectContaining({ key: "vendors.all" }),
         expect.objectContaining({ key: "vendors.dataProcessors" }),
         expect.objectContaining({ key: "vendors.subprocessors" }),
       ]),
     )
+  })
+
+  it("exposes service profile values and resolved labels in the document context", async () => {
+    const vocabularyRepository = new InMemoryVocabularyRepository()
+    const vocabulary = await vocabularyRepository.listVocabulary("org-test")
+    const snapshot: SecurityProgramSnapshot = {
+      organization: {
+        id: "org-test",
+        ...profileBody,
+        createdAt: "2026-05-15T00:00:00.000Z",
+        updatedAt: "2026-05-15T00:00:00.000Z",
+      },
+      vendors: [],
+    }
+
+    const context = new ReportContextBuilder().build(
+      snapshot,
+      undefined,
+      [],
+      vocabulary,
+    )
+
+    expect(context.service).toMatchObject({
+      name: "Acme AI Platform",
+      description: "Cloud software for managing customer security reviews",
+      url: "https://app.acme.example",
+      audiences: ["businesses", "developers"],
+      audienceLabels: ["Businesses", "Developers"],
+      userTypes: ["workspace_admins", "end_users"],
+      userTypeLabels: ["Workspace admins", "End users"],
+      customerTypes: ["smb", "mid_market"],
+      customerTypeLabels: ["SMB", "Mid-market"],
+      availabilityRegions: ["us", "eu"],
+      availabilityRegionLabels: ["United States", "European Union"],
+      childrenDirected: false,
+      minimumUserAge: 13,
+    })
   })
 
   it("renders the subprocessors system template with data processors", async () => {
@@ -662,7 +753,7 @@ describe("security profile API", () => {
         name: "Security Policy",
         slug: "security-policy",
         content:
-          "# {{ company.name }} Security Policy\n\nVersion {{ policy.version }} effective {{ policy.effectiveDate }}\n",
+          "# {{ company.name }} Security Policy\n\nService {{ service.name }} for {{ service.audienceLabels | join(\", \") }}\nVersion {{ policy.version }} effective {{ policy.effectiveDate }}\n",
         policyEffectiveDate: "2026-05-18",
         policyLastReviewedDate: "2026-05-18",
         policyVersion: "1.0",
@@ -696,7 +787,7 @@ describe("security profile API", () => {
       templateId: template.id,
       title: "Security Policy",
       renderedContent:
-        "# Acme AI Security Policy\n\nVersion 1.0 effective 2026-05-18\n",
+        "# Acme AI Security Policy\n\nService Acme AI Platform for Businesses, Developers\nVersion 1.0 effective 2026-05-18\n",
       hasPdf: false,
     })
     expect(generateResponse.json().sourceHash).toHaveLength(64)
@@ -726,7 +817,7 @@ describe("security profile API", () => {
     })
     expect(documentResponse.statusCode).toBe(200)
     expect(documentResponse.json().renderedContent).toBe(
-      "# Acme AI Security Policy\n\nVersion 1.0 effective 2026-05-18\n",
+      "# Acme AI Security Policy\n\nService Acme AI Platform for Businesses, Developers\nVersion 1.0 effective 2026-05-18\n",
     )
 
     await app.inject({
@@ -736,7 +827,7 @@ describe("security profile API", () => {
         name: "Security Policy",
         slug: "security-policy",
         content:
-          "# {{ company.name }} Security Policy\n\nVersion {{ policy.version }} effective {{ policy.effectiveDate }}\n",
+          "# {{ company.name }} Security Policy\n\nService {{ service.name }} for {{ service.audienceLabels | join(\", \") }}\nVersion {{ policy.version }} effective {{ policy.effectiveDate }}\n",
         policyEffectiveDate: "2026-05-18",
         policyLastReviewedDate: "2026-05-18",
         policyVersion: "1.1",

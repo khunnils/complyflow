@@ -114,6 +114,18 @@ export const companyProfileSchema = z.object({
   complianceGoals: z.array(codeIdSchema).default([]),
 })
 
+export const serviceProfileSchema = z.object({
+  serviceName: z.string().trim().default(""),
+  serviceDescription: z.string().trim().default(""),
+  serviceUrl: z.string().trim().default(""),
+  audiences: z.array(codeIdSchema).default([]),
+  userTypes: z.array(codeIdSchema).default([]),
+  customerTypes: z.array(codeIdSchema).default([]),
+  availabilityRegions: z.array(codeIdSchema).default([]),
+  childrenDirected: z.boolean(),
+  minimumUserAge: z.number().int().min(0).max(120).default(0),
+})
+
 export const infrastructureProfileSchema = z.object({
   organizationProviders: z.array(organizationProviderSchema).default([]),
   mfaEnabled: z.boolean(),
@@ -313,6 +325,7 @@ export const templateCatalogSchema = z.object({
 export const organizationSecurityProfileSchema = z.object({
   id: z.string().min(1),
   company: companyProfileSchema,
+  service: serviceProfileSchema,
   infrastructure: infrastructureProfileSchema,
   dataHandling: dataHandlingProfileSchema,
   access: accessProfileSchema,
@@ -349,6 +362,7 @@ export type VocabularyCodeInput = z.infer<typeof vocabularyCodeInputSchema>
 export type OrganizationProvider = z.infer<typeof organizationProviderSchema>
 export type StoredDataType = z.infer<typeof storedDataTypeSchema>
 export type CompanyProfile = z.infer<typeof companyProfileSchema>
+export type ServiceProfile = z.infer<typeof serviceProfileSchema>
 export type InfrastructureProfile = z.infer<typeof infrastructureProfileSchema>
 export type DataHandlingProfile = z.infer<typeof dataHandlingProfileSchema>
 export type AccessProfile = z.infer<typeof accessProfileSchema>
@@ -397,6 +411,18 @@ export const emptyCompanyProfile: CompanyProfile = {
   handlesPii: false,
   handlesSensitiveData: false,
   complianceGoals: [],
+}
+
+export const emptyServiceProfile: ServiceProfile = {
+  serviceName: "",
+  serviceDescription: "",
+  serviceUrl: "",
+  audiences: [],
+  userTypes: [],
+  customerTypes: [],
+  availabilityRegions: [],
+  childrenDirected: false,
+  minimumUserAge: 0,
 }
 
 export const emptyInfrastructureProfile: InfrastructureProfile = {

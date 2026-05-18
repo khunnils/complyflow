@@ -6,6 +6,8 @@ import {
   companyProfileSchema,
   createOrganizationSchema,
   dataHandlingProfileSchema,
+  emptyServiceProfile,
+  serviceProfileSchema,
   templateInputSchema,
   templateSchema,
   vendorInputSchema,
@@ -140,6 +142,59 @@ describe("shared security profile schemas", () => {
         updatedAt: "2026-05-14T00:00:00.000Z",
       }).success,
     ).toBe(true)
+  })
+
+  it("accepts the empty service profile defaults", () => {
+    const result = serviceProfileSchema.safeParse(emptyServiceProfile)
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data).toEqual({
+        serviceName: "",
+        serviceDescription: "",
+        serviceUrl: "",
+        audiences: [],
+        userTypes: [],
+        customerTypes: [],
+        availabilityRegions: [],
+        childrenDirected: false,
+        minimumUserAge: 0,
+      })
+    }
+  })
+
+  it("accepts a populated service profile with code-array fields", () => {
+    const result = serviceProfileSchema.safeParse({
+      serviceName: "Acme AI Platform",
+      serviceDescription: "Customer security review automation",
+      serviceUrl: "https://app.acme.example",
+      audiences: ["businesses", "developers"],
+      userTypes: ["workspace_admins", "end_users"],
+      customerTypes: ["smb", "mid_market"],
+      availabilityRegions: ["us", "eu"],
+      childrenDirected: false,
+      minimumUserAge: 13,
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it("rejects service profile code array values that violate the code id format", () => {
+    const result = serviceProfileSchema.safeParse({
+      ...emptyServiceProfile,
+      audiences: ["Invalid Audience"],
+    })
+
+    expect(result.success).toBe(false)
+  })
+
+  it("rejects negative minimum user age values", () => {
+    const result = serviceProfileSchema.safeParse({
+      ...emptyServiceProfile,
+      minimumUserAge: -1,
+    })
+
+    expect(result.success).toBe(false)
   })
 
   it("accepts template input policy metadata fields", () => {

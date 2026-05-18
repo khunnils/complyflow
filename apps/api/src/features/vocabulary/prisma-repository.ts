@@ -89,14 +89,6 @@ export class PrismaVocabularyRepository implements VocabularyRepository {
   }
 
   async cloneOrganizationVocabulary(organizationId: string): Promise<void> {
-    const existing = await this.client.organizationCodeSet.count({
-      where: { organizationId },
-    })
-
-    if (existing > 0) {
-      return
-    }
-
     const systemCodeSets = await this.client.systemCodeSet.findMany({
       where: { isSystem: false },
       include: {
@@ -104,27 +96,65 @@ export class PrismaVocabularyRepository implements VocabularyRepository {
       },
     })
 
-    await this.client.$transaction(
-      systemCodeSets.map((codeSet) =>
-        this.client.organizationCodeSet.create({
-          data: {
-            organizationId,
-            systemCodeSetId: codeSet.id,
-            name: codeSet.name,
-            description: codeSet.description,
-            codes: {
-              create: codeSet.codes.map((code) => ({
-                systemCodeId: code.id,
-                codeId: code.codeId,
-                name: code.name,
-                sortOrder: code.sortOrder,
-                active: code.active,
-              })),
-            },
-          },
-        }),
-      ),
+    const existingCodeSets = await this.client.organizationCodeSet.findMany({
+      where: { organizationId },
+      select: { id: true, systemCodeSetId: true },
+    })
+    const existingBySystemId = new Map(
+      existingCodeSets.map((record) => [record.systemCodeSetId, record.id]),
     )
+
+    await this.client.$transaction(async (tx) => {
+      for (const codeSet of systemCodeSets) {
+        let organizationCodeSetId = existingBySystemId.get(codeSet.id)
+
+        if (!organizationCodeSetId) {
+          const created = await tx.organizationCodeSet.create({
+            data: {
+              organizationId,
+              systemCodeSetId: codeSet.id,
+              name: codeSet.name,
+              description: codeSet.description,
+              codes: {
+                create: codeSet.codes.map((code) => ({
+                  systemCodeId: code.id,
+                  codeId: code.codeId,
+                  name: code.name,
+                  sortOrder: code.sortOrder,
+                  active: code.active,
+                })),
+              },
+            },
+          })
+          organizationCodeSetId = created.id
+          existingBySystemId.set(codeSet.id, organizationCodeSetId)
+          continue
+        }
+
+        const existingCodes = await tx.organizationCode.findMany({
+          where: { organizationCodeSetId },
+          select: { codeId: true },
+        })
+        const existingCodeIds = new Set(existingCodes.map((c) => c.codeId))
+
+        const missingCodes = codeSet.codes.filter(
+          (code) => !existingCodeIds.has(code.codeId),
+        )
+
+        if (missingCodes.length > 0) {
+          await tx.organizationCode.createMany({
+            data: missingCodes.map((code) => ({
+              organizationCodeSetId,
+              systemCodeId: code.id,
+              codeId: code.codeId,
+              name: code.name,
+              sortOrder: code.sortOrder,
+              active: code.active,
+            })),
+          })
+        }
+      }
+    })
   }
 
   async createOrganizationCode(
