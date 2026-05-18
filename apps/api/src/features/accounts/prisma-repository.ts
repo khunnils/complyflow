@@ -1,10 +1,12 @@
 import { prisma, type PrismaClient } from "@plyco/db"
 import {
   authUserSchema,
+  organizationMemberSchema,
   organizationMembershipRoleSchema,
   organizationSummarySchema,
   type AuthUser,
   type CreateOrganization,
+  type OrganizationMember,
   type OrganizationMembershipRole,
   type OrganizationSummary,
 } from "@plyco/shared"
@@ -88,6 +90,25 @@ export class PrismaAccountRepository implements AccountRepository {
         role: membership.role,
         createdAt: toIsoString(membership.organization.createdAt),
         updatedAt: toIsoString(membership.organization.updatedAt),
+      }),
+    )
+  }
+
+  async listOrganizationMembers(
+    organizationId: string,
+  ): Promise<OrganizationMember[]> {
+    const memberships = await this.client.organizationMembership.findMany({
+      where: { organizationId },
+      include: { user: true },
+      orderBy: { createdAt: "asc" },
+    })
+
+    return memberships.map((membership) =>
+      organizationMemberSchema.parse({
+        userId: membership.user.id,
+        name: membership.user.name,
+        email: membership.user.email,
+        role: membership.role,
       }),
     )
   }

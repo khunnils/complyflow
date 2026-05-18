@@ -8,32 +8,32 @@ datasource db {
 }
 
 model Organization {
-  id                       String                 @id(map: "organizations_pkey") @default(cuid())
-  companyName              String                 @map("company_name")
-  legalEntityName          String                 @default("") @map("legal_entity_name")
-  website                  String                 @default("")
-  contactEmail             String                 @default("") @map("contact_email")
-  securityContactEmail     String                 @default("") @map("security_contact_email")
-  privacyContactEmail      String                 @default("") @map("privacy_contact_email")
-  country                  String                 @default("")
-  address                  String                 @default("")
-  employeeCount            Int                    @map("employee_count")
-  industries               String[]
-  regions                  String[]
-  handlesPii               Boolean                @map("handles_pii")
-  handlesSensitiveData     Boolean                @map("handles_sensitive_data")
-  complianceGoals          String[]               @map("compliance_goals")
-  infrastructureProfile    InfrastructureProfile?
-  dataHandlingProfile      DataHandlingProfile?
-  accessProfile            AccessProfile?
-  dataTypes                OrganizationDataType[]
-  templates                Template[]
-  documents                Document[]
-  vendors                  OrganizationProvider[]
-  memberships              OrganizationMembership[]
-  codeSets                 OrganizationCodeSet[]
-  createdAt                DateTime               @default(now()) @map("created_at")
-  updatedAt                DateTime               @updatedAt @map("updated_at")
+  id                    String                   @id(map: "organizations_pkey") @default(cuid())
+  companyName           String                   @map("company_name")
+  legalEntityName       String                   @default("") @map("legal_entity_name")
+  website               String                   @default("")
+  contactEmail          String                   @default("") @map("contact_email")
+  securityContactEmail  String                   @default("") @map("security_contact_email")
+  privacyContactEmail   String                   @default("") @map("privacy_contact_email")
+  country               String                   @default("")
+  address               String                   @default("")
+  employeeCount         Int                      @map("employee_count")
+  industries            String[]
+  regions               String[]
+  handlesPii            Boolean                  @map("handles_pii")
+  handlesSensitiveData  Boolean                  @map("handles_sensitive_data")
+  complianceGoals       String[]                 @map("compliance_goals")
+  infrastructureProfile InfrastructureProfile?
+  dataHandlingProfile   DataHandlingProfile?
+  accessProfile         AccessProfile?
+  dataTypes             OrganizationDataType[]
+  templates             Template[]
+  documents             Document[]
+  vendors               OrganizationProvider[]
+  memberships           OrganizationMembership[]
+  codeSets              OrganizationCodeSet[]
+  createdAt             DateTime                 @default(now()) @map("created_at")
+  updatedAt             DateTime                 @updatedAt @map("updated_at")
 
   @@map("organizations")
 }
@@ -49,15 +49,15 @@ model Country {
 }
 
 model SystemCodeSet {
-  id                String                @id(map: "system_code_sets_pkey")
-  airtableRecordId  String                @unique(map: "system_code_sets_airtable_record_id_key") @map("airtable_record_id")
-  name              String
-  description       String                @default("")
-  isSystem          Boolean               @default(false) @map("is_system")
-  codes             SystemCode[]
-  organizationSets  OrganizationCodeSet[]
-  createdAt         DateTime              @default(now()) @map("created_at")
-  updatedAt         DateTime              @updatedAt @map("updated_at")
+  id               String                @id(map: "system_code_sets_pkey")
+  airtableRecordId String                @unique(map: "system_code_sets_airtable_record_id_key") @map("airtable_record_id")
+  name             String
+  description      String                @default("")
+  isSystem         Boolean               @default(false) @map("is_system")
+  codes            SystemCode[]
+  organizationSets OrganizationCodeSet[]
+  createdAt        DateTime              @default(now()) @map("created_at")
+  updatedAt        DateTime              @updatedAt @map("updated_at")
 
   @@map("system_code_sets")
 }
@@ -80,16 +80,16 @@ model SystemCode {
 }
 
 model OrganizationCodeSet {
-  id               String             @id(map: "organization_code_sets_pkey") @default(cuid())
-  organizationId   String             @map("organization_id")
-  organization     Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "organization_code_sets_organization_id_fkey")
-  systemCodeSetId  String             @map("system_code_set_id")
-  systemCodeSet    SystemCodeSet      @relation(fields: [systemCodeSetId], references: [id], onDelete: Restrict, map: "organization_code_sets_system_code_set_id_fkey")
-  name             String
-  description      String             @default("")
-  codes            OrganizationCode[]
-  createdAt        DateTime           @default(now()) @map("created_at")
-  updatedAt        DateTime           @updatedAt @map("updated_at")
+  id              String             @id(map: "organization_code_sets_pkey") @default(cuid())
+  organizationId  String             @map("organization_id")
+  organization    Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "organization_code_sets_organization_id_fkey")
+  systemCodeSetId String             @map("system_code_set_id")
+  systemCodeSet   SystemCodeSet      @relation(fields: [systemCodeSetId], references: [id], onDelete: Restrict, map: "organization_code_sets_system_code_set_id_fkey")
+  name            String
+  description     String             @default("")
+  codes           OrganizationCode[]
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
 
   @@unique([organizationId, systemCodeSetId], map: "organization_code_sets_organization_id_system_code_set_id_key")
   @@index([organizationId], map: "idx_organization_code_sets_organization_id")
@@ -116,14 +116,16 @@ model OrganizationCode {
 }
 
 model User {
-  id              String                   @id(map: "users_pkey") @default(cuid())
-  googleSubject   String                   @unique(map: "users_google_subject_key") @map("google_subject")
-  email           String                   @unique(map: "users_email_key")
-  name            String
-  picture         String?
-  memberships     OrganizationMembership[]
-  createdAt       DateTime                 @default(now()) @map("created_at")
-  updatedAt       DateTime                 @updatedAt @map("updated_at")
+  id                      String                   @id(map: "users_pkey") @default(cuid())
+  googleSubject           String                   @unique(map: "users_google_subject_key") @map("google_subject")
+  email                   String                   @unique(map: "users_email_key")
+  name                    String
+  picture                 String?
+  memberships             OrganizationMembership[]
+  policyOwnedTemplates    Template[]               @relation("TemplatePolicyOwner")
+  policyApprovedTemplates Template[]               @relation("TemplatePolicyApprover")
+  createdAt               DateTime                 @default(now()) @map("created_at")
+  updatedAt               DateTime                 @updatedAt @map("updated_at")
 
   @@map("users")
 }
@@ -159,39 +161,39 @@ model InfrastructureProfile {
 }
 
 model DataHandlingProfile {
-  id                              String       @id(map: "data_handling_profiles_pkey") @default(cuid())
-  organizationId                  String       @unique(map: "data_handling_profiles_organization_id_key") @map("organization_id")
-  organization                    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "data_handling_profiles_organization_id_fkey")
-  storesPii                       Boolean      @map("stores_pii")
-  storesHealthcareData            Boolean      @map("stores_healthcare_data")
-  encryptionAtRest                Boolean      @map("encryption_at_rest")
-  encryptionInTransit             Boolean      @map("encryption_in_transit")
-  productionDataInDevelopment     Boolean      @map("production_data_in_development")
-  retentionPolicyExists           Boolean      @map("retention_policy_exists")
-  createdAt                       DateTime     @default(now()) @map("created_at")
-  updatedAt                       DateTime     @updatedAt @map("updated_at")
+  id                          String       @id(map: "data_handling_profiles_pkey") @default(cuid())
+  organizationId              String       @unique(map: "data_handling_profiles_organization_id_key") @map("organization_id")
+  organization                Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "data_handling_profiles_organization_id_fkey")
+  storesPii                   Boolean      @map("stores_pii")
+  storesHealthcareData        Boolean      @map("stores_healthcare_data")
+  encryptionAtRest            Boolean      @map("encryption_at_rest")
+  encryptionInTransit         Boolean      @map("encryption_in_transit")
+  productionDataInDevelopment Boolean      @map("production_data_in_development")
+  retentionPolicyExists       Boolean      @map("retention_policy_exists")
+  createdAt                   DateTime     @default(now()) @map("created_at")
+  updatedAt                   DateTime     @updatedAt @map("updated_at")
 
   @@map("data_handling_profiles")
 }
 
 model OrganizationDataType {
-  id              String           @id(map: "organization_data_types_pkey") @default(cuid())
-  organizationId  String           @map("organization_id")
-  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "organization_data_types_organization_id_fkey")
-  name            String
-  description     String
-  subjectTypes    String[]         @default([]) @map("subject_types")
-  purposes        String           @default("")
-  collectionMethods String[]       @default([]) @map("collection_methods")
-  legalBasis      String[]         @default([]) @map("legal_basis")
-  retentionDays   Int              @default(0) @map("retention_days")
-  isSensitive     Boolean          @map("is_sensitive")
-  isRequired      Boolean          @default(false) @map("is_required")
-  sharedWithThirdParties Boolean    @default(false) @map("shared_with_third_parties")
-  thirdParties    String[]         @default([]) @map("third_parties")
-  vendorDataTypes VendorDataType[]
-  createdAt       DateTime         @default(now()) @map("created_at")
-  updatedAt       DateTime         @updatedAt @map("updated_at")
+  id                     String           @id(map: "organization_data_types_pkey") @default(cuid())
+  organizationId         String           @map("organization_id")
+  organization           Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "organization_data_types_organization_id_fkey")
+  name                   String
+  description            String
+  subjectTypes           String[]         @default([]) @map("subject_types")
+  purposes               String           @default("")
+  collectionMethods      String[]         @default([]) @map("collection_methods")
+  legalBasis             String[]         @default([]) @map("legal_basis")
+  retentionDays          Int              @default(0) @map("retention_days")
+  isSensitive            Boolean          @map("is_sensitive")
+  isRequired             Boolean          @default(false) @map("is_required")
+  sharedWithThirdParties Boolean          @default(false) @map("shared_with_third_parties")
+  thirdParties           String[]         @default([]) @map("third_parties")
+  vendorDataTypes        VendorDataType[]
+  createdAt              DateTime         @default(now()) @map("created_at")
+  updatedAt              DateTime         @updatedAt @map("updated_at")
 
   @@unique([organizationId, name], map: "organization_data_types_organization_id_name_key")
   @@index([organizationId], map: "idx_organization_data_types_organization_id")
@@ -199,46 +201,46 @@ model OrganizationDataType {
 }
 
 model AccessProfile {
-  id                           String       @id(map: "access_profiles_pkey") @default(cuid())
-  organizationId               String       @unique(map: "access_profiles_organization_id_key") @map("organization_id")
-  organization                 Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "access_profiles_organization_id_fkey")
-  mfaRequired                  Boolean      @map("mfa_required")
-  ssoEnabled                   Boolean      @map("sso_enabled")
-  sharedAccountsExist          Boolean      @map("shared_accounts_exist")
-  offboardingProcessExists     Boolean      @map("offboarding_process_exists")
-  accessReviewsPerformed       Boolean      @map("access_reviews_performed")
-  privilegedAccessRestricted   Boolean      @map("privileged_access_restricted")
-  createdAt                    DateTime     @default(now()) @map("created_at")
-  updatedAt                    DateTime     @updatedAt @map("updated_at")
+  id                         String       @id(map: "access_profiles_pkey") @default(cuid())
+  organizationId             String       @unique(map: "access_profiles_organization_id_key") @map("organization_id")
+  organization               Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "access_profiles_organization_id_fkey")
+  mfaRequired                Boolean      @map("mfa_required")
+  ssoEnabled                 Boolean      @map("sso_enabled")
+  sharedAccountsExist        Boolean      @map("shared_accounts_exist")
+  offboardingProcessExists   Boolean      @map("offboarding_process_exists")
+  accessReviewsPerformed     Boolean      @map("access_reviews_performed")
+  privilegedAccessRestricted Boolean      @map("privileged_access_restricted")
+  createdAt                  DateTime     @default(now()) @map("created_at")
+  updatedAt                  DateTime     @updatedAt @map("updated_at")
 
   @@map("access_profiles")
 }
 
 model OrganizationProvider {
-  id               String       @id(map: "organization_providers_pkey") @default(cuid())
-  organizationId   String       @map("organization_id")
-  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "vendors_organization_id_fkey")
-  providerId       String?      @map("provider_id")
-  systemType       String?      @map("system_type")
-  name             String
-  category         String
-  purpose          String
-  countryOfRegistration String  @default("") @map("country_of_registration")
-  hasSubprocessors Boolean      @map("has_subprocessors")
-  dataProcessingLevel String    @default("limited") @map("data_processing_level")
-  dpaStatus        String       @map("dpa_status")
-  dataRegions      String[]     @map("data_regions")
-  criticality      String
-  owner            String?
-  notes            String?
-  dataTypes        VendorDataType[]
-  createdAt        DateTime     @default(now()) @map("created_at")
-  updatedAt        DateTime     @updatedAt @map("updated_at")
+  id                    String           @id(map: "organization_providers_pkey") @default(cuid())
+  organizationId        String           @map("organization_id")
+  organization          Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "vendors_organization_id_fkey")
+  providerId            String?          @map("provider_id")
+  systemType            String?          @map("system_type")
+  name                  String
+  category              String
+  purpose               String
+  countryOfRegistration String           @default("") @map("country_of_registration")
+  hasSubprocessors      Boolean          @map("has_subprocessors")
+  dataProcessingLevel   String           @default("limited") @map("data_processing_level")
+  dpaStatus             String           @map("dpa_status")
+  dataRegions           String[]         @map("data_regions")
+  criticality           String
+  owner                 String?
+  notes                 String?
+  dataTypes             VendorDataType[]
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
 
+  @@unique([organizationId, systemType, providerId], map: "organization_providers_org_system_provider_key")
   @@index([organizationId], map: "idx_organization_providers_organization_id")
   @@index([providerId], map: "idx_organization_providers_provider_id")
   @@index([systemType], map: "idx_organization_providers_system_type")
-  @@unique([organizationId, systemType, providerId], map: "organization_providers_org_system_provider_key")
   @@map("organization_providers")
 }
 
@@ -250,12 +252,22 @@ model Template {
   slug                     String
   sourceSystemTemplateSlug String       @map("source_system_template_slug")
   content                  String
+  policyEffectiveDate      String       @default("") @map("policy_effective_date")
+  policyLastReviewedDate   String       @default("") @map("policy_last_reviewed_date")
+  policyVersion            String       @default("") @map("policy_version")
+  policyOwnerUserId        String?      @map("policy_owner_user_id")
+  policyOwner              User?        @relation("TemplatePolicyOwner", fields: [policyOwnerUserId], references: [id], onDelete: SetNull, map: "templates_policy_owner_user_id_fkey")
+  policyApproverUserId     String?      @map("policy_approver_user_id")
+  policyApprover           User?        @relation("TemplatePolicyApprover", fields: [policyApproverUserId], references: [id], onDelete: SetNull, map: "templates_policy_approver_user_id_fkey")
+  policyReviewCadence      String       @default("") @map("policy_review_cadence")
   documents                Document[]
   createdAt                DateTime     @default(now()) @map("created_at")
   updatedAt                DateTime     @updatedAt @map("updated_at")
 
   @@unique([organizationId, slug], map: "templates_organization_id_slug_key")
   @@index([organizationId], map: "idx_templates_organization_id")
+  @@index([policyOwnerUserId], map: "idx_templates_policy_owner_user_id")
+  @@index([policyApproverUserId], map: "idx_templates_policy_approver_user_id")
   @@index([sourceSystemTemplateSlug], map: "idx_templates_source_system_template_slug")
   @@map("templates")
 }

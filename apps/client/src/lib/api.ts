@@ -15,6 +15,7 @@ import {
   templateSchema,
   createOrganizationSchema,
   organizationSummarySchema,
+  organizationMemberSchema,
   type Provider,
   type Country,
   type Vocabulary,
@@ -33,6 +34,7 @@ import {
   type Vendor,
   type VendorInput,
   type OrganizationSummary,
+  type OrganizationMember,
 } from "@plyco/shared"
 import { z } from "zod"
 
@@ -110,6 +112,14 @@ export const getCountries = (): Promise<Country[]> =>
 
 export const getVocabulary = (organizationId: string): Promise<Vocabulary> =>
   apiRequest(`/organizations/${organizationId}/vocabulary`, vocabularySchema)
+
+export const getOrganizationMembers = (
+  organizationId: string
+): Promise<OrganizationMember[]> =>
+  apiRequest(
+    `/organizations/${organizationId}/members`,
+    z.array(organizationMemberSchema)
+  )
 
 export const createVocabularyCode = ({
   organizationId,

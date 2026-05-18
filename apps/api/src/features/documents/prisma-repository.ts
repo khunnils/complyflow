@@ -43,6 +43,12 @@ export class PrismaDocumentRepository implements DocumentRepository {
           slug: systemTemplate.slug,
           sourceSystemTemplateSlug: systemTemplate.slug,
           content: systemTemplate.content,
+          policyEffectiveDate: "",
+          policyLastReviewedDate: "",
+          policyVersion: "",
+          policyOwnerUserId: null,
+          policyApproverUserId: null,
+          policyReviewCadence: "",
         },
       })
 
@@ -72,6 +78,12 @@ export class PrismaDocumentRepository implements DocumentRepository {
           name: input.name,
           slug: input.slug,
           content: input.content,
+          policyEffectiveDate: input.policyEffectiveDate,
+          policyLastReviewedDate: input.policyLastReviewedDate,
+          policyVersion: input.policyVersion,
+          policyOwnerUserId: input.policyOwnerUserId || null,
+          policyApproverUserId: input.policyApproverUserId || null,
+          policyReviewCadence: input.policyReviewCadence,
         },
       })
 

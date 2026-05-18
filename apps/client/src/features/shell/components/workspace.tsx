@@ -57,6 +57,7 @@ import {
   type ProfileFormReturn,
   ProfileInfrastructureFields,
 } from "@/features/security-profile/components/profile-form"
+import { DataHandlingReadOnlySection } from "@/features/security-profile/components/data-handling-read-only-section"
 import { useCreateDocument, useDocument, useDocuments, useDownloadDocumentPdf } from "@/features/documents/hooks/use-documents"
 import { useLogout } from "@/features/auth/hooks/use-auth"
 import { OrganizationSwitcher } from "@/features/organizations/components/organization-switcher"
@@ -67,6 +68,7 @@ import {
 import {
   useCreateTemplateFromSystem,
   useDeleteTemplate,
+  useOrganizationMembers,
   useTemplates,
   useUpdateTemplate,
 } from "@/features/templates/hooks/use-templates"
@@ -192,30 +194,6 @@ const providerNamesForSystem = (
   return valueList(names)
 }
 
-const dataTypeList = (
-  values: ProfileDraft["dataHandling"]["dataTypesStored"],
-  vocabulary: Vocabulary | undefined,
-) =>
-  values.length > 0
-    ? values
-        .map((value) => {
-          const details = [
-            value.description,
-            value.retentionDays > 0
-              ? `${value.retentionDays} day retention`
-              : null,
-            value.isRequired ? "required" : null,
-            value.isSensitive ? "sensitive" : null,
-            value.sharedWithThirdParties ? "shared with third parties" : null,
-          ].filter(Boolean)
-
-          return details.length > 0
-            ? `${codeLabel(vocabulary, "data_categories", value.name)}: ${details.join("; ")}`
-            : codeLabel(vocabulary, "data_categories", value.name)
-        })
-        .join(", ")
-    : "Not set"
-
 const boolText = (value: boolean) => (value ? "Yes" : "No")
 
 const DetailGrid = ({ rows }: { rows: Array<[string, string | number]> }) => (
@@ -290,8 +268,18 @@ const CompanyReadOnlySection = ({
   vocabulary: Vocabulary | undefined
   onEdit: () => void
 }) => {
+  if (section === "dataHandling") {
+    return (
+      <DataHandlingReadOnlySection
+        profile={profile}
+        vocabulary={vocabulary}
+        onEdit={onEdit}
+      />
+    )
+  }
+
   const rowsBySection: Record<
-    CompanySectionId,
+    Exclude<CompanySectionId, "dataHandling">,
     Array<[string, string | number]>
   > = {
     profile: [
@@ -350,27 +338,6 @@ const CompanyReadOnlySection = ({
         boolText(profile.infrastructure.centralizedLoggingEnabled),
       ],
     ],
-    dataHandling: [
-      [
-        "Data types",
-        dataTypeList(profile.dataHandling.dataTypesStored, vocabulary),
-      ],
-      ["Stores PII", boolText(profile.dataHandling.storesPii)],
-      ["Healthcare data", boolText(profile.dataHandling.storesHealthcareData)],
-      ["Encryption at rest", boolText(profile.dataHandling.encryptionAtRest)],
-      [
-        "Encryption in transit",
-        boolText(profile.dataHandling.encryptionInTransit),
-      ],
-      [
-        "Production data in development",
-        boolText(profile.dataHandling.productionDataInDevelopment),
-      ],
-      [
-        "Retention policy",
-        boolText(profile.dataHandling.retentionPolicyExists),
-      ],
-    ],
     access: [
       ["MFA required", boolText(profile.access.mfaRequired)],
       ["SSO enabled", boolText(profile.access.ssoEnabled)],
@@ -406,6 +373,7 @@ export const Workspace = ({ user }: { user: AuthUser }) => {
   const countries = useCountries()
   const vocabulary = useVocabulary()
   const templates = useTemplates()
+  const organizationMembers = useOrganizationMembers()
   const documents = useDocuments()
   const viewingDocumentId = useSecurityUiStore(
     (state) => state.viewingDocumentId
@@ -441,6 +409,7 @@ export const Workspace = ({ user }: { user: AuthUser }) => {
     providers.error,
     countries.error,
     vocabulary.error,
+    organizationMembers.error,
     document.error,
   ]
     .map((err) => err?.message)
@@ -453,6 +422,7 @@ export const Workspace = ({ user }: { user: AuthUser }) => {
   const providersList = providers.data ?? []
   const countriesList = countries.data ?? []
   const vocabularyData = vocabulary.data
+  const organizationMembersData = organizationMembers.data ?? []
   const documentRecord = document.data ?? null
 
   const [showVendorCatalog, setShowVendorCatalog] = useState(false)
@@ -910,6 +880,7 @@ export const Workspace = ({ user }: { user: AuthUser }) => {
                   <TemplateForm
                     defaultValues={editingTemplate}
                     isSaving={updateTemplate.isPending}
+                    members={organizationMembersData}
                     onCancel={() => startEditingTemplate(null)}
                     onSubmit={(template) => {
                       updateTemplate.mutate(

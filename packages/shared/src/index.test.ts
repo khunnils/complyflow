@@ -6,6 +6,8 @@ import {
   companyProfileSchema,
   createOrganizationSchema,
   dataHandlingProfileSchema,
+  templateInputSchema,
+  templateSchema,
   vendorInputSchema,
   vendorCriticalitySchema,
   countryCodeSchema,
@@ -120,6 +122,37 @@ describe("shared security profile schemas", () => {
       encryptionInTransit: true,
       productionDataInDevelopment: false,
       retentionPolicyExists: true,
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it("accepts blank template policy metadata defaults", () => {
+    expect(
+      templateSchema.safeParse({
+        id: "template_1",
+        organizationId: "org_1",
+        name: "Privacy Policy",
+        slug: "privacy-policy",
+        sourceSystemTemplateSlug: "privacy-policy",
+        content: "# Privacy Policy\n",
+        createdAt: "2026-05-14T00:00:00.000Z",
+        updatedAt: "2026-05-14T00:00:00.000Z",
+      }).success,
+    ).toBe(true)
+  })
+
+  it("accepts template input policy metadata fields", () => {
+    const result = templateInputSchema.safeParse({
+      name: "Privacy Policy",
+      slug: "privacy-policy",
+      content: "# Privacy Policy\n",
+      policyEffectiveDate: "2026-05-18",
+      policyLastReviewedDate: "2026-05-18",
+      policyVersion: "1.0",
+      policyOwnerUserId: "user_security",
+      policyApproverUserId: "user_legal",
+      policyReviewCadence: "Annual",
     })
 
     expect(result.success).toBe(true)

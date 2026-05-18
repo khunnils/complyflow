@@ -7,6 +7,9 @@ export const countriesQueryKey = ["countries"] as const
 export const vocabularyQueryKey = (organizationId: string) =>
   ["vocabulary", organizationId] as const
 
+export const organizationMembersQueryKey = (organizationId: string) =>
+  ["organization-members", organizationId] as const
+
 export const securityProfileQueryKey = (organizationId: string) =>
   ["security-profile", organizationId] as const
 

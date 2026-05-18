@@ -3,6 +3,7 @@ import { createHash } from "node:crypto"
 import nunjucks from "nunjucks"
 import {
   type SecurityProgramSnapshot,
+  type OrganizationMember,
   type Template,
   type Vendor,
 } from "@plyco/shared"
@@ -10,6 +11,7 @@ import {
 export type NormalizedTemplateContext = {
   organization: Record<string, unknown>
   company: Record<string, unknown>
+  policy: Record<string, unknown>
   infrastructure: Record<string, unknown>
   dataHandling: Record<string, unknown>
   access: Record<string, unknown>
@@ -21,7 +23,11 @@ export type NormalizedTemplateContext = {
 }
 
 export class ReportContextBuilder {
-  build(snapshot: SecurityProgramSnapshot): NormalizedTemplateContext {
+  build(
+    snapshot: SecurityProgramSnapshot,
+    template?: Template,
+    members: OrganizationMember[] = [],
+  ): NormalizedTemplateContext {
     const organization = snapshot.organization
     const organizationContext = organization
       ? {
@@ -34,6 +40,7 @@ export class ReportContextBuilder {
     return {
       organization: organizationContext,
       company: organizationContext,
+      policy: template ? this.policyContext(template, members) : {},
       infrastructure: organization?.infrastructure ?? {},
       dataHandling: organization?.dataHandling ?? {},
       access: organization?.access ?? {},
@@ -48,6 +55,28 @@ export class ReportContextBuilder {
           (vendor) => vendor.dataProcessingLevel === "subprocessor",
         ),
       },
+    }
+  }
+
+  private policyContext(template: Template, members: OrganizationMember[]) {
+    const owner = members.find(
+      (member) => member.userId === template.policyOwnerUserId,
+    )
+    const approver = members.find(
+      (member) => member.userId === template.policyApproverUserId,
+    )
+
+    return {
+      effectiveDate: template.policyEffectiveDate,
+      lastReviewedDate: template.policyLastReviewedDate,
+      version: template.policyVersion,
+      ownerUserId: template.policyOwnerUserId,
+      ownerName: owner?.name ?? "",
+      ownerEmail: owner?.email ?? "",
+      approverUserId: template.policyApproverUserId,
+      approverName: approver?.name ?? "",
+      approverEmail: approver?.email ?? "",
+      reviewCadence: template.policyReviewCadence,
     }
   }
 

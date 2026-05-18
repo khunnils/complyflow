@@ -3,6 +3,7 @@ import { type FastifyInstance } from "fastify"
 
 import { getPersistedSessionUser } from "../../auth.js"
 import { ApiError } from "../../errors.js"
+import { requireOrganizationMembership } from "../../organization-context.js"
 import { type AccountRepository } from "./repository.js"
 import { type VocabularyRepository } from "../vocabulary/repository.js"
 
@@ -36,4 +37,19 @@ export async function registerAccountRoutes(
 
     return reply.status(201).send(organization)
   })
+
+  app.get<{ Params: { organizationId: string } }>(
+    "/organizations/:organizationId/members",
+    async (request) => {
+      await requireOrganizationMembership(
+        request,
+        accountRepository,
+        request.params.organizationId,
+      )
+
+      return accountRepository.listOrganizationMembers(
+        request.params.organizationId,
+      )
+    },
+  )
 }

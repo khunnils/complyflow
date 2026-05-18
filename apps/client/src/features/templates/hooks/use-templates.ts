@@ -11,11 +11,13 @@ import { useAuthState } from "@/features/auth/hooks/use-auth"
 import {
   createTemplateFromSystem,
   deleteTemplate,
+  getOrganizationMembers,
   getOrganizationTemplates,
   updateTemplate,
 } from "@/lib/api"
 import {
   documentsQueryKey,
+  organizationMembersQueryKey,
   templatesQueryKey,
 } from "@/lib/query-keys"
 
@@ -29,6 +31,18 @@ export const useTemplates = (enabled = true) => {
     queryKey: templatesQueryKey(selectedOrganizationId ?? ""),
     queryFn: () =>
       getOrganizationTemplates(selectedOrganizationId ?? ""),
+  })
+}
+
+export const useOrganizationMembers = (enabled = true) => {
+  const { data: auth } = useAuthState()
+  const user = auth?.user ?? null
+  const { selectedOrganizationId } = useSelectedOrganization()
+
+  return useQuery({
+    enabled: enabled && Boolean(user) && Boolean(selectedOrganizationId),
+    queryKey: organizationMembersQueryKey(selectedOrganizationId ?? ""),
+    queryFn: () => getOrganizationMembers(selectedOrganizationId ?? ""),
   })
 }
 

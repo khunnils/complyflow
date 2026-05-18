@@ -219,6 +219,12 @@ export const templateSchema = z.object({
   slug: templateSlugSchema,
   sourceSystemTemplateSlug: templateSlugSchema,
   content: z.string(),
+  policyEffectiveDate: z.string().default(""),
+  policyLastReviewedDate: z.string().default(""),
+  policyVersion: z.string().default(""),
+  policyOwnerUserId: z.string().default(""),
+  policyApproverUserId: z.string().default(""),
+  policyReviewCadence: z.string().default(""),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 })
@@ -227,6 +233,12 @@ export const templateInputSchema = z.object({
   name: z.string().trim().min(1, "Template name is required"),
   slug: templateSlugSchema,
   content: z.string(),
+  policyEffectiveDate: z.string().default(""),
+  policyLastReviewedDate: z.string().default(""),
+  policyVersion: z.string().default(""),
+  policyOwnerUserId: z.string().default(""),
+  policyApproverUserId: z.string().default(""),
+  policyReviewCadence: z.string().default(""),
 })
 
 export const createTemplateFromSystemSchema = z.object({
@@ -268,6 +280,13 @@ export const authUserSchema = z.object({
 })
 
 export const organizationMembershipRoleSchema = z.enum(["owner", "member"])
+
+export const organizationMemberSchema = z.object({
+  userId: z.string().min(1),
+  name: z.string().trim().min(1),
+  email: z.string().email(),
+  role: organizationMembershipRoleSchema,
+})
 
 export const organizationSummarySchema = z.object({
   id: z.string().min(1),
@@ -351,6 +370,7 @@ export type AuthUser = z.infer<typeof authUserSchema>
 export type OrganizationMembershipRole = z.infer<
   typeof organizationMembershipRoleSchema
 >
+export type OrganizationMember = z.infer<typeof organizationMemberSchema>
 export type OrganizationSummary = z.infer<typeof organizationSummarySchema>
 export type AuthState = z.infer<typeof authStateSchema>
 export type CreateOrganization = z.infer<typeof createOrganizationSchema>

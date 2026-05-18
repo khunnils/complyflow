@@ -60,6 +60,12 @@ export class InMemoryDocumentRepository implements DocumentRepository {
       slug: systemTemplate.slug,
       sourceSystemTemplateSlug: systemTemplate.slug,
       content: systemTemplate.content,
+      policyEffectiveDate: "",
+      policyLastReviewedDate: "",
+      policyVersion: "",
+      policyOwnerUserId: "",
+      policyApproverUserId: "",
+      policyReviewCadence: "",
       createdAt: timestamp,
       updatedAt: timestamp,
     }

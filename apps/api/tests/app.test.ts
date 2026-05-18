@@ -320,6 +320,8 @@ describe("security profile API", () => {
     expect(schema.variables).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ key: "organization.name" }),
+        expect.objectContaining({ key: "policy.version" }),
+        expect.objectContaining({ key: "policy.effectiveDate" }),
         expect.objectContaining({ key: "vendors.all" }),
         expect.objectContaining({ key: "vendors.dataProcessors" }),
         expect.objectContaining({ key: "vendors.subprocessors" }),
@@ -362,6 +364,12 @@ describe("security profile API", () => {
         id: "template-subprocessors",
         organizationId: "org-test",
         sourceSystemTemplateSlug: systemTemplate.slug,
+        policyEffectiveDate: "",
+        policyLastReviewedDate: "",
+        policyVersion: "",
+        policyOwnerUserId: "",
+        policyApproverUserId: "",
+        policyReviewCadence: "",
         createdAt: "2026-05-15T00:00:00.000Z",
         updatedAt: "2026-05-15T00:00:00.000Z",
         ...systemTemplate,
@@ -573,6 +581,12 @@ describe("security profile API", () => {
       slug: "security-policy",
       sourceSystemTemplateSlug: "security-policy",
       content: "# {{ company.name }} Security Policy\n",
+      policyEffectiveDate: "",
+      policyLastReviewedDate: "",
+      policyVersion: "",
+      policyOwnerUserId: "",
+      policyApproverUserId: "",
+      policyReviewCadence: "",
     })
 
     const updateResponse = await app.inject({
@@ -582,6 +596,12 @@ describe("security profile API", () => {
         name: "Customer Security Policy",
         slug: "customer-security-policy",
         content: "# Updated policy\n",
+        policyEffectiveDate: "2026-05-18",
+        policyLastReviewedDate: "2026-05-18",
+        policyVersion: "1.0",
+        policyOwnerUserId: "",
+        policyApproverUserId: "",
+        policyReviewCadence: "Annual",
       },
     })
 
@@ -591,6 +611,12 @@ describe("security profile API", () => {
       slug: "customer-security-policy",
       sourceSystemTemplateSlug: "security-policy",
       content: "# Updated policy\n",
+      policyEffectiveDate: "2026-05-18",
+      policyLastReviewedDate: "2026-05-18",
+      policyVersion: "1.0",
+      policyOwnerUserId: "",
+      policyApproverUserId: "",
+      policyReviewCadence: "Annual",
     })
 
     const listResponse = await app.inject({ method: "GET", url: "/organizations/org-test/templates" })
@@ -629,6 +655,23 @@ describe("security profile API", () => {
     })
     const template = createTemplateResponse.json()
 
+    await app.inject({
+      method: "PUT",
+      url: `/organizations/org-test/templates/${template.id}`,
+      payload: {
+        name: "Security Policy",
+        slug: "security-policy",
+        content:
+          "# {{ company.name }} Security Policy\n\nVersion {{ policy.version }} effective {{ policy.effectiveDate }}\n",
+        policyEffectiveDate: "2026-05-18",
+        policyLastReviewedDate: "2026-05-18",
+        policyVersion: "1.0",
+        policyOwnerUserId: "",
+        policyApproverUserId: "",
+        policyReviewCadence: "Annual",
+      },
+    })
+
     const emptyDocumentsResponse = await app.inject({
       method: "GET",
       url: "/organizations/org-test/documents",
@@ -652,7 +695,8 @@ describe("security profile API", () => {
     expect(generateResponse.json()).toMatchObject({
       templateId: template.id,
       title: "Security Policy",
-      renderedContent: "# Acme AI Security Policy\n",
+      renderedContent:
+        "# Acme AI Security Policy\n\nVersion 1.0 effective 2026-05-18\n",
       hasPdf: false,
     })
     expect(generateResponse.json().sourceHash).toHaveLength(64)
@@ -682,7 +726,7 @@ describe("security profile API", () => {
     })
     expect(documentResponse.statusCode).toBe(200)
     expect(documentResponse.json().renderedContent).toBe(
-      "# Acme AI Security Policy\n",
+      "# Acme AI Security Policy\n\nVersion 1.0 effective 2026-05-18\n",
     )
 
     await app.inject({
@@ -691,7 +735,14 @@ describe("security profile API", () => {
       payload: {
         name: "Security Policy",
         slug: "security-policy",
-        content: "# Updated {{ company.name }} Security Policy\n",
+        content:
+          "# {{ company.name }} Security Policy\n\nVersion {{ policy.version }} effective {{ policy.effectiveDate }}\n",
+        policyEffectiveDate: "2026-05-18",
+        policyLastReviewedDate: "2026-05-18",
+        policyVersion: "1.1",
+        policyOwnerUserId: "",
+        policyApproverUserId: "",
+        policyReviewCadence: "Annual",
       },
     })
 

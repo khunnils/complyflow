@@ -1,8 +1,10 @@
 import {
   authUserSchema,
+  organizationMemberSchema,
   organizationSummarySchema,
   type AuthUser,
   type CreateOrganization,
+  type OrganizationMember,
   type OrganizationMembershipRole,
   type OrganizationSummary,
 } from "@plyco/shared"
@@ -44,6 +46,21 @@ export class InMemoryAccountRepository implements AccountRepository {
     return Array.from(this.organizations.values()).filter((organization) =>
       this.memberships.has(this.membershipKey(userId, organization.id)),
     )
+  }
+
+  async listOrganizationMembers(
+    organizationId: string,
+  ): Promise<OrganizationMember[]> {
+    return Array.from(this.users.values())
+      .filter((user) => this.memberships.has(this.membershipKey(user.id, organizationId)))
+      .map((user) =>
+        organizationMemberSchema.parse({
+          userId: user.id,
+          name: user.name,
+          email: user.email,
+          role: this.memberships.get(this.membershipKey(user.id, organizationId)),
+        }),
+      )
   }
 
   async createOrganization(

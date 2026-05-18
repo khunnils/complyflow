@@ -208,6 +208,12 @@ export function mapTemplateRecord(record: {
   slug: string
   sourceSystemTemplateSlug: string
   content: string
+  policyEffectiveDate: string
+  policyLastReviewedDate: string
+  policyVersion: string
+  policyOwnerUserId: string | null
+  policyApproverUserId: string | null
+  policyReviewCadence: string
   createdAt: Date
   updatedAt: Date
 }): Template {
@@ -218,6 +224,12 @@ export function mapTemplateRecord(record: {
     slug: record.slug,
     sourceSystemTemplateSlug: record.sourceSystemTemplateSlug,
     content: record.content,
+    policyEffectiveDate: record.policyEffectiveDate,
+    policyLastReviewedDate: record.policyLastReviewedDate,
+    policyVersion: record.policyVersion,
+    policyOwnerUserId: record.policyOwnerUserId ?? "",
+    policyApproverUserId: record.policyApproverUserId ?? "",
+    policyReviewCadence: record.policyReviewCadence,
     createdAt: toIsoString(record.createdAt),
     updatedAt: toIsoString(record.updatedAt),
   })

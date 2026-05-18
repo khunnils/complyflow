@@ -236,7 +236,7 @@ The Templates screen shows:
 - System templates at the top, with slug, name, description, and an Add action.
 - Organization templates below, created by copying a system template.
 
-Organization templates can be edited or deleted after they are added. Editing covers name, slug, and markdown content.
+Organization templates can be edited or deleted after they are added. Editing covers name, slug, per-template policy metadata, and markdown content.
 
 # 9. Generated Documents
 
@@ -253,7 +253,7 @@ Report Context Builder
 → Generated Document
 ```
 
-Generated documents retain a source hash so the app can show when a document is outdated after template or profile changes. Each generated document also has a private PDF export that can be downloaded through the authenticated app.
+Generated documents retain a source hash so the app can show when a document is outdated after template, policy metadata, or profile changes. Each generated document also has a private PDF export that can be downloaded through the authenticated app.
 
 ## UX
 
