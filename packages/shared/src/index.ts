@@ -146,6 +146,14 @@ export const privacyProfileSchema = z.object({
   sendsMarketingEmails: z.boolean(),
   marketingOptOutMethod: codeIdSchema.or(z.literal("")).default(""),
   transactionalEmailsSent: z.boolean(),
+  dataTransferMechanisms: z.array(z.string().trim()).default([]),
+  sellsOrSharesData: z.boolean().default(false),
+  doNotSellLink: z.string().trim().default(""),
+  dpoName: z.string().trim().default(""),
+  dpoEmail: z.string().trim().default(""),
+  euRepresentativeName: z.string().trim().default(""),
+  euRepresentativeAddress: z.string().trim().default(""),
+  usesAutomatedDecisionMaking: z.boolean().default(false),
 })
 
 export const infrastructureProfileSchema = z.object({
@@ -465,6 +473,14 @@ export const emptyPrivacyProfile: PrivacyProfile = {
   sendsMarketingEmails: false,
   marketingOptOutMethod: "",
   transactionalEmailsSent: false,
+  dataTransferMechanisms: [],
+  sellsOrSharesData: false,
+  doNotSellLink: "",
+  dpoName: "",
+  dpoEmail: "",
+  euRepresentativeName: "",
+  euRepresentativeAddress: "",
+  usesAutomatedDecisionMaking: false,
 }
 
 export const emptyInfrastructureProfile: InfrastructureProfile = {

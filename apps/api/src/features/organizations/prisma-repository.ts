@@ -175,6 +175,14 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
       sendsMarketingEmails: input.sendsMarketingEmails,
       marketingOptOutMethod: input.marketingOptOutMethod,
       transactionalEmailsSent: input.transactionalEmailsSent,
+      dataTransferMechanisms: input.dataTransferMechanisms,
+      sellsOrSharesData: input.sellsOrSharesData,
+      doNotSellLink: input.doNotSellLink,
+      dpoName: input.dpoName,
+      dpoEmail: input.dpoEmail,
+      euRepresentativeName: input.euRepresentativeName,
+      euRepresentativeAddress: input.euRepresentativeAddress,
+      usesAutomatedDecisionMaking: input.usesAutomatedDecisionMaking,
     }
   }
 

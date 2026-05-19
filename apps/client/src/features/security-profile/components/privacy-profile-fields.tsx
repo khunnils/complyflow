@@ -5,8 +5,10 @@ import {
 } from "@plyco/shared"
 import { type UseFormReturn } from "react-hook-form"
 
+import { ListField } from "@/components/form/list-field"
 import { MultiSelectField } from "@/components/form/multi-select-field"
 import { SelectField } from "@/components/form/select-field"
+import { TextField } from "@/components/form/text-field"
 import { ToggleField } from "@/components/form/toggle-field"
 import { type ProfileDraft } from "@/features/security-profile/types/security-profile"
 import { type Option } from "@/features/vocabulary/lib/vocabulary"
@@ -239,6 +241,66 @@ export const PrivacyProfileFields = ({
           multiple={false}
           providers={providers}
           systemType="newsletter"
+        />
+      </div>
+    </section>
+    <section className="grid gap-4">
+      <h3 className="text-sm font-semibold text-slate-900">
+        Compliance & Disclosures
+      </h3>
+      <div className="grid gap-4 md:grid-cols-2">
+        <ListField
+          control={form.control}
+          label="Data transfer mechanisms"
+          name="privacy.dataTransferMechanisms"
+          placeholder="e.g. SCCs, DPF"
+        />
+        <ToggleField
+          control={form.control}
+          label="Sells or shares data (CCPA)"
+          name="privacy.sellsOrSharesData"
+        />
+        <TextField
+          error={form.formState.errors.privacy?.doNotSellLink}
+          label="Do Not Sell link"
+          name="privacy.doNotSellLink"
+          register={form.register}
+        />
+        <ToggleField
+          control={form.control}
+          label="Uses automated decision making"
+          name="privacy.usesAutomatedDecisionMaking"
+        />
+      </div>
+    </section>
+    <section className="grid gap-4">
+      <h3 className="text-sm font-semibold text-slate-900">
+        Privacy Officers & Representation
+      </h3>
+      <div className="grid gap-4 md:grid-cols-2">
+        <TextField
+          error={form.formState.errors.privacy?.dpoName}
+          label="DPO name"
+          name="privacy.dpoName"
+          register={form.register}
+        />
+        <TextField
+          error={form.formState.errors.privacy?.dpoEmail}
+          label="DPO email"
+          name="privacy.dpoEmail"
+          register={form.register}
+        />
+        <TextField
+          error={form.formState.errors.privacy?.euRepresentativeName}
+          label="EU representative name"
+          name="privacy.euRepresentativeName"
+          register={form.register}
+        />
+        <TextField
+          error={form.formState.errors.privacy?.euRepresentativeAddress}
+          label="EU representative address"
+          name="privacy.euRepresentativeAddress"
+          register={form.register}
         />
       </div>
     </section>

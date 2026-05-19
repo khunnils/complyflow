@@ -63,6 +63,14 @@ export function mapOrganizationRecord(record: {
     sendsMarketingEmails: boolean
     marketingOptOutMethod: string
     transactionalEmailsSent: boolean
+    dataTransferMechanisms: string[]
+    sellsOrSharesData: boolean
+    doNotSellLink: string
+    dpoName: string
+    dpoEmail: string
+    euRepresentativeName: string
+    euRepresentativeAddress: string
+    usesAutomatedDecisionMaking: boolean
   } | null
   infrastructureProfile: {
     mfaEnabled: boolean
@@ -191,6 +199,15 @@ export function mapOrganizationRecord(record: {
     marketingOptOutMethod: record.privacyProfile?.marketingOptOutMethod ?? "",
     transactionalEmailsSent:
       record.privacyProfile?.transactionalEmailsSent ?? false,
+    dataTransferMechanisms:
+      record.privacyProfile?.dataTransferMechanisms ?? [],
+    sellsOrSharesData: record.privacyProfile?.sellsOrSharesData ?? false,
+    doNotSellLink: record.privacyProfile?.doNotSellLink ?? "",
+    dpoName: record.privacyProfile?.dpoName ?? "",
+    dpoEmail: record.privacyProfile?.dpoEmail ?? "",
+    euRepresentativeName: record.privacyProfile?.euRepresentativeName ?? "",
+    euRepresentativeAddress: record.privacyProfile?.euRepresentativeAddress ?? "",
+    usesAutomatedDecisionMaking: record.privacyProfile?.usesAutomatedDecisionMaking ?? false,
   })
   const dataHandling = dataHandlingProfileSchema.parse({
     dataTypesStored: record.dataTypes.map((dataType) => ({

@@ -83,6 +83,14 @@ const profileBody = {
     sendsMarketingEmails: true,
     marketingOptOutMethod: "unsubscribe_link",
     transactionalEmailsSent: true,
+    dataTransferMechanisms: [],
+    sellsOrSharesData: false,
+    doNotSellLink: "",
+    dpoName: "",
+    dpoEmail: "",
+    euRepresentativeName: "",
+    euRepresentativeAddress: "",
+    usesAutomatedDecisionMaking: false,
   },
   infrastructure: {
     organizationProviders: [

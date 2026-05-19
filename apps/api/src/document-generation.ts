@@ -177,6 +177,14 @@ export class ReportContextBuilder {
       transactionalEmailsSent: privacy.transactionalEmailsSent,
       newsletterProvider: this.providerNames(privacy, "newsletter")[0] ?? "",
       newsletterProviderId: this.providerIds(privacy, "newsletter")[0] ?? "",
+      dataTransferMechanisms: privacy.dataTransferMechanisms,
+      sellsOrSharesData: privacy.sellsOrSharesData,
+      doNotSellLink: privacy.doNotSellLink,
+      dpoName: privacy.dpoName,
+      dpoEmail: privacy.dpoEmail,
+      euRepresentativeName: privacy.euRepresentativeName,
+      euRepresentativeAddress: privacy.euRepresentativeAddress,
+      usesAutomatedDecisionMaking: privacy.usesAutomatedDecisionMaking,
     }
   }
 

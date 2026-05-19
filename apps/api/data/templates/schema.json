@@ -465,6 +465,73 @@
       "example": true
     },
     {
+      "key": "privacy.dataTransferMechanisms",
+      "label": "Data transfer mechanisms",
+      "type": "string[]",
+      "category": "Privacy",
+      "description": "Legal mechanisms used for cross-border data transfers.",
+      "example": [
+        "Standard Contractual Clauses (SCCs)",
+        "EU-US Data Privacy Framework (DPF)"
+      ]
+    },
+    {
+      "key": "privacy.sellsOrSharesData",
+      "label": "Sells or shares data",
+      "type": "boolean",
+      "category": "Privacy",
+      "description": "Whether the organization sells or shares personal data for cross-context behavioral advertising (as defined by CCPA).",
+      "example": false
+    },
+    {
+      "key": "privacy.doNotSellLink",
+      "label": "Do Not Sell link",
+      "type": "string",
+      "category": "Privacy",
+      "description": "URL for the Do Not Sell or Share My Personal Information request page.",
+      "example": "https://acme.example/privacy/opt-out"
+    },
+    {
+      "key": "privacy.dpoName",
+      "label": "DPO name",
+      "type": "string",
+      "category": "Privacy",
+      "description": "Name of the designated Data Protection Officer.",
+      "example": "Jane Privacy"
+    },
+    {
+      "key": "privacy.dpoEmail",
+      "label": "DPO email",
+      "type": "string",
+      "category": "Privacy",
+      "description": "Email address for the Data Protection Officer.",
+      "example": "dpo@acme.example"
+    },
+    {
+      "key": "privacy.euRepresentativeName",
+      "label": "EU representative name",
+      "type": "string",
+      "category": "Privacy",
+      "description": "Name of the designated EU Data Protection Representative.",
+      "example": "EU Privacy Services Ltd."
+    },
+    {
+      "key": "privacy.euRepresentativeAddress",
+      "label": "EU representative address",
+      "type": "string",
+      "category": "Privacy",
+      "description": "Business address for the EU representative.",
+      "example": "123 Dublin St, Dublin, Ireland"
+    },
+    {
+      "key": "privacy.usesAutomatedDecisionMaking",
+      "label": "Uses automated decision making",
+      "type": "boolean",
+      "category": "Privacy",
+      "description": "Whether the organization uses automated decision-making or profiling with legal or significant effects.",
+      "example": false
+    },
+    {
       "key": "privacy.newsletterProvider",
       "label": "Newsletter provider",
       "type": "string",

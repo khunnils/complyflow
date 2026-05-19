@@ -449,6 +449,30 @@ const CompanyReadOnlySection = ({
         ),
       ],
     ]
+    const complianceRows: Array<[string, string | number]> = [
+      [
+        "Data transfer mechanisms",
+        profile.privacy.dataTransferMechanisms?.join(", ") || "None set",
+      ],
+      [
+        "Sells or shares data (CCPA)",
+        boolText(profile.privacy.sellsOrSharesData),
+      ],
+      ["Do Not Sell link", profile.privacy.doNotSellLink || "Not set"],
+      [
+        "Automated decision making",
+        boolText(profile.privacy.usesAutomatedDecisionMaking),
+      ],
+    ]
+    const officerRows: Array<[string, string | number]> = [
+      ["DPO name", profile.privacy.dpoName || "Not set"],
+      ["DPO email", profile.privacy.dpoEmail || "Not set"],
+      ["EU representative", profile.privacy.euRepresentativeName || "Not set"],
+      [
+        "EU representative address",
+        profile.privacy.euRepresentativeAddress || "Not set",
+      ],
+    ]
 
     return (
       <div className="grid gap-5">
@@ -469,6 +493,18 @@ const CompanyReadOnlySection = ({
             Marketing & Communications
           </h3>
           <DetailGrid rows={marketingRows} />
+        </section>
+        <section className="grid gap-3">
+          <h3 className="text-sm font-semibold text-slate-900">
+            Compliance & Disclosures
+          </h3>
+          <DetailGrid rows={complianceRows} />
+        </section>
+        <section className="grid gap-3">
+          <h3 className="text-sm font-semibold text-slate-900">
+            Privacy Officers & Representation
+          </h3>
+          <DetailGrid rows={officerRows} />
         </section>
         <Button
           className="w-fit"

@@ -45,12 +45,15 @@ export const profileFromOrganization = (
   }
 
   return {
-    company: organization.company,
-    service: organization.service,
-    privacy: organization.privacy,
-    infrastructure: organization.infrastructure,
-    dataHandling: organization.dataHandling,
-    access: organization.access,
+    company: { ...emptyCompanyProfile, ...organization.company },
+    service: { ...emptyServiceProfile, ...organization.service },
+    privacy: { ...emptyPrivacyProfile, ...organization.privacy },
+    infrastructure: {
+      ...emptyInfrastructureProfile,
+      ...organization.infrastructure,
+    },
+    dataHandling: { ...emptyDataHandlingProfile, ...organization.dataHandling },
+    access: { ...emptyAccessProfile, ...organization.access },
   }
 }
 
