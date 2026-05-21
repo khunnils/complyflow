@@ -25,9 +25,22 @@ export const VendorList = ({
     )
   }
 
+  const vendorsByService = Array.from(
+    vendors.reduce((groups, vendor) => {
+      const serviceName = vendor.serviceName || "Unassigned service"
+      groups.set(serviceName, [...(groups.get(serviceName) ?? []), vendor])
+      return groups
+    }, new Map<string, Vendor[]>())
+  )
+
   return (
-    <div className="grid gap-3">
-      {vendors.map((vendor) => (
+    <div className="grid gap-4">
+      {vendorsByService.map(([serviceName, serviceVendors]) => (
+        <section className="grid gap-3" key={serviceName}>
+          <h3 className="text-sm font-semibold text-slate-900">
+            {serviceName}
+          </h3>
+          {serviceVendors.map((vendor) => (
         <article
           className="rounded-lg border border-slate-200 bg-white p-4"
           key={vendor.id}
@@ -92,6 +105,8 @@ export const VendorList = ({
             </div>
           </div>
         </article>
+          ))}
+        </section>
       ))}
     </div>
   )

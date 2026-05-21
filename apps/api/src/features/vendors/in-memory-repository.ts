@@ -26,6 +26,7 @@ export class InMemoryVendorRepository implements VendorRepository {
   }
 
   async createVendor(organizationId: string, input: VendorInput): Promise<Vendor> {
+    await this.validateServiceId(organizationId, input.serviceId)
     const timestamp = now()
     const dataProcessed = await this.validVendorDataTypeNames(
       organizationId,
@@ -35,6 +36,7 @@ export class InMemoryVendorRepository implements VendorRepository {
       id: newId("vendor"),
       organizationId,
       ...input,
+      serviceName: await this.serviceName(organizationId, input.serviceId),
       dataProcessed,
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -55,6 +57,7 @@ export class InMemoryVendorRepository implements VendorRepository {
       return null
     }
 
+    await this.validateServiceId(organizationId, input.serviceId)
     const dataProcessed = await this.validVendorDataTypeNames(
       organizationId,
       input,
@@ -63,6 +66,7 @@ export class InMemoryVendorRepository implements VendorRepository {
       id,
       organizationId,
       ...input,
+      serviceName: await this.serviceName(organizationId, input.serviceId),
       dataProcessed,
       createdAt: currentVendor.createdAt,
       updatedAt: now(),
@@ -113,5 +117,28 @@ export class InMemoryVendorRepository implements VendorRepository {
     }
 
     return requestedNames
+  }
+
+  private async validateServiceId(organizationId: string, serviceId: string) {
+    const serviceIds = new Set(
+      await this.organizationRepository.listServiceIds(organizationId),
+    )
+
+    if (!serviceIds.has(serviceId)) {
+      throw new ApiError(
+        "VENDOR_SERVICE_NOT_FOUND",
+        "Vendor service must reference a service on the organization.",
+        400,
+        { serviceId },
+      )
+    }
+  }
+
+  private async serviceName(organizationId: string, serviceId: string) {
+    const organization = await this.organizationRepository.getOrganization(organizationId)
+    return (
+      organization?.services.find((service) => service.id === serviceId)
+        ?.serviceName ?? ""
+    )
   }
 }

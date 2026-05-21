@@ -18,6 +18,25 @@ import { InMemoryVocabularyRepository } from "../src/features/vocabulary/in-memo
 import { AirtableProviderSource } from "../src/providers.js"
 import { parseSystemTemplate } from "../src/system-templates.js"
 
+const serviceBody = {
+  serviceName: "Acme AI Platform",
+  serviceDescription: "Cloud software for managing customer security reviews",
+  serviceUrl: "https://app.acme.example",
+  audiences: ["businesses", "developers"],
+  userTypes: ["workspace_admins", "end_users"],
+  customerTypes: ["smb", "mid_market"],
+  availabilityRegions: ["us", "eu"],
+  childrenDirected: false,
+  minimumUserAge: 13,
+}
+
+const storedService = {
+  id: "service-platform",
+  ...serviceBody,
+  createdAt: "2026-05-15T00:00:00.000Z",
+  updatedAt: "2026-05-15T00:00:00.000Z",
+}
+
 const profileBody = {
   company: {
     companyName: "Acme AI",
@@ -35,17 +54,7 @@ const profileBody = {
     handlesSensitiveData: true,
     complianceGoals: ["soc_2", "gdpr"],
   },
-  service: {
-    serviceName: "Acme AI Platform",
-    serviceDescription: "Cloud software for managing customer security reviews",
-    serviceUrl: "https://app.acme.example",
-    audiences: ["businesses", "developers"],
-    userTypes: ["workspace_admins", "end_users"],
-    customerTypes: ["smb", "mid_market"],
-    availabilityRegions: ["us", "eu"],
-    childrenDirected: false,
-    minimumUserAge: 13,
-  },
+  services: [serviceBody],
   privacy: {
     supportedRights: ["access", "deletion", "correction", "opt_out"],
     requestMethods: ["email", "web_form"],
@@ -151,6 +160,7 @@ const profileBody = {
 }
 
 const vendorBody = {
+  serviceId: "service-platform",
   name: "GitHub",
   category: "source_control",
   purpose: "Code hosting and pull requests",
@@ -291,7 +301,7 @@ describe("security profile API", () => {
     ).toThrow("SESSION_KEY must be at least 32 characters")
   })
 
-  it("creates and returns the single organization security profile", async () => {
+  it("creates and returns organization security profile services", async () => {
     const app = await createTestApp()
     const saveResponse = await app.inject({
       method: "PUT",
@@ -307,7 +317,9 @@ describe("security profile API", () => {
     expect(
       saveResponse.json().organization.dataHandling.dataTypesStored,
     ).toEqual(profileBody.dataHandling.dataTypesStored)
-    expect(saveResponse.json().organization.service).toEqual(profileBody.service)
+    expect(saveResponse.json().organization.services).toEqual([
+      expect.objectContaining(profileBody.services[0]),
+    ])
     expect(saveResponse.json().organization.privacy).toEqual(profileBody.privacy)
 
     const getResponse = await app.inject({
@@ -320,7 +332,9 @@ describe("security profile API", () => {
     expect(
       getResponse.json().organization.dataHandling.dataTypesStored,
     ).toEqual(profileBody.dataHandling.dataTypesStored)
-    expect(getResponse.json().organization.service).toEqual(profileBody.service)
+    expect(getResponse.json().organization.services).toEqual([
+      expect.objectContaining(profileBody.services[0]),
+    ])
     expect(getResponse.json().organization.privacy).toEqual(profileBody.privacy)
   })
 
@@ -331,10 +345,12 @@ describe("security profile API", () => {
       url: "/organizations/org-test/security-profile",
       payload: {
         ...profileBody,
-        service: {
-          ...profileBody.service,
-          audiences: ["not_a_real_audience"],
-        },
+        services: [
+          {
+            ...profileBody.services[0],
+            audiences: ["not_a_real_audience"],
+          },
+        ],
       },
     })
 
@@ -344,11 +360,66 @@ describe("security profile API", () => {
         code: "CODE_NOT_FOUND",
         details: {
           codeSetId: "service_audiences",
-          field: "service.audiences",
+          field: "services.0.audiences",
           value: "not_a_real_audience",
         },
       },
     })
+  })
+
+  it("supports multiple services and service-scoped vendor inventory", async () => {
+    const app = await createTestApp()
+    const saveResponse = await app.inject({
+      method: "PUT",
+      url: "/organizations/org-test/security-profile",
+      payload: {
+        ...profileBody,
+        services: [
+          profileBody.services[0],
+          {
+            ...profileBody.services[0],
+            serviceName: "Acme EU",
+            serviceUrl: "https://eu.acme.example",
+            availabilityRegions: ["eu"],
+          },
+        ],
+      },
+    })
+
+    expect(saveResponse.statusCode).toBe(200)
+    const services = saveResponse.json().organization.services
+    expect(services).toHaveLength(2)
+
+    const vendorResponse = await app.inject({
+      method: "POST",
+      url: "/organizations/org-test/vendors",
+      payload: {
+        ...vendorBody,
+        serviceId: services[1].id,
+        name: "Stripe EU",
+      },
+    })
+
+    expect(vendorResponse.statusCode).toBe(201)
+    expect(vendorResponse.json()).toMatchObject({
+      serviceId: services[1].id,
+      serviceName: "Acme EU",
+      name: "Stripe EU",
+    })
+
+    const invalidVendorResponse = await app.inject({
+      method: "POST",
+      url: "/organizations/org-test/vendors",
+      payload: {
+        ...vendorBody,
+        serviceId: "service_missing",
+      },
+    })
+
+    expect(invalidVendorResponse.statusCode).toBe(400)
+    expect(invalidVendorResponse.json().error.code).toBe(
+      "VENDOR_SERVICE_NOT_FOUND",
+    )
   })
 
   it("rejects privacy profile codes that are not in organization vocabulary", async () => {
@@ -492,6 +563,7 @@ describe("security profile API", () => {
       organization: {
         id: "org-test",
         ...profileBody,
+        services: [storedService],
         createdAt: "2026-05-15T00:00:00.000Z",
         updatedAt: "2026-05-15T00:00:00.000Z",
       },
@@ -533,6 +605,16 @@ describe("security profile API", () => {
     expect(context.vendors.subprocessors.map((vendor) => vendor.name)).toEqual([
       "Stripe",
     ])
+    expect(context.vendors.byService).toEqual([
+      expect.objectContaining({
+        serviceId: "service-platform",
+        serviceName: "Acme AI Platform",
+        vendors: expect.arrayContaining([
+          expect.objectContaining({ name: "GitHub" }),
+          expect.objectContaining({ name: "Stripe" }),
+        ]),
+      }),
+    ])
   })
 
   it("loads the report builder variable schema", async () => {
@@ -560,6 +642,8 @@ describe("security profile API", () => {
         expect.objectContaining({ key: "service.availabilityRegionLabels" }),
         expect.objectContaining({ key: "service.childrenDirected" }),
         expect.objectContaining({ key: "service.minimumUserAge" }),
+        expect.objectContaining({ key: "services.all" }),
+        expect.objectContaining({ key: "services.primary" }),
         expect.objectContaining({ key: "privacy.supportedRights" }),
         expect.objectContaining({ key: "privacy.supportedRightLabels" }),
         expect.objectContaining({ key: "privacy.requestMethods" }),
@@ -594,6 +678,7 @@ describe("security profile API", () => {
         expect.objectContaining({ key: "vendors.all" }),
         expect.objectContaining({ key: "vendors.dataProcessors" }),
         expect.objectContaining({ key: "vendors.subprocessors" }),
+        expect.objectContaining({ key: "vendors.byService" }),
       ]),
     )
   })
@@ -605,6 +690,7 @@ describe("security profile API", () => {
       organization: {
         id: "org-test",
         ...profileBody,
+        services: [storedService],
         createdAt: "2026-05-15T00:00:00.000Z",
         updatedAt: "2026-05-15T00:00:00.000Z",
       },
@@ -619,6 +705,7 @@ describe("security profile API", () => {
     )
 
     expect(context.service).toMatchObject({
+      id: "service-platform",
       name: "Acme AI Platform",
       description: "Cloud software for managing customer security reviews",
       url: "https://app.acme.example",
@@ -633,6 +720,8 @@ describe("security profile API", () => {
       childrenDirected: false,
       minimumUserAge: 13,
     })
+    expect(context.services.primary).toMatchObject(context.service)
+    expect(context.services.all).toHaveLength(1)
     expect(context.privacy).toMatchObject({
       supportedRights: ["access", "deletion", "correction", "opt_out"],
       supportedRightLabels: ["Access", "Deletion", "Correction", "Opt-out"],
@@ -674,6 +763,7 @@ describe("security profile API", () => {
       organization: {
         id: "org-test",
         ...profileBody,
+        services: [storedService],
         createdAt: "2026-05-15T00:00:00.000Z",
         updatedAt: "2026-05-15T00:00:00.000Z",
       },
@@ -733,16 +823,17 @@ describe("security profile API", () => {
 
   it("supports vendor CRUD", async () => {
     const app = await createTestApp()
-    await app.inject({
+    const profileResponse = await app.inject({
       method: "PUT",
       url: "/organizations/org-test/security-profile",
       payload: profileBody,
     })
+    const serviceId = profileResponse.json().organization.services[0].id
 
     const createResponse = await app.inject({
       method: "POST",
       url: "/organizations/org-test/vendors",
-      payload: vendorBody,
+      payload: { ...vendorBody, serviceId },
     })
 
     expect(createResponse.statusCode).toBe(201)
@@ -755,6 +846,7 @@ describe("security profile API", () => {
       url: `/organizations/org-test/vendors/${createdVendor.id}`,
       payload: {
         ...vendorBody,
+        serviceId,
         dpaStatus: "under_review",
         notes: "DPA being reviewed",
       },
@@ -1171,17 +1263,19 @@ describe("security profile API", () => {
 
   it("rejects vendor data processed outside organization data types", async () => {
     const app = await createTestApp()
-    await app.inject({
+    const profileResponse = await app.inject({
       method: "PUT",
       url: "/organizations/org-test/security-profile",
       payload: profileBody,
     })
+    const serviceId = profileResponse.json().organization.services[0].id
 
     const response = await app.inject({
       method: "POST",
       url: "/organizations/org-test/vendors",
       payload: {
         ...vendorBody,
+        serviceId,
         dataProcessed: ["source_code"],
       },
     })

@@ -15,7 +15,7 @@ import { type ProfileDraft } from "@/features/security-profile/types/security-pr
 
 export const emptyProfileDraft: ProfileDraft = {
   company: emptyCompanyProfile,
-  service: emptyServiceProfile,
+  services: [emptyServiceProfile],
   privacy: emptyPrivacyProfile,
   infrastructure: emptyInfrastructureProfile,
   dataHandling: emptyDataHandlingProfile,
@@ -25,6 +25,7 @@ export const emptyProfileDraft: ProfileDraft = {
 export const emptyVendorDraft: VendorInput = {
   name: "",
   category: "",
+  serviceId: "",
   purpose: "",
   countryOfRegistration: "",
   hasSubprocessors: false,
@@ -46,7 +47,21 @@ export const profileFromOrganization = (
 
   return {
     company: { ...emptyCompanyProfile, ...organization.company },
-    service: { ...emptyServiceProfile, ...organization.service },
+    services:
+      organization.services.length > 0
+        ? organization.services.map((service) => ({
+            id: service.id,
+            serviceName: service.serviceName,
+            serviceDescription: service.serviceDescription,
+            serviceUrl: service.serviceUrl,
+            audiences: service.audiences,
+            userTypes: service.userTypes,
+            customerTypes: service.customerTypes,
+            availabilityRegions: service.availabilityRegions,
+            childrenDirected: service.childrenDirected,
+            minimumUserAge: service.minimumUserAge,
+          }))
+        : [emptyServiceProfile],
     privacy: { ...emptyPrivacyProfile, ...organization.privacy },
     infrastructure: {
       ...emptyInfrastructureProfile,
@@ -58,6 +73,7 @@ export const profileFromOrganization = (
 }
 
 export const toVendorInput = (vendor: Vendor | VendorInput): VendorInput => ({
+  serviceId: vendor.serviceId,
   name: vendor.name,
   category: vendor.category,
   purpose: vendor.purpose,
@@ -132,7 +148,11 @@ const providerCategory = (provider: Provider): VendorInput["category"] => {
   return ""
 }
 
-export const vendorInputFromProvider = (provider: Provider): VendorInput => ({
+export const vendorInputFromProvider = (
+  provider: Provider,
+  serviceId: string,
+): VendorInput => ({
+  serviceId,
   name: provider.name,
   category: providerCategory(provider),
   purpose: provider.url

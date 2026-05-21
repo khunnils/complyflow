@@ -10,6 +10,7 @@ import {
   emptyServiceProfile,
   privacyProfileSchema,
   providerSystemTypeSchema,
+  serviceProfileInputSchema,
   serviceProfileSchema,
   templateInputSchema,
   templateSchema,
@@ -43,6 +44,7 @@ describe("shared security profile schemas", () => {
   it("requires operational vendor fields", () => {
     const result = vendorInputSchema.safeParse({
       name: "GitHub",
+      serviceId: "service_1",
       category: "source_control",
       purpose: "Code hosting",
       countryOfRegistration: "US",
@@ -148,7 +150,7 @@ describe("shared security profile schemas", () => {
   })
 
   it("accepts the empty service profile defaults", () => {
-    const result = serviceProfileSchema.safeParse(emptyServiceProfile)
+    const result = serviceProfileInputSchema.safeParse(emptyServiceProfile)
 
     expect(result.success).toBe(true)
     if (result.success) {
@@ -167,7 +169,7 @@ describe("shared security profile schemas", () => {
   })
 
   it("accepts a populated service profile with code-array fields", () => {
-    const result = serviceProfileSchema.safeParse({
+    const result = serviceProfileInputSchema.safeParse({
       serviceName: "Acme AI Platform",
       serviceDescription: "Customer security review automation",
       serviceUrl: "https://app.acme.example",
@@ -183,7 +185,7 @@ describe("shared security profile schemas", () => {
   })
 
   it("rejects service profile code array values that violate the code id format", () => {
-    const result = serviceProfileSchema.safeParse({
+    const result = serviceProfileInputSchema.safeParse({
       ...emptyServiceProfile,
       audiences: ["Invalid Audience"],
     })
@@ -192,12 +194,23 @@ describe("shared security profile schemas", () => {
   })
 
   it("rejects negative minimum user age values", () => {
-    const result = serviceProfileSchema.safeParse({
+    const result = serviceProfileInputSchema.safeParse({
       ...emptyServiceProfile,
       minimumUserAge: -1,
     })
 
     expect(result.success).toBe(false)
+  })
+
+  it("accepts persisted service profile identity fields", () => {
+    const result = serviceProfileSchema.safeParse({
+      ...emptyServiceProfile,
+      id: "service_1",
+      createdAt: "2026-05-14T00:00:00.000Z",
+      updatedAt: "2026-05-14T00:00:00.000Z",
+    })
+
+    expect(result.success).toBe(true)
   })
 
   it("accepts the empty privacy profile defaults", () => {
@@ -221,6 +234,14 @@ describe("shared security profile schemas", () => {
         sendsMarketingEmails: false,
         marketingOptOutMethod: "",
         transactionalEmailsSent: false,
+        dataTransferMechanisms: [],
+        sellsOrSharesData: false,
+        doNotSellLink: "",
+        dpoName: "",
+        dpoEmail: "",
+        euRepresentativeName: "",
+        euRepresentativeAddress: "",
+        usesAutomatedDecisionMaking: false,
       })
     }
   })

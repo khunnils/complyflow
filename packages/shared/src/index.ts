@@ -118,7 +118,8 @@ export const companyProfileSchema = z.object({
   complianceGoals: z.array(codeIdSchema).default([]),
 })
 
-export const serviceProfileSchema = z.object({
+export const serviceProfileInputSchema = z.object({
+  id: z.string().min(1).optional(),
   serviceName: z.string().trim().default(""),
   serviceDescription: z.string().trim().default(""),
   serviceUrl: z.string().trim().default(""),
@@ -128,6 +129,12 @@ export const serviceProfileSchema = z.object({
   availabilityRegions: z.array(codeIdSchema).default([]),
   childrenDirected: z.boolean(),
   minimumUserAge: z.number().int().min(0).max(120).default(0),
+})
+
+export const serviceProfileSchema = serviceProfileInputSchema.extend({
+  id: z.string().min(1),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
 })
 
 export const privacyProfileSchema = z.object({
@@ -184,6 +191,7 @@ export const accessProfileSchema = z.object({
 })
 
 const vendorInputBaseSchema = z.object({
+  serviceId: z.string().trim().min(1, "Service is required"),
   name: z.string().trim().min(1, "Vendor name is required"),
   category: codeIdSchema.or(z.literal("")).default(""),
   purpose: z.string().trim().min(1, "Purpose is required"),
@@ -219,6 +227,7 @@ export const vendorInputSchema = vendorInputBaseSchema.transform(
 
 const vendorStoredBaseSchema = vendorInputBaseSchema.extend({
   id: z.string().min(1),
+  serviceName: z.string().trim().default(""),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 })
@@ -355,7 +364,7 @@ export const templateCatalogSchema = z.object({
 export const organizationSecurityProfileSchema = z.object({
   id: z.string().min(1),
   company: companyProfileSchema,
-  service: serviceProfileSchema,
+  services: z.array(serviceProfileSchema).default([]),
   privacy: privacyProfileSchema,
   infrastructure: infrastructureProfileSchema,
   dataHandling: dataHandlingProfileSchema,
@@ -393,6 +402,7 @@ export type VocabularyCodeInput = z.infer<typeof vocabularyCodeInputSchema>
 export type OrganizationProvider = z.infer<typeof organizationProviderSchema>
 export type StoredDataType = z.infer<typeof storedDataTypeSchema>
 export type CompanyProfile = z.infer<typeof companyProfileSchema>
+export type ServiceProfileInput = z.infer<typeof serviceProfileInputSchema>
 export type ServiceProfile = z.infer<typeof serviceProfileSchema>
 export type PrivacyProfile = z.infer<typeof privacyProfileSchema>
 export type InfrastructureProfile = z.infer<typeof infrastructureProfileSchema>
@@ -445,7 +455,7 @@ export const emptyCompanyProfile: CompanyProfile = {
   complianceGoals: [],
 }
 
-export const emptyServiceProfile: ServiceProfile = {
+export const emptyServiceProfile: ServiceProfileInput = {
   serviceName: "",
   serviceDescription: "",
   serviceUrl: "",

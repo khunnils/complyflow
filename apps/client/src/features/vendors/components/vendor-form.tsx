@@ -23,6 +23,7 @@ export const VendorForm = ({
   dataRegionOptions,
   defaultValues,
   dpaStatusOptions,
+  serviceOptions,
   vendorCategoryOptions,
   submitLabel,
   submitDisabled = false,
@@ -36,6 +37,7 @@ export const VendorForm = ({
   dataRegionOptions: Option[]
   defaultValues: VendorInput
   dpaStatusOptions: Option[]
+  serviceOptions: Option[]
   submitLabel: string
   submitDisabled?: boolean
   vendorCategoryOptions: Option[]
@@ -83,6 +85,12 @@ export const VendorForm = ({
           name="name"
           placeholder="GitHub"
           register={form.register}
+        />
+        <SelectField
+          control={form.control}
+          label="Service"
+          name="serviceId"
+          options={serviceOptions}
         />
         <SelectField
           control={form.control}

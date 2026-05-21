@@ -2,6 +2,8 @@ import {
   type OrganizationProvider,
   type OrganizationSecurityProfile,
   type Provider,
+  type ServiceProfile,
+  type ServiceProfileInput,
 } from "@plyco/shared"
 
 import {
@@ -12,6 +14,10 @@ import { ApiError } from "../../errors.js"
 
 function now() {
   return new Date().toISOString()
+}
+
+function newId(prefix: string) {
+  return `${prefix}_${crypto.randomUUID()}`
 }
 
 export class InMemoryOrganizationRepository implements OrganizationRepository {
@@ -30,9 +36,12 @@ export class InMemoryOrganizationRepository implements OrganizationRepository {
   ): Promise<OrganizationSecurityProfile> {
     const timestamp = now()
     const existing = this.organizations.get(organizationId)
+    const services = this.servicesWithIds(input.services, existing?.services ?? [], timestamp)
+    const inputWithProviderNames = this.withProviderNames(input, providerCatalog)
     const organization: OrganizationSecurityProfile = {
       id: organizationId,
-      ...this.withProviderNames(input, providerCatalog),
+      ...inputWithProviderNames,
+      services,
       createdAt: existing?.createdAt ?? timestamp,
       updatedAt: timestamp,
     }
@@ -49,6 +58,39 @@ export class InMemoryOrganizationRepository implements OrganizationRepository {
         (dataType) => dataType.name,
       ) ?? []
     )
+  }
+
+  async listServiceIds(organizationId: string): Promise<string[]> {
+    return this.organizations.get(organizationId)?.services.map((service) => service.id) ?? []
+  }
+
+  private servicesWithIds(
+    inputServices: ServiceProfileInput[],
+    existingServices: ServiceProfile[],
+    timestamp: string,
+  ): ServiceProfile[] {
+    return inputServices.map((service, index) => {
+      const serviceId = service.id ?? existingServices[index]?.id
+      const existingService = service.id
+        ? existingServices.find((currentService) => currentService.id === service.id)
+        : existingServices[index]
+
+      if (service.id && !existingService) {
+        throw new ApiError(
+          "SERVICE_NOT_FOUND",
+          "Service was not found for this organization.",
+          400,
+          { serviceId: service.id },
+        )
+      }
+
+      return {
+        ...service,
+        id: serviceId ?? newId("service"),
+        createdAt: existingService?.createdAt ?? timestamp,
+        updatedAt: timestamp,
+      }
+    })
   }
 
   private withProviderNames(

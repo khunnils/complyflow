@@ -37,7 +37,8 @@ export function mapOrganizationRecord(record: {
   handlesPii: boolean
   handlesSensitiveData: boolean
   complianceGoals: string[]
-  serviceProfile: {
+  serviceProfile?: {
+    id: string
     serviceName: string
     serviceDescription: string
     serviceUrl: string
@@ -47,7 +48,23 @@ export function mapOrganizationRecord(record: {
     availabilityRegions: string[]
     childrenDirected: boolean
     minimumUserAge: number
+    createdAt: Date
+    updatedAt: Date
   } | null
+  services?: Array<{
+    id: string
+    serviceName: string
+    serviceDescription: string
+    serviceUrl: string
+    audiences: string[]
+    userTypes: string[]
+    customerTypes: string[]
+    availabilityRegions: string[]
+    childrenDirected: boolean
+    minimumUserAge: number
+    createdAt: Date
+    updatedAt: Date
+  }>
   privacyProfile: {
     supportedRights: string[]
     requestMethods: string[]
@@ -154,17 +171,27 @@ export function mapOrganizationRecord(record: {
     centralizedLoggingEnabled:
       record.infrastructureProfile?.centralizedLoggingEnabled ?? false,
   })
-  const service = serviceProfileSchema.parse({
-    serviceName: record.serviceProfile?.serviceName ?? "",
-    serviceDescription: record.serviceProfile?.serviceDescription ?? "",
-    serviceUrl: record.serviceProfile?.serviceUrl ?? "",
-    audiences: record.serviceProfile?.audiences ?? [],
-    userTypes: record.serviceProfile?.userTypes ?? [],
-    customerTypes: record.serviceProfile?.customerTypes ?? [],
-    availabilityRegions: record.serviceProfile?.availabilityRegions ?? [],
-    childrenDirected: record.serviceProfile?.childrenDirected ?? false,
-    minimumUserAge: record.serviceProfile?.minimumUserAge ?? 0,
-  })
+  const serviceRecords = record.services ?? (record.serviceProfile ? [record.serviceProfile] : [])
+  const services = serviceRecords.flatMap((service) =>
+    service
+      ? [
+          serviceProfileSchema.parse({
+            id: service.id,
+            serviceName: service.serviceName,
+            serviceDescription: service.serviceDescription,
+            serviceUrl: service.serviceUrl,
+            audiences: service.audiences,
+            userTypes: service.userTypes,
+            customerTypes: service.customerTypes,
+            availabilityRegions: service.availabilityRegions,
+            childrenDirected: service.childrenDirected,
+            minimumUserAge: service.minimumUserAge,
+            createdAt: toIsoString(service.createdAt),
+            updatedAt: toIsoString(service.updatedAt),
+          }),
+        ]
+      : [],
+  )
   const privacy = privacyProfileSchema.parse({
     supportedRights: record.privacyProfile?.supportedRights ?? [],
     requestMethods: record.privacyProfile?.requestMethods ?? [],
@@ -249,7 +276,7 @@ export function mapOrganizationRecord(record: {
   return {
     id: record.id,
     company,
-    service,
+    services,
     privacy,
     infrastructure,
     dataHandling,
@@ -261,6 +288,10 @@ export function mapOrganizationRecord(record: {
 
 export function mapVendorRecord(record: {
   id: string
+  serviceId: string | null
+  service?: {
+    serviceName: string
+  } | null
   name: string
   category: string
   purpose: string
@@ -282,6 +313,8 @@ export function mapVendorRecord(record: {
 }): Vendor {
   return vendorSchema.parse({
     id: record.id,
+    serviceId: record.serviceId ?? "",
+    serviceName: record.service?.serviceName ?? "",
     name: record.name,
     category: record.category,
     purpose: record.purpose,

@@ -110,9 +110,9 @@ Fields:
 - handles sensitive data
 - compliance goals
 
-### Service Profile
+### Service Profiles
 
-The workspace includes one primary product or service profile per organization. It is edited from the Company workspace navigation and is not part of onboarding.
+The workspace supports multiple product or service profiles per organization. Services are edited from the Company workspace navigation and are not part of onboarding. Organization-level profile sections such as Privacy, Infrastructure, Data Handling, and Access stay shared across services.
 
 Fields:
 
@@ -187,7 +187,7 @@ Fields:
 
 Fields:
 
-- vendor inventory
+- vendor inventory mapped to one service
 - country of registration
 - vendor category
 - data processing level

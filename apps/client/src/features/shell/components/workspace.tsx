@@ -145,8 +145,8 @@ const companySections: Array<{
   {
     id: "service",
     view: "companyService",
-    title: "Service",
-    description: "The primary product or service the organization offers.",
+    title: "Services",
+    description: "Products or services the organization offers.",
     icon: Box,
   },
   {
@@ -518,8 +518,71 @@ const CompanyReadOnlySection = ({
     )
   }
 
+  if (section === "service") {
+    return (
+      <div className="grid gap-4">
+        {profile.services.map((service, index) => (
+          <section className="grid gap-3" key={service.id ?? index}>
+            <h3 className="text-sm font-semibold text-slate-900">
+              {service.serviceName || `Service ${index + 1}`}
+            </h3>
+            <DetailGrid
+              rows={[
+                ["Service URL", service.serviceUrl || "Not set"],
+                ["Description", service.serviceDescription || "Not set"],
+                [
+                  "Audiences",
+                  codeValueList(
+                    vocabulary,
+                    "service_audiences",
+                    service.audiences,
+                  ),
+                ],
+                [
+                  "User types",
+                  codeValueList(
+                    vocabulary,
+                    "service_user_types",
+                    service.userTypes,
+                  ),
+                ],
+                [
+                  "Customer types",
+                  codeValueList(
+                    vocabulary,
+                    "service_customer_types",
+                    service.customerTypes,
+                  ),
+                ],
+                [
+                  "Availability regions",
+                  codeValueList(vocabulary, "regions", service.availabilityRegions),
+                ],
+                ["Directed to children", boolText(service.childrenDirected)],
+                [
+                  "Minimum user age",
+                  service.minimumUserAge === 0
+                    ? "Not set"
+                    : service.minimumUserAge,
+                ],
+              ]}
+            />
+          </section>
+        ))}
+        <Button
+          className="w-fit"
+          type="button"
+          variant="outline"
+          onClick={onEdit}
+        >
+          Edit
+        </Button>
+      </div>
+    )
+  }
+
   const rowsBySection: Record<
-    Exclude<CompanySectionId, "dataHandling" | "privacy">,
+    Exclude<CompanySectionId, "dataHandling" | "privacy" | "service">,
     Array<[string, string | number]>
   > = {
     profile: [
@@ -555,56 +618,6 @@ const CompanyReadOnlySection = ({
       ],
       ["Handles PII", boolText(profile.company.handlesPii)],
       ["Sensitive data", boolText(profile.company.handlesSensitiveData)],
-    ],
-    service: [
-      ["Service name", profile.service.serviceName || "Not set"],
-      ["Service URL", profile.service.serviceUrl || "Not set"],
-      [
-        "Description",
-        profile.service.serviceDescription || "Not set",
-      ],
-      [
-        "Audiences",
-        codeValueList(
-          vocabulary,
-          "service_audiences",
-          profile.service.audiences,
-        ),
-      ],
-      [
-        "User types",
-        codeValueList(
-          vocabulary,
-          "service_user_types",
-          profile.service.userTypes,
-        ),
-      ],
-      [
-        "Customer types",
-        codeValueList(
-          vocabulary,
-          "service_customer_types",
-          profile.service.customerTypes,
-        ),
-      ],
-      [
-        "Availability regions",
-        codeValueList(
-          vocabulary,
-          "regions",
-          profile.service.availabilityRegions,
-        ),
-      ],
-      [
-        "Directed to children",
-        boolText(profile.service.childrenDirected),
-      ],
-      [
-        "Minimum user age",
-        profile.service.minimumUserAge === 0
-          ? "Not set"
-          : profile.service.minimumUserAge,
-      ],
     ],
     infrastructure: [
       [
@@ -760,6 +773,16 @@ export const Workspace = ({ user }: { user: AuthUser }) => {
     ...option,
     label: codeLabel(vocabularyData, "data_categories", option.value),
   }))
+  const serviceOptions = (snapshot?.organization?.services ?? []).map(
+    (service, index) => ({
+      value: service.id,
+      label: service.serviceName || `Service ${index + 1}`,
+    })
+  )
+  const defaultVendorValues = {
+    ...emptyVendorDraft,
+    serviceId: serviceOptions[0]?.value ?? "",
+  }
   const addedSystemTemplateSlugs = new Set(
     templatesData.organizationTemplates.map(
       (template) => template.sourceSystemTemplateSlug
@@ -1024,7 +1047,12 @@ export const Workspace = ({ user }: { user: AuthUser }) => {
                       setShowCustomVendorForm(true)
                     }}
                     onChooseProvider={(provider) => {
-                      createVendor.mutate(vendorInputFromProvider(provider))
+                      createVendor.mutate(
+                        vendorInputFromProvider(
+                          provider,
+                          serviceOptions[0]?.value ?? "",
+                        )
+                      )
                       setShowVendorCatalog(false)
                       setShowCustomVendorForm(false)
                     }}
@@ -1047,9 +1075,10 @@ export const Workspace = ({ user }: { user: AuthUser }) => {
                   defaultValues={
                     editingVendor
                       ? toVendorInput(editingVendor)
-                      : emptyVendorDraft
+                      : defaultVendorValues
                   }
                   dpaStatusOptions={codeOptions(vocabularyData, "dpa_status")}
+                  serviceOptions={serviceOptions}
                   submitDisabled={isVendorMutationPending}
                   submitLabel={editingVendor ? "Save" : "Add vendor"}
                   vendorCategoryOptions={codeOptions(

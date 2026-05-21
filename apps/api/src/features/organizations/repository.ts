@@ -1,12 +1,22 @@
 import {
+  type AccessProfile,
+  type CompanyProfile,
+  type DataHandlingProfile,
+  type InfrastructureProfile,
   type OrganizationSecurityProfile,
+  type PrivacyProfile,
   type Provider,
+  type ServiceProfileInput,
 } from "@plyco/shared"
 
-export type SecurityProfileInput = Pick<
-  OrganizationSecurityProfile,
-  "company" | "service" | "privacy" | "infrastructure" | "dataHandling" | "access"
->
+export type SecurityProfileInput = {
+  company: CompanyProfile
+  services: ServiceProfileInput[]
+  privacy: PrivacyProfile
+  infrastructure: InfrastructureProfile
+  dataHandling: DataHandlingProfile
+  access: AccessProfile
+}
 
 export interface OrganizationRepository {
   getOrganization(
@@ -18,4 +28,5 @@ export interface OrganizationRepository {
     providerCatalog: Provider[],
   ): Promise<OrganizationSecurityProfile>
   listDataTypeNames(organizationId: string): Promise<string[]>
+  listServiceIds(organizationId: string): Promise<string[]>
 }

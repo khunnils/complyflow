@@ -5,7 +5,7 @@ import {
   dataHandlingProfileSchema,
   infrastructureProfileSchema,
   privacyProfileSchema,
-  serviceProfileSchema,
+  serviceProfileInputSchema,
 } from "@plyco/shared"
 import { type ReactNode } from "react"
 import {
@@ -26,7 +26,7 @@ import { type ProfileDraft } from "@/features/security-profile/types/security-pr
 
 const profileDraftSchema = z.object({
   company: companyProfileSchema,
-  service: serviceProfileSchema,
+  services: z.array(serviceProfileInputSchema).min(1),
   privacy: privacyProfileSchema,
   infrastructure: infrastructureProfileSchema,
   dataHandling: dataHandlingProfileSchema,

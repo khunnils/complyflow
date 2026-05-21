@@ -8,7 +8,7 @@ import {
   type PrivacyProfile,
   type Provider,
   type ProviderSystemType,
-  type ServiceProfile,
+  type ServiceProfileInput,
 } from "@plyco/shared"
 
 import {
@@ -23,7 +23,7 @@ export const ORGANIZATION_INCLUDE = {
   dataTypes: { orderBy: { createdAt: "asc" } },
   infrastructureProfile: true,
   privacyProfile: true,
-  serviceProfile: true,
+  services: { orderBy: { createdAt: "asc" } },
   vendors: {
     select: {
       name: true,
@@ -56,7 +56,6 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
     const infrastructureData = this.infrastructureData(input.infrastructure)
     const dataHandlingData = this.dataHandlingData(input.dataHandling)
     const privacyData = this.privacyData(input.privacy)
-    const serviceData = this.serviceData(input.service)
     const accessData = this.accessData(input.access)
 
     const organization = await this.client.organization.update({
@@ -73,12 +72,6 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
           upsert: {
             create: dataHandlingData,
             update: dataHandlingData,
-          },
-        },
-        serviceProfile: {
-          upsert: {
-            create: serviceData,
-            update: serviceData,
           },
         },
         privacyProfile: {
@@ -98,6 +91,7 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
     })
 
     await this.syncOrganizationDataTypes(organization.id, input.dataHandling)
+    await this.syncServices(organization.id, input.services)
     await this.syncOrganizationProviders(organization.id, input, providerCatalog)
 
     return mapOrganizationRecord(
@@ -115,6 +109,15 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
     })
 
     return dataTypes.map((dataType) => dataType.name)
+  }
+
+  async listServiceIds(organizationId: string): Promise<string[]> {
+    const services = await this.client.serviceProfile.findMany({
+      where: { organizationId },
+      select: { id: true },
+    })
+
+    return services.map((service) => service.id)
   }
 
   private organizationData(input: CompanyProfile) {
@@ -145,7 +148,7 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
     }
   }
 
-  private serviceData(input: ServiceProfile) {
+  private serviceData(input: ServiceProfileInput) {
     return {
       serviceName: input.serviceName,
       serviceDescription: input.serviceDescription,
@@ -157,6 +160,57 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
       childrenDirected: input.childrenDirected,
       minimumUserAge: input.minimumUserAge,
     }
+  }
+
+  private async syncServices(
+    organizationId: string,
+    services: ServiceProfileInput[],
+  ) {
+    const existingServices = await this.client.serviceProfile.findMany({
+      where: { organizationId },
+      select: { id: true },
+    })
+    const existingIds = new Set(existingServices.map((service) => service.id))
+    const resolvedServices = services.map((service, index) => ({
+      ...service,
+      id: service.id ?? existingServices[index]?.id,
+    }))
+    const requestedIds = resolvedServices.flatMap((service) =>
+      service.id ? [service.id] : [],
+    )
+    const unknownId = requestedIds.find((id) => !existingIds.has(id))
+
+    if (unknownId) {
+      throw new ApiError(
+        "SERVICE_NOT_FOUND",
+        "Service was not found for this organization.",
+        400,
+        { serviceId: unknownId },
+      )
+    }
+
+    await this.client.serviceProfile.deleteMany({
+      where: {
+        organizationId,
+        ...(requestedIds.length > 0 ? { id: { notIn: requestedIds } } : {}),
+      },
+    })
+
+    await Promise.all(
+      resolvedServices.map((service) =>
+        service.id
+          ? this.client.serviceProfile.update({
+              where: { id: service.id },
+              data: this.serviceData(service),
+            })
+          : this.client.serviceProfile.create({
+              data: {
+                organizationId,
+                ...this.serviceData(service),
+              },
+            }),
+      ),
+    )
   }
 
   private privacyData(input: PrivacyProfile) {

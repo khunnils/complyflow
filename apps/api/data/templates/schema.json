@@ -251,6 +251,32 @@
       "example": 13
     },
     {
+      "key": "services.all",
+      "label": "All services",
+      "type": "collection",
+      "category": "Service",
+      "description": "All product or service profiles for the organization.",
+      "example": [
+        {
+          "id": "service_1",
+          "name": "Acme AI Platform",
+          "url": "https://app.acme.example"
+        }
+      ]
+    },
+    {
+      "key": "services.primary",
+      "label": "Primary service",
+      "type": "object",
+      "category": "Service",
+      "description": "The oldest service profile, also exposed through service.* for existing templates.",
+      "example": {
+        "id": "service_1",
+        "name": "Acme AI Platform",
+        "url": "https://app.acme.example"
+      }
+    },
+    {
       "key": "privacy.supportedRights",
       "label": "Privacy supported rights",
       "type": "string[]",
@@ -1227,6 +1253,25 @@
           "type": "string",
           "description": "Additional notes about the vendor.",
           "example": "Critical engineering system"
+        }
+      ]
+    },
+    {
+      "key": "vendors.byService",
+      "label": "Vendors by service",
+      "type": "collection",
+      "category": "Vendors",
+      "description": "Vendor inventory grouped by the service each vendor supports.",
+      "example": [
+        {
+          "serviceId": "service_1",
+          "serviceName": "Acme AI Platform",
+          "vendors": [
+            {
+              "name": "Stripe",
+              "dataProcessingLevel": "subprocessor"
+            }
+          ]
         }
       ]
     }

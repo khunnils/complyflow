@@ -6,6 +6,9 @@ import { type OrganizationRepository } from "../organizations/repository.js"
 import { type VendorRepository } from "./repository.js"
 
 const VENDOR_INCLUDE = {
+  service: {
+    select: { serviceName: true },
+  },
   dataTypes: {
     include: { organizationDataType: true },
     orderBy: { createdAt: "asc" },
@@ -20,7 +23,7 @@ export class PrismaVendorRepository implements VendorRepository {
 
   async listVendors(organizationId: string): Promise<Vendor[]> {
     const vendors = await this.client.organizationProvider.findMany({
-      where: { organizationId },
+      where: { organizationId, systemType: null },
       include: VENDOR_INCLUDE,
       orderBy: { createdAt: "asc" },
     })
@@ -29,6 +32,7 @@ export class PrismaVendorRepository implements VendorRepository {
   }
 
   async createVendor(organizationId: string, input: VendorInput): Promise<Vendor> {
+    await this.validateServiceId(organizationId, input.serviceId)
     const dataProcessed = await this.validVendorDataTypeNames(
       organizationId,
       input,
@@ -36,6 +40,7 @@ export class PrismaVendorRepository implements VendorRepository {
     const vendor = await this.client.organizationProvider.create({
       data: {
         organizationId,
+        serviceId: input.serviceId,
         ...this.vendorData(input),
         dataTypes: {
           create: dataProcessed.map((name) => ({
@@ -55,13 +60,14 @@ export class PrismaVendorRepository implements VendorRepository {
     input: VendorInput,
   ): Promise<Vendor | null> {
     const existing = await this.client.organizationProvider.findFirst({
-      where: { id, organizationId },
+      where: { id, organizationId, systemType: null },
     })
 
     if (!existing) {
       return null
     }
 
+    await this.validateServiceId(organizationId, input.serviceId)
     const dataProcessed = await this.validVendorDataTypeNames(
       organizationId,
       input,
@@ -70,6 +76,7 @@ export class PrismaVendorRepository implements VendorRepository {
       where: { id },
       data: {
         ...this.vendorData(input),
+        serviceId: input.serviceId,
         dataTypes: {
           deleteMany: {},
           create: dataProcessed.map((name) => ({
@@ -85,7 +92,7 @@ export class PrismaVendorRepository implements VendorRepository {
 
   async deleteVendor(organizationId: string, id: string): Promise<boolean> {
     const existing = await this.client.organizationProvider.findFirst({
-      where: { id, organizationId },
+      where: { id, organizationId, systemType: null },
     })
 
     if (!existing) {
@@ -127,6 +134,21 @@ export class PrismaVendorRepository implements VendorRepository {
     }
 
     return requestedNames
+  }
+
+  private async validateServiceId(organizationId: string, serviceId: string) {
+    const serviceIds = new Set(
+      await this.organizationRepository.listServiceIds(organizationId),
+    )
+
+    if (!serviceIds.has(serviceId)) {
+      throw new ApiError(
+        "VENDOR_SERVICE_NOT_FOUND",
+        "Vendor service must reference a service on the organization.",
+        400,
+        { serviceId },
+      )
+    }
   }
 
   private connectDataType(organizationId: string, name: string) {

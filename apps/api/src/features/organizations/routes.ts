@@ -4,7 +4,7 @@ import {
   dataHandlingProfileSchema,
   infrastructureProfileSchema,
   privacyProfileSchema,
-  serviceProfileSchema,
+  serviceProfileInputSchema,
 } from "@plyco/shared"
 import { type FastifyInstance } from "fastify"
 import { z } from "zod"
@@ -25,7 +25,7 @@ import { type OrganizationRepository } from "./repository.js"
 
 const securityProfileBodySchema = z.object({
   company: companyProfileSchema,
-  service: serviceProfileSchema,
+  services: z.array(serviceProfileInputSchema).min(1, "At least one service is required"),
   privacy: privacyProfileSchema,
   infrastructure: infrastructureProfileSchema,
   dataHandling: dataHandlingProfileSchema,
@@ -87,10 +87,15 @@ export async function registerOrganizationRoutes(
         request.params.organizationId,
         body.dataHandling,
       )
-      await validateServiceProfileCodes(
-        vocabularyRepository,
-        request.params.organizationId,
-        body.service,
+      await Promise.all(
+        body.services.map((service, index) =>
+          validateServiceProfileCodes(
+            vocabularyRepository,
+            request.params.organizationId,
+            service,
+            `services.${index}`,
+          ),
+        ),
       )
       await validatePrivacyProfileCodes(
         vocabularyRepository,

@@ -4,12 +4,12 @@ import {
   type DataHandlingProfile,
   type InfrastructureProfile,
   type PrivacyProfile,
-  type ServiceProfile,
+  type ServiceProfileInput,
 } from "@plyco/shared"
 
 export type ProfileDraft = {
   company: CompanyProfile
-  service: ServiceProfile
+  services: ServiceProfileInput[]
   privacy: PrivacyProfile
   infrastructure: InfrastructureProfile
   dataHandling: DataHandlingProfile

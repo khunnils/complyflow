@@ -3,7 +3,7 @@ import {
   type DataHandlingProfile,
   type InfrastructureProfile,
   type PrivacyProfile,
-  type ServiceProfile,
+  type ServiceProfileInput,
   type VendorInput,
 } from "@plyco/shared"
 
@@ -157,7 +157,8 @@ export const validateInfrastructureProfileCodes = async (
 export const validateServiceProfileCodes = async (
   vocabularyRepository: VocabularyRepository,
   organizationId: string,
-  service: ServiceProfile,
+  service: ServiceProfileInput,
+  fieldPrefix = "service",
 ) => {
   await Promise.all([
     assertCodes(
@@ -165,28 +166,28 @@ export const validateServiceProfileCodes = async (
       organizationId,
       "service_audiences",
       service.audiences,
-      "service.audiences",
+      `${fieldPrefix}.audiences`,
     ),
     assertCodes(
       vocabularyRepository,
       organizationId,
       "service_user_types",
       service.userTypes,
-      "service.userTypes",
+      `${fieldPrefix}.userTypes`,
     ),
     assertCodes(
       vocabularyRepository,
       organizationId,
       "service_customer_types",
       service.customerTypes,
-      "service.customerTypes",
+      `${fieldPrefix}.customerTypes`,
     ),
     assertCodes(
       vocabularyRepository,
       organizationId,
       "regions",
       service.availabilityRegions,
-      "service.availabilityRegions",
+      `${fieldPrefix}.availabilityRegions`,
     ),
   ])
 }

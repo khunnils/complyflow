@@ -16,6 +16,10 @@ export type NormalizedTemplateContext = {
   company: Record<string, unknown>
   policy: Record<string, unknown>
   service: Record<string, unknown>
+  services: {
+    all: Array<Record<string, unknown>>
+    primary: Record<string, unknown>
+  }
   privacy: Record<string, unknown>
   infrastructure: Record<string, unknown>
   dataHandling: Record<string, unknown>
@@ -24,6 +28,7 @@ export type NormalizedTemplateContext = {
     all: Array<Record<string, unknown>>
     dataProcessors: Array<Record<string, unknown>>
     subprocessors: Array<Record<string, unknown>>
+    byService: Array<Record<string, unknown>>
   }
 }
 
@@ -42,14 +47,22 @@ export class ReportContextBuilder {
         }
       : {}
     const vendors = snapshot.vendors.map((vendor) => this.vendorContext(vendor))
+    const services = organization
+      ? organization.services.map((service) =>
+          this.serviceContext(service, vocabulary),
+        )
+      : []
+    const primaryService = services[0] ?? {}
 
     return {
       organization: organizationContext,
       company: organizationContext,
       policy: template ? this.policyContext(template, members) : {},
-      service: organization
-        ? this.serviceContext(organization.service, vocabulary)
-        : {},
+      service: primaryService,
+      services: {
+        all: services,
+        primary: primaryService,
+      },
       privacy: organization
         ? this.privacyContext(organization.privacy, vocabulary)
         : {},
@@ -66,6 +79,7 @@ export class ReportContextBuilder {
         subprocessors: vendors.filter(
           (vendor) => vendor.dataProcessingLevel === "subprocessor",
         ),
+        byService: this.vendorsByService(services, vendors),
       },
     }
   }
@@ -94,6 +108,7 @@ export class ReportContextBuilder {
 
   private serviceContext(service: ServiceProfile, vocabulary?: Vocabulary) {
     return {
+      id: service.id,
       name: service.serviceName,
       description: service.serviceDescription,
       url: service.serviceUrl,
@@ -217,6 +232,8 @@ export class ReportContextBuilder {
 
   private vendorContext(vendor: Vendor) {
     return {
+      serviceId: vendor.serviceId,
+      serviceName: vendor.serviceName,
       name: vendor.name,
       category: vendor.category,
       purpose: vendor.purpose,
@@ -230,6 +247,17 @@ export class ReportContextBuilder {
       owner: vendor.owner,
       notes: vendor.notes,
     }
+  }
+
+  private vendorsByService(
+    services: Array<Record<string, unknown>>,
+    vendors: Array<Record<string, unknown>>,
+  ) {
+    return services.map((service) => ({
+      serviceId: service.id,
+      serviceName: service.name,
+      vendors: vendors.filter((vendor) => vendor.serviceId === service.id),
+    }))
   }
 }
 

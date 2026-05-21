@@ -23,7 +23,7 @@ model Organization {
   handlesPii            Boolean                  @map("handles_pii")
   handlesSensitiveData  Boolean                  @map("handles_sensitive_data")
   complianceGoals       String[]                 @map("compliance_goals")
-  serviceProfile        ServiceProfile?
+  services              ServiceProfile[]
   privacyProfile        PrivacyProfile?
   infrastructureProfile InfrastructureProfile?
   dataHandlingProfile   DataHandlingProfile?
@@ -150,8 +150,9 @@ model OrganizationMembership {
 
 model ServiceProfile {
   id                  String       @id(map: "service_profiles_pkey") @default(cuid())
-  organizationId      String       @unique(map: "service_profiles_organization_id_key") @map("organization_id")
+  organizationId      String       @map("organization_id")
   organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "service_profiles_organization_id_fkey")
+  vendors             OrganizationProvider[]
   serviceName         String       @default("") @map("service_name")
   serviceDescription  String       @default("") @map("service_description")
   serviceUrl          String       @default("") @map("service_url")
@@ -164,6 +165,7 @@ model ServiceProfile {
   createdAt           DateTime     @default(now()) @map("created_at")
   updatedAt           DateTime     @updatedAt @map("updated_at")
 
+  @@index([organizationId], map: "idx_service_profiles_organization_id")
   @@map("service_profiles")
 }
 
@@ -273,6 +275,8 @@ model OrganizationProvider {
   id                    String           @id(map: "organization_providers_pkey") @default(cuid())
   organizationId        String           @map("organization_id")
   organization          Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "vendors_organization_id_fkey")
+  serviceId             String?          @map("service_id")
+  service               ServiceProfile?  @relation(fields: [serviceId], references: [id], onDelete: Cascade, map: "organization_providers_service_id_fkey")
   providerId            String?          @map("provider_id")
   systemType            String?          @map("system_type")
   name                  String
@@ -292,6 +296,7 @@ model OrganizationProvider {
 
   @@unique([organizationId, systemType, providerId], map: "organization_providers_org_system_provider_key")
   @@index([organizationId], map: "idx_organization_providers_organization_id")
+  @@index([serviceId], map: "idx_organization_providers_service_id")
   @@index([providerId], map: "idx_organization_providers_provider_id")
   @@index([systemType], map: "idx_organization_providers_system_type")
   @@map("organization_providers")
